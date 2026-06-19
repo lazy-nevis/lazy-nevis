@@ -126,7 +126,6 @@ fn get_active_window_macos() -> Option<WindowInfo> {
 fn get_active_window_windows() -> Option<WindowInfo> {
     use std::ffi::OsString;
     use std::os::windows::ffi::OsStringExt;
-    use windows::Win32::Foundation::HWND;
     use windows::Win32::System::Threading::{
         OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ,
     };
@@ -136,7 +135,7 @@ fn get_active_window_windows() -> Option<WindowInfo> {
 
     unsafe {
         let hwnd = GetForegroundWindow();
-        if hwnd == HWND(0) {
+        if hwnd.0.is_null() {
             return None;
         }
 
