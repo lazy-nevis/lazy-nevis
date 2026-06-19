@@ -91,7 +91,7 @@ jobs:
         run: |
           config=()
           if [ "${{ runner.os }}" = Windows ] && [ -n "${WINDOWS_THUMBPRINT:-}" ]; then config=(--config "$RUNNER_TEMP/signing.json"); fi
-          bun run tauri build -- --target "${{ matrix.target }}" --bundles "${{ matrix.bundles }}" "${config[@]}"
+          bun run tauri build --target "${{ matrix.target }}" --bundles "${{ matrix.bundles }}" "${config[@]}"
       - name: Archive macOS app
         if: runner.os == 'macOS'
         run: |
