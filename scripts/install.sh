@@ -2,7 +2,6 @@
 set -eu
 
 REPO="simstm/lazy-nevis"
-INSTALLER_VERSION="1.0.0"
 VERSION=""
 PRERELEASE=0
 DRY_RUN=0
@@ -79,7 +78,7 @@ case "$PACKAGE" in
   rpm) SUFFIX='linux-x64.*\.rpm$' ;;
 esac
 
-set -- $(python3 - "$JSON" "$VERSION" "$PRERELEASE" "$SUFFIX" <<'PY'
+METADATA=$(python3 - "$JSON" "$VERSION" "$PRERELEASE" "$SUFFIX" <<'PY'
 import json,re,sys
 data=json.load(open(sys.argv[1], encoding="utf-8")); releases=data if isinstance(data,list) else [data]
 version,allow,pattern=sys.argv[2],sys.argv[3]=="1",re.compile(sys.argv[4],re.I)
@@ -94,11 +93,14 @@ if len(matches)!=1 or len(sums)!=1 or len(icons)!=1: raise SystemExit("artifact,
 for a in (matches[0],sums[0],icons[0]):
  u=a.get("browser_download_url","")
  if not u.startswith("https://github.com/simstm/lazy-nevis/releases/download/"): raise SystemExit("unofficial asset URL")
-print(r["tag_name"],matches[0]["name"],matches[0]["browser_download_url"],sums[0]["browser_download_url"],icons[0]["browser_download_url"])
+print(r["tag_name"],matches[0]["name"],matches[0]["browser_download_url"],sums[0]["browser_download_url"],icons[0]["browser_download_url"],sep="\t")
 PY
 )
-[ "$#" -eq 5 ] || die "release metadata parsing failed"
-TAG=$1; ASSET_NAME=$2; ASSET_URL=$3; SUMS_URL=$4; ICON_URL=$5
+IFS="$(printf '\t')" read -r TAG ASSET_NAME ASSET_URL SUMS_URL ICON_URL <<EOF
+$METADATA
+EOF
+[ -n "$TAG" ] && [ -n "$ASSET_NAME" ] && [ -n "$ASSET_URL" ] && [ -n "$SUMS_URL" ] && [ -n "$ICON_URL" ] \
+  || die "release metadata parsing failed"
 ASSET="$TMP_DIR/$ASSET_NAME"; SUMS="$TMP_DIR/SHA256SUMS"
 curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 "$SUMS_URL" -o "$SUMS"
 curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 "$ASSET_URL" -o "$ASSET"
