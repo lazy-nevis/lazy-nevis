@@ -152,7 +152,7 @@ fn get_active_window_windows() -> Option<WindowInfo> {
 
         let mut exe_buf = [0u16; 512];
         let exe_len = windows::Win32::System::ProcessStatus::GetModuleFileNameExW(
-            process,
+            Some(process),
             None,
             &mut exe_buf,
         );
