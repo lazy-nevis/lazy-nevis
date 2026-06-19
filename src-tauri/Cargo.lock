@@ -2181,7 +2181,7 @@ name = "lazy-nevis"
 version = "0.1.0-rc.1"
 dependencies = [
  "chrono",
- "core-foundation 0.9.4",
+ "core-foundation 0.10.1",
  "core-graphics 0.23.2",
  "mac-notification-sys",
  "objc2-app-kit",
