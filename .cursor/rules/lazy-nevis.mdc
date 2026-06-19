@@ -1,0 +1,43 @@
+---
+description: LazyNevis project context and coding rules
+globs: "**/*"
+alwaysApply: true
+---
+
+# LazyNevis
+
+Read `AGENTS.md` and `RTK.md` before non-trivial edits, plus relevant `openspec/specs/*/spec.md`. Use `openspec/README.md` for behavior/schema/security/cross-module changes, `DESIGN.md` for visual work, and `docs/architecture/release.md` for release work.
+
+## Stack
+- Tauri v2 desktop app.
+- Rust backend in `src-tauri/src/`.
+- React 19 + TypeScript frontend in `src/`.
+- Vite 8 + Tailwind v4 + Zustand + i18next.
+- Bun package manager; use `/Users/lucas/.bun/bin/bun` if PATH lacks `bun`.
+
+## Required Patterns
+- No TypeScript `any`.
+- No new hardcoded user-visible strings; add locale keys to both `en-US.json` and `pt-BR.json`.
+- `useFocusSession()` is only called in `AppShell`.
+- Add Tauri wrappers in `src/services/tauri.ts`.
+- Mirror Rust payloads/models in `src/types/index.ts`.
+- Register new Rust commands in `src-tauri/src/lib.rs`.
+- New SQL belongs in `src-tauri/src/db/queries.rs`.
+- Keep alert checks in the 1-second ticker in `src-tauri/src/monitor.rs`.
+- Keep `rodio::OutputStream` inside the audio background thread.
+- Keep LazyNevis in `ALWAYS_IGNORED`.
+- Update specs and tests for behavior changes. Keep all adapters named in `AGENTS.md` aligned.
+
+## Validate
+```bash
+bun run test
+bun run build
+cargo test --manifest-path src-tauri/Cargo.toml
+bun run quality
+```
+
+Report task IDs, files owned, validation, unresolved risks, and manual actions.
+
+## Known Debt
+- Some production Rust panics and inline SQL remain; avoid adding more.
+- Some existing hardcoded UI strings remain; avoid adding more.

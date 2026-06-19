@@ -1,0 +1,12 @@
+schema: spec-driven
+context: |
+  LazyNevis is a local-first Tauri v2 desktop focus tool with a strict TypeScript/React frontend and Rust backend. RTK.md is current implementation truth. Specs define expected behavior and must preserve local privacy, offline operation, cross-platform degradation, and explicit error behavior. Use Bun and the validation commands in AGENTS.md.
+rules:
+  proposal:
+    - State privacy, permission, offline, restart, and platform consequences.
+    - Link affected capability specs and identify any documented exemption.
+  design:
+    - Preserve frontend/Rust ownership boundaries described in RTK.md.
+    - Explain migrations, rollback behavior, and security boundaries when relevant.
+  tasks:
+    - Include spec updates, scenario-linked tests, both locales for UI text, and validation.

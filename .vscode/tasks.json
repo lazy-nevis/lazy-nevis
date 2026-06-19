@@ -1,0 +1,9 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "LazyNevis: frontend tests", "type": "shell", "command": "bun run test", "group": "test", "problemMatcher": [] },
+    { "label": "LazyNevis: frontend build", "type": "shell", "command": "bun run build", "group": "build", "problemMatcher": ["$tsc"] },
+    { "label": "LazyNevis: Rust tests", "type": "shell", "command": "cargo test --manifest-path src-tauri/Cargo.toml --locked", "group": "test", "problemMatcher": ["$rustc"] },
+    { "label": "LazyNevis: repository quality", "type": "shell", "command": "bun run quality", "group": "test", "problemMatcher": [] }
+  ]
+}

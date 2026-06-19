@@ -1,0 +1,31 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main-capability",
+  "description": "Capabilities required by the trusted main application window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus",
+    "core:window:allow-start-dragging",
+    "core:window:allow-close",
+    "notification:default",
+    "notification:allow-notify",
+    "notification:allow-request-permission",
+    "notification:allow-is-permission-granted",
+    "notification:allow-check-permissions",
+    "dialog:allow-open",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        { "url": "https://github.com/simstm" },
+        { "url": "https://github.com/simstm/lazy-nevis" },
+        { "url": "https://github.com/simstm/lazy-nevis/blob/main/LICENSE" },
+        { "url": "https://github.com/simstm/lazy-nevis/releases*" },
+        { "url": "https://sims.dev.br" },
+        { "url": "https://www.buymeacoffee.com/simstm" }
+      ]
+    }
+  ]
+}

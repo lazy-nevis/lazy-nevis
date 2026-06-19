@@ -1,0 +1,50 @@
+[package]
+name = "lazy-nevis"
+version = "0.1.0-rc.1"
+description = "LazyNevis — for lazy people who don't give upis."
+authors = ["Lucas \"Sims\" Nagasaki Souza <simstm@github>"]
+license = "MIT"
+homepage = "https://github.com/simstm/lazy-nevis"
+repository = "https://github.com/simstm/lazy-nevis"
+keywords = ["focus", "productivity", "tauri", "desktop"]
+edition = "2021"
+
+[lib]
+name = "lazy_nevis_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png", "image-ico", "macos-private-api"] }
+tauri-plugin-notification = "2"
+tauri-plugin-store = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-opener = "2"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+rusqlite = { version = "0.31", features = ["bundled"] }
+rodio = { version = "0.17", default-features = false, features = ["mp3", "wav", "vorbis"] }
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "1"
+sysinfo = { version = "0.32", default-features = false, features = ["system"] }
+tauri-plugin-autostart = "2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-graphics = "0.23"
+core-foundation = "0.9"
+mac-notification-sys = "0.6"
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["NSColor", "NSWindow"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.58", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_System_Threading"] }
+
+[dev-dependencies]
+tempfile = "3"

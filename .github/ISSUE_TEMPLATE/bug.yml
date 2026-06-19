@@ -1,0 +1,50 @@
+name: Bug report
+description: Report a reproducible LazyNevis defect
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: "Remove private window titles, paths, checkpoints, and secrets. Security reports belong in SECURITY.md."
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: "What happened?"
+      placeholder: Describe the observable behavior.
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: Expected behavior, description: "What should have happened?" }
+    validations: { required: true }
+  - type: textarea
+    id: reproduce
+    attributes: { label: Reproduction steps, placeholder: "1. Start…\n2. Open…\n3. Observe…" }
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes: { label: LazyNevis version, placeholder: "0.1.0-rc.1" }
+    validations: { required: true }
+  - type: input
+    id: system
+    attributes: { label: OS and architecture, placeholder: "macOS 15 ARM64 / Windows 11 x64 / Fedora 42 x64" }
+    validations: { required: true }
+  - type: dropdown
+    id: package
+    attributes: { label: Package, options: [Development build, DMG, App archive, MSI, NSIS EXE, AppImage, DEB, RPM, Other] }
+    validations: { required: true }
+  - type: textarea
+    id: logs
+    attributes: { label: Sanitized logs, description: Paste relevant logs after removing personal data and secrets., render: shell }
+  - type: textarea
+    id: media
+    attributes: { label: Screenshots or video, description: Optional when the issue can be captured safely. }
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and troubleshooting docs.
+          required: true
+        - label: This report contains no secrets or other people's personal data.
+          required: true

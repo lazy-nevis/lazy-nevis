@@ -1,0 +1,14 @@
+- { name: bug, color: d73a4a, description: "Confirmed or reported defect" }
+- { name: feature, color: a2eeef, description: "New product behavior" }
+- { name: documentation, color: 0075ca, description: "Documentation improvement" }
+- { name: security, color: b60205, description: "Security-sensitive work; public only after disclosure" }
+- { name: "platform: macOS", color: 5319e7, description: "macOS-specific" }
+- { name: "platform: Windows", color: 0075ca, description: "Windows-specific" }
+- { name: "platform: Linux", color: f9d0c4, description: "Linux-specific" }
+- { name: "arch: x64", color: c5def5, description: "x86-64 architecture" }
+- { name: "arch: arm64", color: c5def5, description: "ARM64 architecture" }
+- { name: needs-triage, color: bfdadc, description: "Awaiting maintainer triage" }
+- { name: needs-reproduction, color: fbca04, description: "Needs a reliable reproduction" }
+- { name: blocked, color: 000000, description: "Blocked by another decision or task" }
+- { name: good-first-issue, color: 7057ff, description: "Suitable for a first contribution" }
+- { name: release-blocker, color: b60205, description: "Blocks the next release" }

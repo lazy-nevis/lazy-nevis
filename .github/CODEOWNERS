@@ -1,0 +1,7 @@
+* @simstm
+/.github/ @simstm
+/.github/workflows/ @simstm
+/SECURITY.md @simstm
+/CODEOWNERS @simstm
+/docs/architecture/release.md @simstm
+/scripts/install.* @simstm

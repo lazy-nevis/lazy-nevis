@@ -1,0 +1,32 @@
+name: Feature proposal
+description: Propose an outcome, not just an implementation
+title: "[Feature]: "
+labels: ["feature", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes: { label: Problem, description: "Who has this problem and why does it matter?" }
+    validations: { required: true }
+  - type: textarea
+    id: outcome
+    attributes: { label: Desired outcome, description: Describe observable behavior and success. }
+    validations: { required: true }
+  - type: textarea
+    id: alternatives
+    attributes: { label: Alternatives considered, description: Include existing workflows or simpler options. }
+    validations: { required: true }
+  - type: textarea
+    id: privacy
+    attributes: { label: Privacy and permissions impact, description: "What data, network, or OS access would change?" }
+    validations: { required: true }
+  - type: dropdown
+    id: contribute
+    attributes: { label: "Would you contribute?", options: [Yes, With guidance, No] }
+    validations: { required: true }
+  - type: checkboxes
+    id: spec
+    attributes:
+      label: OpenSpec
+      options:
+        - label: I understand accepted behavior changes require an approved OpenSpec proposal before implementation.
+          required: true

@@ -1,0 +1,330 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "refresh": "Refresh",
+    "remove": "Remove {{item}}",
+    "units": { "ms": "ms", "seconds": "sec", "minutes": "min" },
+    "unavailable": "Unavailable",
+    "app_name": "LazyNevis",
+    "tagline": "for lazy people who don't give upis.",
+    "tagline_note": "(\"upis\" is not a typo — it's a playful suffix inspired by Mussum, a beloved Brazilian comedian. Think of it as our cultural Easter egg.)"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "history": "History",
+    "settings": "Settings",
+    "about": "About"
+  },
+  "dashboard": {
+    "session": {
+      "start_button": "Start Focus Session",
+      "stop_button": "End Session",
+      "pause_button": "Pause",
+      "resume_button": "Resume",
+      "checkpoint_button": "Checkpoint",
+      "status_focused": "Focused",
+      "status_distracted": "Distracted",
+      "status_paused": "Paused",
+      "status_inactive": "Inactive",
+      "no_session_title": "Ready to focus?",
+      "no_session_description": "Start a session to track your focus and get back on track when you drift.",
+      "last_session": "Last session",
+      "no_sessions_yet": "No sessions yet. Start your first focus session!",
+      "sync_error": "LazyNevis couldn't confirm the current session state.",
+      "try_again": "Try again",
+      "already_active": "A session is already active",
+      "saved": "Session saved!"
+    },
+    "timer": {
+      "total": "Total",
+      "focused": "Focused",
+      "distracted": "Distracted",
+      "idle": "Idle",
+      "focus_score": "Focus score"
+    },
+    "break": {
+      "reminder": "Time for a break?",
+      "start": "Start break",
+      "skip": "Skip",
+      "active": "Break time - {{remaining}} remaining",
+      "end": "Back to work"
+    },
+    "charts": {
+      "app_distribution": "Time per app",
+      "hourly_breakdown": "Activity by hour",
+      "focus_trend": "Focus trend (last sessions)",
+      "activity_calendar": "Activity calendar",
+      "no_data": "No data yet for this period",
+      "less": "Less",
+      "more": "More",
+      "focus": "Focus",
+      "distracted": "Distracted",
+      "no_hourly_data": "No hourly data available"
+    },
+    "current_window": {
+      "label": "Currently active",
+      "none": "No active window detected"
+    },
+    "checkpoints": {
+      "title": "Checkpoints",
+      "empty": "No checkpoints yet",
+      "add_label_placeholder": "Optional label...",
+      "shortcut_label": "Shortcut checkpoint"
+    },
+    "alert_count": "{{count}} alert",
+    "alert_count_plural": "{{count}} alerts",
+    "modal": {
+      "start_title": "Start a Focus Session",
+      "label_placeholder": "Session name (optional)",
+      "label_hint": "e.g. \"Morning sprint\", \"Deep work — project X\""
+    }
+  },
+  "history": {
+    "title": "Session History",
+    "empty": "No sessions found. Start your first session!",
+    "search_placeholder": "Search by label or note...",
+    "filters": {
+      "today": "Today",
+      "week": "This week",
+      "month": "This month",
+      "all": "All time"
+    },
+    "session_card": {
+      "focus_score": "Focus score",
+      "alerts": "Alerts",
+      "duration": "Duration"
+    },
+    "detail": {
+      "title": "Session Detail",
+      "events": "Timeline",
+      "all_events": "All events",
+      "checkpoints": "Checkpoints",
+      "top_apps": "Top apps by time",
+      "export": "Export",
+      "started": "Started",
+      "ended": "Ended",
+      "no_events": "No events recorded yet.",
+      "app_switch": "App switch"
+    },
+    "session_deleted": "Session deleted",
+    "all_cleared": "All sessions cleared",
+    "delete_confirm": "Delete this session? This cannot be undone.",
+    "clear_confirm": "Delete ALL sessions? This cannot be undone.",
+    "export": {
+      "json": "Export as JSON",
+      "csv": "Export as CSV",
+      "sensitive_warning": "Exports may contain window titles, application activity, and checkpoint text. Review them before sharing."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "saved": "Settings saved",
+    "save_failed": "Settings couldn't be saved. Your current screen values are still available.",
+    "load_failed": "Settings couldn't be loaded from local storage.",
+    "tabs": {
+      "general": "General",
+      "focus_rules": "Focus Rules",
+      "alerts": "Alerts",
+      "audio": "Audio",
+      "breaks": "Breaks",
+      "shortcuts": "Shortcuts",
+      "data": "Data",
+      "permissions": "Permissions"
+    },
+    "section_desc": {
+      "general": "Language, theme, and window monitoring parameters.",
+      "focus_rules": "Define which apps count as 'focus' and which are 'distractions'. Rules apply immediately — even during an active session.",
+      "alerts": "Configure when and how LazyNevis reminds you to refocus. Alerts only fire during a session, after you've been in a distraction app longer than the configured threshold.",
+      "audio": "Audio cues play when alerts fire. Use the built-in sounds or pick any MP3, WAV, or OGG file from your computer.",
+      "breaks": "Break reminders nudge you to step away after long focus streaks. Compatible with Pomodoro (25 min focus + 5 min break).",
+      "shortcuts": "Global keyboard shortcuts work from any app — no need to open LazyNevis first.",
+      "data": "All data is stored locally on your device. Nothing is ever sent to external servers."
+    },
+    "general": {
+      "language": "Language",
+      "language_en": "English (US)",
+      "language_pt": "Portuguese (Brazil)",
+      "theme": "Theme",
+      "theme_light": "Light",
+      "theme_dark": "Dark",
+      "theme_system": "System",
+      "time_format": "Clock format",
+      "time_format_24h": "24-hour",
+      "time_format_12h": "12-hour (AM/PM)",
+      "polling_interval": "Polling interval",
+      "polling_interval_hint": "How often LazyNevis checks which app is active. Lower = more responsive, higher = less CPU. Min: 500 ms.",
+      "micro_threshold": "Micro-event threshold",
+      "micro_threshold_hint": "Window switches shorter than this are ignored. Prevents noise from accidental clicks or quick alt-tabs.",
+      "start_minimized": "Start minimized to tray",
+      "start_minimized_hint": "When enabled, LazyNevis starts silently in the system tray without showing the window.",
+      "launch_at_login": "Open LazyNevis at login",
+      "launch_at_login_hint": "Automatically starts LazyNevis when you sign in to Windows, macOS, or Linux. Login launches always start in the tray."
+    },
+    "focus_rules": {
+      "mode_label": "Mode",
+      "mode_allowlist": "Allowlist — only apps in the list count as focus",
+      "mode_blocklist": "Blocklist — only apps in the list count as distractions",
+      "mode_allowlist_desc": "Allowlist: only apps you list are focus — everything else is a distraction.",
+      "mode_blocklist_desc": "Blocklist: only apps you list are distractions — everything else is focus.",
+      "apps_label": "Apps",
+      "apps_hint": "Type an app name or pick from the running apps below. Only the executable name is stored (e.g. code, chrome.exe).",
+      "apps_placeholder": "Executable name (e.g. code, chrome.exe)",
+      "add_app": "Add",
+      "detect_current": "Detect active app",
+      "browser_rules_title": "Browser tab rules",
+      "browser_rules_hint": "When a browser is open, LazyNevis checks the tab title to decide if it's focus or distraction. Only applies to browsers (Chrome, Firefox, Edge, etc.).",
+      "browser_tab_mode": "Browser tab mode",
+      "browser_tab_terms": "Keywords",
+      "browser_tab_placeholder": "Keyword (e.g. YouTube, Reddit)",
+      "tab_mode": "Tab mode",
+      "tab_mode_blocklist_desc": "Blocklist — keywords below are distractions",
+      "tab_mode_allowlist_desc": "Allowlist — only keywords below are focus"
+    },
+    "alerts": {
+      "notification_enabled": "Desktop notification",
+      "notification_desc": "A native OS notification. Subtle — won't interrupt your workflow.",
+      "notification_threshold": "Alert after",
+      "fullscreen_enabled": "Fullscreen overlay",
+      "fullscreen_desc": "A full-screen flashing overlay. Aggressive — hard to ignore. Requires a click to dismiss.",
+      "fullscreen_threshold": "Alert after",
+      "cooldown": "Cooldown between alerts",
+      "cooldown_hint": "After dismissing an alert, LazyNevis won't fire another one for this duration. Prevents spam.",
+      "threshold_hint": "Time in distraction before alert fires (seconds)",
+      "seconds_suffix": "seconds in a distraction app"
+    },
+    "audio": {
+      "notification_sound": "Notification sound",
+      "notification_sound_desc": "Plays once when the desktop notification fires.",
+      "fullscreen_sound": "Overlay sound",
+      "fullscreen_sound_desc": "Loops continuously while the fullscreen overlay is visible. Stops when you dismiss it.",
+      "volume": "Master volume",
+      "preview": "Preview",
+      "stop": "Stop",
+      "no_sound": "No sound",
+      "custom_file": "Browse audio file…",
+      "notification_enabled": "Enable sound for notifications",
+      "fullscreen_enabled": "Enable sound for overlay",
+      "builtin_alert1": "Alert 1 (short beep)",
+      "builtin_alarm": "Alarm (long tone)",
+      "builtin_chime": "Chime (gentle)",
+      "builtin_section": "Built-in sounds",
+      "recent_section": "Recent files",
+      "test_section": "Test alerts",
+      "test_notification": "Test notification",
+      "test_fullscreen": "Test fullscreen overlay",
+      "test_hint": "Alert logic: fires when distracted_for ≥ threshold AND cooldown has passed. Checked every second."
+    },
+    "breaks": {
+      "enabled": "Enable break reminders",
+      "focus_interval": "Remind me after",
+      "focus_interval_hint": "How long you need to be in focus before a break reminder fires.",
+      "break_duration": "Suggested break length",
+      "break_duration_hint": "Shown in the break countdown on the dashboard.",
+      "alert_type": "Reminder style",
+      "hint": "Compatible with Pomodoro: 25 min focus + 5 min break.",
+      "type_notification": "Notification (subtle)",
+      "type_fullscreen": "Fullscreen overlay"
+    },
+    "shortcuts": {
+      "toggle_focus": "Toggle focus mode",
+      "toggle_focus_hint": "Starts a new session or pauses/resumes the current one.",
+      "stop_session": "Stop active session",
+      "open_home": "Open app / Go to Home",
+      "add_checkpoint": "Add checkpoint",
+      "stop_session_hint": "Ends and saves the active focus session.",
+      "open_home_hint": "Opens LazyNevis on the Dashboard.",
+      "add_checkpoint_hint": "Adds a checkpoint to the active session.",
+      "instructions_before": "Select a field and press a key combination, or",
+      "instructions_after": "to cancel. Shortcuts require Ctrl/Cmd, Alt, or Shift.",
+      "save_failed": "That shortcut couldn't be registered. The previous shortcuts remain active.",
+      "startup_failed": "Saved shortcuts couldn't be registered on this computer. Review them in Settings."
+    },
+    "data": {
+      "export_all": "Export all data",
+      "clear_history": "Clear all sessions",
+      "clear_history_confirm": "This will permanently delete all your session history. Are you sure?",
+      "reset_settings": "Reset settings to defaults",
+      "destructive_warning": "Destructive actions below cannot be undone."
+    }
+  },
+  "permissions": {
+    "title": "App Permissions",
+    "tab": "Permissions",
+    "intro": "LazyNevis needs the following permissions to work correctly. Grant them here, or revisit this screen at any time in Settings.",
+    "request": "Request",
+    "open_settings": "Open Settings",
+    "recheck": "Re-check",
+    "all_ok": "All required permissions are granted. LazyNevis is fully operational.",
+    "status": {
+      "granted": "Granted",
+      "denied": "Denied",
+      "not_determined": "Not yet requested",
+      "not_required": "Not required"
+    },
+    "notifications": {
+      "label": "Notifications",
+      "desc": "Required to show focus alerts as native desktop notifications when you drift away from your work."
+    },
+    "accessibility": {
+      "label": "Automation (macOS)",
+      "desc": "Required to detect which app is active and read window titles. Without this, window monitoring won't work on macOS. Grant in System Settings → Privacy & Security → Automation."
+    },
+    "section_desc": "Manage the OS permissions LazyNevis needs. You can re-request any permission from here without restarting the app."
+  },
+  "alerts": {
+    "notification_title": "LazyNevis — You lost focus",
+    "notification_body": "You've been on {{app}} for {{time}}. Get back on track!",
+    "fullscreen_message": "YOU LOST FOCUS",
+    "fullscreen_app": "Currently on: {{app}}",
+    "fullscreen_unknown_app": "Unknown app",
+    "fullscreen_time": "For {{time}}",
+    "fullscreen_live_label": "Focus alert",
+    "fullscreen_test_label": "Test alert",
+    "fullscreen_session_time": "Session",
+    "fullscreen_focus_time": "Focus",
+    "fullscreen_distracted_time": "Off focus",
+    "fullscreen_active_time": "Alert active",
+    "fullscreen_idle_time": "Idle time: {{time}}",
+    "fullscreen_dismiss": "Got it, back to work!",
+    "break_notification_title": "LazyNevis — Time for a break!",
+    "break_notification_body": "You've been focused for {{time}}. Take a short break.",
+    "break_app": "Break time!"
+  },
+  "app": {
+    "close_warning_title": "Focus session is active",
+    "close_warning_body": "You have an active focus session. Closing the app will end it and save your progress.",
+    "close_keep": "Keep session running",
+    "close_confirm": "End session & close",
+    "close_note": "Session ended when the app window closed"
+  },
+  "about": {
+    "title": "About LazyNevis",
+    "version": "Version",
+    "description": "LazyNevis is a lightweight, open-source desktop focus tool. It lives in your tray, watches what you're doing, and nudges you back on track — without blocking or judging.",
+    "tagline_title": "About the name",
+    "tagline_body": "LazyNevis is a playful take on the word \"lazy\" — a nod to all of us who procrastinate but don't give up. The \"-is\" suffix is inspired by Mussum, a beloved Brazilian comedian known for his quirky speech patterns. It's a cultural Easter egg, not a typo.",
+    "created_by": "Created by",
+    "author_name": "Lucas ‘Sims’ Nagasaki Souza",
+    "author_github": "@simstm on GitHub",
+    "author_site": "sims.dev.br",
+    "open_source": "100% open-source. Contributions welcome.",
+    "license": "MIT License",
+    "github": "View on GitHub",
+    "built_with": "Built with Tauri, Rust, React, and ♥",
+    "donate": "Buy me a coffee",
+    "check_update": "Check for updates",
+    "checking_update": "Checking...",
+    "update_available": "Version {{version}} is available.",
+    "up_to_date": "You're up to date.",
+    "update_failed": "Couldn't check for updates. Check your connection and try again.",
+    "open_release": "Open release page"
+  }
+}
