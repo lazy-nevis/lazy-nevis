@@ -157,7 +157,8 @@ jobs:
       - name: Generate final checksums and notes
         run: |
           cd release-assets
-          find . -maxdepth 1 -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum | sed 's#  \./#  #' > SHA256SUMS
+          find . -maxdepth 1 -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum | sed 's#  \./#  #' > "$RUNNER_TEMP/SHA256SUMS"
+          mv "$RUNNER_TEMP/SHA256SUMS" SHA256SUMS
           cd ..
           bun scripts/release-notes.mjs "${GITHUB_REF_NAME#v}" release-notes.md
       - name: Attest release unit

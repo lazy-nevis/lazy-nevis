@@ -89,7 +89,9 @@ jobs:
         run: bun audit --audit-level=high
       - name: RustSec audit
         uses: rustsec/audit-check@69366f33c96575abad1ee0dba8212993eecbe998 # v2.0.0
-        with: { working-directory: src-tauri }
+        with:
+          token: ${{ github.token }}
+          working-directory: src-tauri
       - name: Cargo license and source policy
         uses: EmbarkStudios/cargo-deny-action@d8395c1c8c9df74d968a3bcbba5533e396ff43cf # v2.0.9
         with:
