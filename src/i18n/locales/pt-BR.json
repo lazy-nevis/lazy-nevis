@@ -91,6 +91,10 @@
     "title": "Histórico de Sessões",
     "empty": "Nenhuma sessão encontrada. Inicie sua primeira sessão!",
     "search_placeholder": "Buscar por nome ou nota...",
+    "clear_search": "Limpar busca do histórico",
+    "no_search_results": "Nenhuma sessão corresponde a \"{{query}}\"",
+    "delete_session_label": "Excluir sessão {{label}}",
+    "untitled_session": "Sessão sem nome",
     "filters": {
       "today": "Hoje",
       "week": "Esta semana",

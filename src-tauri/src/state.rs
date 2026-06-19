@@ -1,4 +1,5 @@
 use crate::db::Database;
+use crate::error::{AppError, Result};
 use crate::models::{
     AppSettings, OverlayAlertPayload, Session, SessionRuntimeSnapshot, WindowInfo,
 };
@@ -96,6 +97,28 @@ impl SessionData {
             last_window: self.last_window.clone(),
         }
     }
+
+    pub fn start_break(&mut self, now: i64) -> Result<()> {
+        if self.on_break {
+            return Err(AppError::InvalidArgument("Break is already active".into()));
+        }
+        self.on_break = true;
+        self.break_started_at_ms = Some(now);
+        self.continuous_focus_start_ms = None;
+        self.last_tick_ms = now;
+        Ok(())
+    }
+
+    pub fn end_break(&mut self, now: i64) -> Result<()> {
+        if !self.on_break {
+            return Err(AppError::InvalidArgument("No break is active".into()));
+        }
+        self.on_break = false;
+        self.break_started_at_ms = None;
+        self.continuous_focus_start_ms = Some(now);
+        self.last_tick_ms = now;
+        Ok(())
+    }
 }
 
 /// Shared mutable application state, managed by Tauri.
@@ -163,5 +186,36 @@ mod tests {
         assert_eq!(recovered.distracted_ms, 2_000);
         assert_eq!(recovered.idle_ms, 1_000);
         assert!(recovered.last_tick_ms >= 8_000);
+    }
+
+    #[test]
+    fn break_transitions_are_exclusive_and_restart_focus_timing() {
+        let session = Session {
+            id: "session".into(),
+            label: None,
+            started_at: 1_000,
+            ended_at: None,
+            total_focus_ms: 0,
+            total_distracted_ms: 0,
+            total_idle_ms: 0,
+            total_alerts: 0,
+            notes: None,
+            settings_snapshot: "{}".into(),
+        };
+        let mut data = SessionData::new(session);
+        data.focus_ms = 5_000;
+
+        data.start_break(10_000).unwrap();
+        assert!(data.on_break);
+        assert_eq!(data.break_started_at_ms, Some(10_000));
+        assert!(data.continuous_focus_start_ms.is_none());
+        assert!(data.start_break(11_000).is_err());
+        assert_eq!(data.focus_ms, 5_000);
+
+        data.end_break(20_000).unwrap();
+        assert!(!data.on_break);
+        assert_eq!(data.continuous_focus_start_ms, Some(20_000));
+        assert!(data.end_break(21_000).is_err());
+        assert_eq!(data.focus_ms, 5_000);
     }
 }

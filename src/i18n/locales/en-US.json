@@ -91,6 +91,10 @@
     "title": "Session History",
     "empty": "No sessions found. Start your first session!",
     "search_placeholder": "Search by label or note...",
+    "clear_search": "Clear history search",
+    "no_search_results": "No sessions match \"{{query}}\"",
+    "delete_session_label": "Delete session {{label}}",
+    "untitled_session": "Untitled session",
     "filters": {
       "today": "Today",
       "week": "This week",

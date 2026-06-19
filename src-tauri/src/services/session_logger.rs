@@ -678,4 +678,77 @@ mod tests {
         assert_eq!(found.total_alerts, 3);
         assert_eq!(found.notes.as_deref(), Some("good session"));
     }
+
+    #[test]
+    fn deleting_session_cascades_events_checkpoints_and_runtime() {
+        let mut logger = test_logger();
+        let session = logger.create_session(None, "{}".into()).unwrap();
+        logger
+            .record_event(
+                &session.id,
+                EventType::AppFocus,
+                Some("Code".into()),
+                Some("code".into()),
+                Some("main.rs".into()),
+                false,
+                false,
+                None,
+            )
+            .unwrap();
+        logger.add_checkpoint(&session.id, None).unwrap();
+        logger
+            .persist_runtime(&SessionRuntimeSnapshot {
+                session_id: session.id.clone(),
+                focus_ms: 1,
+                distracted_ms: 0,
+                idle_ms: 0,
+                alert_count: 0,
+                paused: false,
+                is_distracted: false,
+                is_idle: false,
+                on_break: false,
+                distracted_since_ms: None,
+                last_alert_ms: None,
+                continuous_focus_start_ms: None,
+                last_break_reminder_ms: None,
+                last_tick_ms: 1,
+                last_heartbeat_at: 1,
+                last_window: None,
+            })
+            .unwrap();
+
+        logger.delete_session(&session.id).unwrap();
+
+        assert!(logger.get_session(&session.id).unwrap().is_none());
+        assert!(logger.get_events(&session.id).unwrap().is_empty());
+        assert!(logger.get_checkpoints(&session.id).unwrap().is_empty());
+        assert!(logger.load_recoverable_session().unwrap().is_none());
+    }
+
+    #[test]
+    fn clearing_data_removes_sessions_and_recent_audio() {
+        let logger = test_logger();
+        logger.create_session(None, "{}".into()).unwrap();
+        {
+            let db = logger.db.lock().unwrap();
+            db.conn()
+                .execute(
+                    queries::UPSERT_RECENT_AUDIO,
+                    params!["/tmp/sound.wav", "sound.wav", 1],
+                )
+                .unwrap();
+        }
+
+        logger.clear_all().unwrap();
+
+        assert!(logger.list_sessions(10, 0).unwrap().is_empty());
+        let recent_count: i64 = logger
+            .db
+            .lock()
+            .unwrap()
+            .conn()
+            .query_row(queries::COUNT_RECENT_AUDIO, [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(recent_count, 0);
+    }
 }

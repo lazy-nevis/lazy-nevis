@@ -371,14 +371,8 @@ pub async fn start_break(state: State<'_, AppState>) -> Result<()> {
             .lock()
             .map_err(|_| AppError::Internal("lock".into()))?;
         let s = active.as_mut().ok_or(AppError::NoActiveSession)?;
-        if s.on_break {
-            return Err(AppError::InvalidArgument("Break is already active".into()));
-        }
-        s.on_break = true;
-        s.break_started_at_ms = Some(now_ms());
-        s.continuous_focus_start_ms = None;
         let now = now_ms();
-        s.last_tick_ms = now;
+        s.start_break(now)?;
         (s.session.id.clone(), s.runtime_snapshot(now))
     };
     let mut logger = state
@@ -408,14 +402,8 @@ pub async fn end_break(state: State<'_, AppState>) -> Result<()> {
             .lock()
             .map_err(|_| AppError::Internal("lock".into()))?;
         let s = active.as_mut().ok_or(AppError::NoActiveSession)?;
-        if !s.on_break {
-            return Err(AppError::InvalidArgument("No break is active".into()));
-        }
-        s.on_break = false;
-        s.break_started_at_ms = None;
         let now = now_ms();
-        s.continuous_focus_start_ms = Some(now);
-        s.last_tick_ms = now;
+        s.end_break(now)?;
         (s.session.id.clone(), s.runtime_snapshot(now))
     };
     let mut logger = state

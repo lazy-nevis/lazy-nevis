@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
+import { listen } from "@tauri-apps/api/event";
 import { useFocusSession } from "./useFocusSession";
 import { useSessionStore } from "@/stores/sessionStore";
 import * as tauriService from "@/services/tauri";
@@ -137,5 +138,23 @@ describe("useFocusSession", () => {
     });
 
     expect(result.current.checkpoints).toHaveLength(0);
+  });
+
+  it("registers one listener per event and removes all listeners on cleanup", async () => {
+    const cleanups: Array<ReturnType<typeof vi.fn>> = [];
+    vi.mocked(listen).mockImplementation(async () => {
+      const cleanup = vi.fn();
+      cleanups.push(cleanup);
+      return cleanup;
+    });
+
+    const { unmount } = renderHook(() => useFocusSession());
+    await waitFor(() => expect(listen).toHaveBeenCalledTimes(8));
+
+    const events = vi.mocked(listen).mock.calls.map(([event]) => event);
+    expect(new Set(events).size).toBe(events.length);
+    unmount();
+    expect(cleanups).toHaveLength(8);
+    expect(cleanups.every((cleanup) => cleanup.mock.calls.length === 1)).toBe(true);
   });
 });

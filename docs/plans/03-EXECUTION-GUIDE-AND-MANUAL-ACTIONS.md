@@ -36,7 +36,7 @@ Use this file to sequence the work, assign agents, configure external accounts, 
 ## Recommended Execution Order
 
 1. Preserve and audit the current local repository.
-2. Create the private or public GitHub repository only after the secret/history audit.
+2. Confirm the existing public `simstm/lazy-nevis` repository and its initial history passed the secret/history audit.
 3. Implement baseline quality gates and version consistency.
 4. Bootstrap OpenSpec and write specs for tasks about to change.
 5. Complete P0 application readiness work.
@@ -103,7 +103,7 @@ Merge smaller dependency PRs first. Rebase or refresh later branches after share
 
 The following actions require your account, payment, identity verification, device access, or a decision that an agent should not make autonomously.
 
-## 1. Audit Before The First Push
+## 1. Audit The Published Baseline
 
 - [ ] Review every untracked file and confirm it belongs in the public repository.
 - [ ] Remove `.DS_Store`, logs, databases, exports, local settings, build outputs, and credentials.
@@ -125,9 +125,9 @@ rg -n --hidden \
 - [ ] Review large files and repository size.
 - [ ] Confirm the MIT license and project name are intentional.
 
-Because the repository currently has no tracked initial history or configured remote, treat the first commit as a release artifact: review it before pushing.
+The repository and `origin` now exist. Review the published initial commit and full reachable history before creating a release tag.
 
-## 2. Create And Connect The GitHub Repository
+## 2. Verify The GitHub Repository Connection
 
 Authenticate and inspect the intended account:
 
@@ -136,17 +136,7 @@ gh auth status
 gh api user --jq .login
 ```
 
-After the audit and initial commit, either create the repository manually in GitHub or use:
-
-```bash
-gh repo create simstm/lazy-nevis \
-  --public \
-  --source=. \
-  --remote=origin \
-  --description="A lightweight, privacy-first desktop focus tool"
-```
-
-Do not run the creation command until you are ready for the repository to be public. A safer alternative is to create it as private, finish configuration, and change visibility manually after the RC pipeline is validated.
+Confirm the connected repository is `simstm/lazy-nevis` and that `main` is the intended default branch. Do not recreate or replace the existing remote.
 
 Confirm before pushing:
 

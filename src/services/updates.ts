@@ -11,6 +11,7 @@ interface GitHubRelease {
 }
 
 const API_URL = "https://api.github.com/repos/simstm/lazy-nevis/releases?per_page=10";
+const RELEASE_URL_PREFIX = "https://github.com/simstm/lazy-nevis/releases/tag/";
 const MAX_RESPONSE_BYTES = 128 * 1024;
 const CACHE_MS = 15 * 60 * 1000;
 let cache: { at: number; release: ReleaseInfo | null } | null = null;
@@ -45,6 +46,15 @@ export function compareVersions(left: string, right: string): number {
   return 0;
 }
 
+function isOfficialReleaseUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.origin === "https://github.com" && url.href.startsWith(RELEASE_URL_PREFIX);
+  } catch {
+    return false;
+  }
+}
+
 export async function checkForUpdate(currentVersion: string): Promise<ReleaseInfo | null> {
   if (cache && Date.now() - cache.at < CACHE_MS) return cache.release;
   const controller = new AbortController();
@@ -60,12 +70,18 @@ export async function checkForUpdate(currentVersion: string): Promise<ReleaseInf
     if (contentLength > MAX_RESPONSE_BYTES) throw new Error("Update response is too large");
     const text = await response.text();
     if (text.length > MAX_RESPONSE_BYTES) throw new Error("Update response is too large");
-    const releases = JSON.parse(text) as GitHubRelease[];
+    const parsed: unknown = JSON.parse(text);
+    if (!Array.isArray(parsed)) throw new Error("Invalid update response");
+    const releases = parsed as GitHubRelease[];
     const allowPrerelease = currentVersion.includes("-");
     const candidates = releases
       .filter((release) => release.draft === false && (allowPrerelease || release.prerelease === false))
       .flatMap((release) => {
-        if (typeof release.tag_name !== "string" || typeof release.html_url !== "string") return [];
+        if (
+          typeof release.tag_name !== "string"
+          || typeof release.html_url !== "string"
+          || !isOfficialReleaseUrl(release.html_url)
+        ) return [];
         const version = release.tag_name.replace(/^v/, "");
         return parseVersion(version) ? [{ version, url: release.html_url }] : [];
       })

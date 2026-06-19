@@ -11,18 +11,21 @@ Commands run successfully on 2026-06-19:
 ```bash
 /Users/lucas/.bun/bin/bun run test
 /Users/lucas/.bun/bin/bun run build
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
 cargo test --manifest-path src-tauri/Cargo.toml
 /Users/lucas/.bun/bin/bun run tauri build
 ```
 
 Results:
-- Frontend tests: 9 files, 45 tests passed.
+- Frontend tests: 11 files, 57 tests passed.
 - Frontend build: `tsc && vite build` passed.
-- Rust tests: 39 unit tests and 3 release-contract tests passed.
+- Rust tests: 45 unit tests, 3 release-contract tests, and 1 session-lifecycle integration test passed.
 - Rust build/check/test passed without the previously reported unused-item warnings.
+- Bun dependency audit passed with no high-severity advisory after pinning the compatible `undici` fix.
 - `bun` and `node` were not on PATH in this shell; `/Users/lucas/.bun/bin/bun` worked.
 - Production macOS app and DMG bundle passed with the autostart plugin included.
-- i18n parity check: `en-US` and `pt-BR` both have 266 keys, with no missing keys or hardcoded-string baseline entries.
+- i18n parity check: `en-US` and `pt-BR` both have 270 keys, with no missing keys or hardcoded-string baseline entries.
 
 ## Current Feature Surface
 

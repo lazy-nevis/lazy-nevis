@@ -1,6 +1,9 @@
 # LazyNevis App Release Readiness Plan
 
-Status: proposed  
+Status: implemented in source; external acceptance pending
+
+Implementation record: [01-IMPLEMENTATION-STATUS.md](01-IMPLEMENTATION-STATUS.md)
+
 Target: `v0.1.0-rc.1`, followed by `v0.1.0` after validation  
 Scope owner: application behavior, quality, security boundaries, and end-user experience
 

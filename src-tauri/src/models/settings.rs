@@ -187,6 +187,9 @@ impl AppSettings {
         if !matches!(self.general.theme.as_str(), "light" | "dark" | "system") {
             return Err(invalid("Unsupported theme"));
         }
+        if !matches!(self.general.time_format.as_str(), "12h" | "24h") {
+            return Err(invalid("Unsupported time format"));
+        }
         if !(250..=60_000).contains(&self.general.polling_interval_ms) {
             return Err(invalid("Polling interval must be between 250 ms and 60 s"));
         }
@@ -221,5 +224,69 @@ impl AppSettings {
         }
         crate::services::shortcuts::parse_shortcuts(&self.shortcuts)?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod app_settings_tests {
+    use super::AppSettings;
+
+    #[test]
+    fn missing_groups_receive_compatible_defaults() {
+        let settings: AppSettings =
+            serde_json::from_str(r#"{"general":{"language":"pt-BR"}}"#).unwrap();
+
+        assert_eq!(settings.general.language, "pt-BR");
+        assert_eq!(settings.general.theme, "system");
+        assert_eq!(settings.focus_rules.mode, "blocklist");
+        assert_eq!(settings.audio.volume, 0.8);
+        assert_eq!(settings.breaks.break_duration_ms, 600_000);
+        assert!(!settings.shortcuts.toggle_focus.is_empty());
+        settings.validate().unwrap();
+    }
+
+    #[test]
+    fn all_settings_groups_round_trip() {
+        let settings = AppSettings::default();
+        let json = serde_json::to_string(&settings).unwrap();
+        let restored: AppSettings = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(restored.general.language, settings.general.language);
+        assert_eq!(restored.focus_rules.apps, settings.focus_rules.apps);
+        assert_eq!(restored.alerts.cooldown_ms, settings.alerts.cooldown_ms);
+        assert_eq!(restored.audio.volume, settings.audio.volume);
+        assert_eq!(
+            restored.breaks.focus_interval_ms,
+            settings.breaks.focus_interval_ms
+        );
+        assert_eq!(restored.shortcuts.open_home, settings.shortcuts.open_home);
+        restored.validate().unwrap();
+    }
+
+    #[test]
+    fn rejects_invalid_values_from_every_settings_category() {
+        let mut settings = AppSettings::default();
+        settings.general.time_format = "invalid".into();
+        assert!(settings.validate().is_err());
+
+        let mut settings = AppSettings::default();
+        settings.focus_rules.mode = "invalid".into();
+        assert!(settings.validate().is_err());
+
+        let mut settings = AppSettings::default();
+        settings.alerts.cooldown_ms = 999;
+        assert!(settings.validate().is_err());
+
+        let mut settings = AppSettings::default();
+        settings.audio.volume = f32::NAN;
+        assert!(settings.validate().is_err());
+
+        let mut settings = AppSettings::default();
+        settings.breaks.break_duration_ms = 1;
+        assert!(settings.validate().is_err());
+
+        let mut settings = AppSettings::default();
+        settings.shortcuts.open_home = "Escape".into();
+        assert!(settings.validate().is_err());
     }
 }

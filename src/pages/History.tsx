@@ -243,6 +243,7 @@ export function History() {
         {searchQuery && (
           <button
             onClick={() => setSearchQuery("")}
+            aria-label={t("history.clear_search")}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />
@@ -305,7 +306,7 @@ export function History() {
             return !s.label?.toLowerCase().includes(q);
           }).length === sessions.length && searchQuery && (
             <p className="text-muted-foreground text-sm py-4 text-center">
-              No sessions match &ldquo;{searchQuery}&rdquo;
+              {t("history.no_search_results", { query: searchQuery })}
             </p>
           )}
         </div>
@@ -413,6 +414,7 @@ function SessionCard({
             variant="ghost"
             size="icon"
             className="shrink-0 text-muted-foreground hover:text-destructive"
+            aria-label={t("history.delete_session_label", { label: session.label ?? t("history.untitled_session") })}
             onClick={(e) => {
               e.stopPropagation();
               onDelete();

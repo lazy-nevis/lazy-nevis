@@ -166,6 +166,8 @@ pub const UPDATE_EVENT_CLASSIFICATION: &str =
     "UPDATE timeline_events SET is_distraction = ?1 WHERE id = ?2";
 pub const SELECT_RECENT_AUDIO: &str =
     "SELECT path, label, added_at FROM recent_audio_files ORDER BY added_at DESC LIMIT 10";
+#[cfg(test)]
+pub const COUNT_RECENT_AUDIO: &str = "SELECT COUNT(*) FROM recent_audio_files";
 pub const UPSERT_RECENT_AUDIO: &str = "
     INSERT INTO recent_audio_files (path, label, added_at) VALUES (?1, ?2, ?3)
     ON CONFLICT(path) DO UPDATE SET added_at = ?3, label = ?2

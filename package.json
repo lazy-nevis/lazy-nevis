@@ -29,7 +29,8 @@
     "check:agents": "bun scripts/check-agent-docs.mjs",
     "spec:validate": "openspec validate --all --strict --no-interactive",
     "test:installers": "bun test scripts/tests",
-    "quality": "bun run check:version && bun run check:i18n && bun run check:hardcoded && bun run check:agents && bun run spec:validate && bun run test:installers && bun run test && bun run build && cargo fmt --manifest-path src-tauri/Cargo.toml -- --check && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings && cargo test --manifest-path src-tauri/Cargo.toml"
+    "quality:repository": "bun run check:version && bun run check:i18n && bun run check:hardcoded && bun run check:agents && bun run spec:validate && bun run test:installers",
+    "quality": "bun run quality:repository && bun run test && bun run build && cargo fmt --manifest-path src-tauri/Cargo.toml -- --check && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings && cargo test --manifest-path src-tauri/Cargo.toml"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
@@ -65,5 +66,8 @@
     "typescript": "~5.8.3",
     "vite": "^8.0.0",
     "vitest": "^4.1.8"
+  },
+  "overrides": {
+    "undici": "7.28.0"
   }
 }

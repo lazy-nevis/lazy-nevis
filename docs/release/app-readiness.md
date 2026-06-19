@@ -10,13 +10,13 @@ Validated locally on macOS 26.5 (25F71) with Bun 1.3.13, Rust 1.95.0, Cargo 1.95
 |---|---|---|
 | Session controls, recovery, timing | hook/store/session logger/state tests | sleep/wake and forced termination |
 | Rules, alerts, cooldown | rule engine and ticker boundary tests | native notification and overlay |
-| Break lifecycle | state/store/ticker and session tests | reminder, skip, manual/automatic end |
+| Break lifecycle | `SessionData`, store, and Dashboard reminder/skip/manual/automatic-end tests | packaged notification/overlay reminder |
 | Configurable shortcuts | parser/conflict tests and settings failure test | OS registration/conflict on each platform |
-| History/export/delete | session logger and CSV escaping tests | native save/cancel and large history |
+| History/export/delete | History empty/error/filter/delete, cascade/reset, and CSV escaping tests | native save/cancel and large history |
 | Audio and permissions | service tests/build coverage | device audio and OS permission dialogs |
 | Themes, languages, accessibility | locale/static checks and component tests | 200%, reduced motion, high contrast, 640x480 |
-| Version/update/donation | version contract, update and About tests | offline check and approved URLs |
-| Tray and autostart | Rust build/integration contracts | clean login and tray menus |
+| Version/update/donation | version contract plus update timeout/offline/rate-limit/cache/official-link and About tests | packaged opener behavior |
+| Tray and autostart | Rust and production bundle builds | clean login and tray menus |
 
 ## External Acceptance Record
 

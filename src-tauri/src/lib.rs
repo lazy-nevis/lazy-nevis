@@ -1,10 +1,10 @@
 mod commands;
-mod db;
-mod error;
-mod models;
+pub mod db;
+pub mod error;
+pub mod models;
 mod monitor;
-mod services;
-mod state;
+pub mod services;
+pub mod state;
 
 use db::Database;
 use models::AppSettings;

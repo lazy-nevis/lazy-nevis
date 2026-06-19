@@ -1,6 +1,9 @@
 use crate::error::{AppError, Result};
+#[cfg(target_os = "macos")]
 use std::path::PathBuf;
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
+#[cfg(target_os = "macos")]
+use tauri::Manager;
 
 #[tauri::command]
 pub async fn send_app_notification(title: String, body: String, app: AppHandle) -> Result<()> {
@@ -61,6 +64,7 @@ async fn send_app_notification_inner(title: String, body: String, app: AppHandle
         .map_err(|error| AppError::Internal(error.to_string()))
 }
 
+#[cfg(target_os = "macos")]
 fn resolve_notification_icon(app: &AppHandle) -> Option<PathBuf> {
     let mut candidates = Vec::new();
 

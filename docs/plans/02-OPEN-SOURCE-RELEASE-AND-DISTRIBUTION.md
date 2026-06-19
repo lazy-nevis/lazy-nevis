@@ -1,6 +1,9 @@
 # LazyNevis Open Source, Documentation, And Distribution Plan
 
-Status: proposed  
+Status: implemented in source; owner configuration and release acceptance pending
+
+Implementation record: [02-IMPLEMENTATION-STATUS.md](02-IMPLEMENTATION-STATUS.md)
+
 Targets: public repository, repeatable CI/CD, signed releases where credentials exist, and contributor-ready documentation  
 Scope owner: documentation, repository health, GitHub configuration, release automation, packaging, OpenSpec, and installers
 

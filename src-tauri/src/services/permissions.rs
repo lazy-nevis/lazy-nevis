@@ -10,7 +10,9 @@ pub struct PermissionsStatus {
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum PermissionState {
+    #[cfg(target_os = "macos")]
     Granted,
+    #[cfg(target_os = "macos")]
     Denied,
     NotDetermined,
     #[allow(dead_code)]
@@ -67,10 +69,10 @@ fn check_accessibility_macos() -> PermissionState {
 
 /// Open System Preferences to the correct privacy pane for the platform.
 pub fn open_accessibility_prefs() {
-    use std::process::Command;
-
     #[cfg(target_os = "macos")]
     {
+        use std::process::Command;
+
         // macOS 13+: System Settings
         let _ = Command::new("open")
             .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_Automation")
@@ -79,6 +81,8 @@ pub fn open_accessibility_prefs() {
 
     #[cfg(target_os = "windows")]
     {
+        use std::process::Command;
+
         let _ = Command::new("cmd")
             .args(["/C", "start", "ms-settings:privacy-general"])
             .spawn();
