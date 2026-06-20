@@ -16,25 +16,20 @@ Open **PowerShell** (not Command Prompt) and run:
 ### Stable release
 
 ```powershell
-Invoke-WebRequest https://github.com/simstm/lazy-nevis/releases/latest/download/install.ps1 -OutFile install.ps1
-Get-Content .\install.ps1   # inspect before running — optional but recommended
-.\install.ps1
+iex "& { $(irm https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.ps1) }"
 ```
 
 ### Pre-release / RC build
 
-Pre-releases are not included in the `latest` URL. Download the script from the specific release and pass `-Prerelease`:
+Pre-releases are not included in the `latest` URL and require the `-Prerelease` flag:
 
 ```powershell
-# Replace v0.1.0-rc.1 with the actual RC version shown on the Releases page
-Invoke-WebRequest https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.ps1 -OutFile install.ps1
-Get-Content .\install.ps1
-.\install.ps1 -Prerelease
+iex "& { $(irm https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.ps1) } -Prerelease"
 ```
 
 > **Why `-Prerelease`?** Without this flag, the script only selects stable releases. Pre-releases are skipped unless you opt in explicitly.
 
-Use `Get-Help .\install.ps1` for additional options (specific version pinning, custom install directory, dry-run).
+Pass `-Version x.y.z-rc.N -Prerelease` to pin to a specific RC. Use `-InstallDir` to choose a custom destination, or `-DryRun` to preview without installing.
 
 ### SmartScreen warning after script install
 

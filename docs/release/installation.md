@@ -11,45 +11,34 @@ The install scripts download the correct artifact for your platform, verify the 
 **macOS / Linux:**
 
 ```bash
-curl -fL https://github.com/simstm/lazy-nevis/releases/latest/download/install.sh -o install.sh
-less install.sh         # optional: inspect before running
-sh install.sh
+bash <(curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.sh)
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-Invoke-WebRequest https://github.com/simstm/lazy-nevis/releases/latest/download/install.ps1 -OutFile install.ps1
-Get-Content .\install.ps1   # optional: inspect before running
-.\install.ps1
+iex "& { $(irm https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.ps1) }"
 ```
 
 ### Pre-release / RC build
 
-> **Note:** Pre-releases are **not** included in the `latest` URL. GitHub's `releases/latest` always resolves to the most recent stable (non-pre-release) release. If you run the stable commands above when only RC builds have been published, the download will fail with a "release not found" error.
-
-To install a pre-release, download the script from the specific release tag and pass `--prerelease` / `-Prerelease`:
+> **Note:** Pre-releases are **not** included in the `latest` URL. GitHub's `releases/latest` always resolves to the most recent stable (non-pre-release) release. Pass `--prerelease` / `-Prerelease` so the script selects the latest RC instead.
 
 **macOS / Linux:**
 
 ```bash
-# Replace v0.1.0-rc.1 with the RC version shown on the Releases page
-curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.sh -o install.sh
-less install.sh
-sh install.sh --prerelease
+bash <(curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.sh) --prerelease
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-Invoke-WebRequest https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.ps1 -OutFile install.ps1
-Get-Content .\install.ps1
-.\install.ps1 -Prerelease
+iex "& { $(irm https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.ps1) } -Prerelease"
 ```
 
 Pass `--version x.y.z-rc.N` (or `-Version`) together with `--prerelease` to pin to a specific RC version rather than selecting the latest available pre-release.
 
-Use `--help` / `Get-Help .\install.ps1` for the full option reference: custom install directory, dry-run, non-interactive mode, and package format selection on Linux.
+Use `--help` / `Get-Help .\install.ps1` for the full option reference: custom install directory, dry-run, and package format selection on Linux.
 
 ## Data Locations And Uninstall
 

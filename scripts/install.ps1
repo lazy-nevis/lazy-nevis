@@ -3,7 +3,6 @@ param(
   [ValidatePattern('^v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$')][string]$Version,
   [switch]$Prerelease,
   [switch]$DryRun,
-  [switch]$NonInteractive,
   [string]$InstallDir
 )
 $ErrorActionPreference = 'Stop'
@@ -32,7 +31,7 @@ try {
   $checksums = @($assets | Where-Object name -EQ 'SHA256SUMS')
   if ($installer.Count -ne 1 -or $checksums.Count -ne 1) { throw 'Installer or SHA256SUMS selection was not unique.' }
   foreach ($asset in @($installer[0], $checksums[0])) {
-    if (-not $asset.browser_download_url.StartsWith("https://github.com/$Repo/releases/download/")) { throw 'Unofficial asset URL.' }
+    if (-not $asset.browser_download_url.StartsWith("https://github.com/$Repo/releases/download/", [StringComparison]::OrdinalIgnoreCase)) { throw 'Unofficial asset URL.' }
   }
 
   $TemporaryDirectory = Join-Path ([System.IO.Path]::GetTempPath()) ("lazynevis-" + [guid]::NewGuid())
@@ -58,17 +57,23 @@ try {
 
   $isMsi = [IO.Path]::GetExtension($installerPath) -eq '.msi'
   if ($isMsi) {
-    $arguments = @('/i', $installerPath, '/norestart', '/L*v', (Join-Path $TemporaryDirectory 'install.log'))
-    if ($NonInteractive) { $arguments += '/qn' }
+    $arguments = @('/i', $installerPath, '/qn', '/norestart', '/L*v', (Join-Path $TemporaryDirectory 'install.log'))
     if ($InstallDir) { $arguments += "INSTALLDIR=$InstallDir" }
     $process = Start-Process msiexec.exe -ArgumentList $arguments -Wait -PassThru
   } else {
-    $arguments = @(); if ($NonInteractive) { $arguments += '/S' }; if ($InstallDir) { $arguments += "/D=$InstallDir" }
+    $arguments = @('/S'); if ($InstallDir) { $arguments += "/D=$InstallDir" }
     $process = Start-Process $installerPath -ArgumentList $arguments -Wait -PassThru
   }
   if ($process.ExitCode -notin @(0, 3010)) { throw "Installer failed with exit code $($process.ExitCode). Logs remain in $TemporaryDirectory" }
   $InstallSucceeded = $true
-  Write-Host "LazyNevis $($release.tag_name) installed successfully (exit $($process.ExitCode))."
+  Write-Host "LazyNevis $($release.tag_name) installed successfully."
+  $installPath = $null
+  foreach ($base in @('HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall', 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall')) {
+    if (-not (Test-Path $base)) { continue }
+    $key = Get-ChildItem $base -ErrorAction SilentlyContinue | Where-Object { (Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue).DisplayName -eq 'LazyNevis' } | Select-Object -First 1
+    if ($key) { $loc = (Get-ItemProperty $key.PSPath -ErrorAction SilentlyContinue).InstallLocation; if ($loc) { $installPath = $loc.TrimEnd('\'); break } }
+  }
+  if ($installPath) { Write-Host "Installed to: $installPath" }
   if ($process.ExitCode -eq 3010) { exit 3010 }
 } catch {
   Write-Error $_

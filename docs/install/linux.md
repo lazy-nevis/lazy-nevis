@@ -36,25 +36,20 @@ The install script downloads the AppImage, verifies the SHA-256 checksum, checks
 ### Stable release
 
 ```bash
-curl -fL https://github.com/simstm/lazy-nevis/releases/latest/download/install.sh -o install.sh
-less install.sh        # inspect before running — optional but recommended
-sh install.sh
+bash <(curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.sh)
 ```
 
 ### Pre-release / RC build
 
-Pre-releases are not included in the `latest` URL. Download the script from the specific release and pass `--prerelease`:
+Pre-releases are not included in the `latest` URL and require the `--prerelease` flag:
 
 ```bash
-# Replace v0.1.0-rc.1 with the actual RC version shown on the Releases page
-curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.sh -o install.sh
-less install.sh
-sh install.sh --prerelease
+bash <(curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.sh) --prerelease
 ```
 
 > **Why `--prerelease`?** Without this flag, the script only selects stable releases. Pre-releases are skipped unless you opt in explicitly.
 
-To install DEB or RPM instead of AppImage, pass `--package deb` or `--package rpm`. Use `sh install.sh --help` for all options (custom install directory, dry-run, version pinning).
+To install DEB or RPM instead of AppImage, pass `--package deb` or `--package rpm`. Use `--help` for all options (custom install directory, dry-run, version pinning).
 
 ---
 
