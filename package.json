@@ -2,11 +2,11 @@
   "name": "lazy-nevis",
   "description": "LazyNevis — for lazy people who don't give upis. A lightweight, open-source focus tool for your desktop.",
   "private": true,
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.2",
   "type": "module",
   "license": "MIT",
   "author": {
-    "name": "Lucas \"Sims\" Nagasaki Souza",
+    "name": "Lucas Sims",
     "url": "https://sims.dev.br"
   },
   "repository": {

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "LazyNevis",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.2",
   "identifier": "br.dev.sims.lazynevis",
   "build": {
     "beforeDevCommand": "bun run dev",
@@ -32,8 +32,8 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "publisher": "Lucas \"Sims\" Nagasaki Souza",
-    "copyright": "Copyright © 2026 Lucas Nagasaki Souza. MIT License.",
+    "publisher": "SIMSDEV",
+    "copyright": "Copyright © 2026 Lucas Sims. MIT License.",
     "category": "Productivity",
     "shortDescription": "for lazy people who don't give upis.",
     "longDescription": "LazyNevis is a lightweight, open-source, cross-platform focus tool. It lives in your system tray, monitors your active window, and nudges you back on track when you drift — without blocking or judging. Built with Tauri, Rust, and React.",

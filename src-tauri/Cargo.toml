@@ -1,8 +1,8 @@
 [package]
 name = "lazy-nevis"
-version = "0.1.0-rc.1"
+version = "0.1.0-rc.2"
 description = "LazyNevis — for lazy people who don't give upis."
-authors = ["Lucas \"Sims\" Nagasaki Souza <simstm@github>"]
+authors = ["Lucas Sims"]
 license = "MIT"
 homepage = "https://github.com/simstm/lazy-nevis"
 repository = "https://github.com/simstm/lazy-nevis"
