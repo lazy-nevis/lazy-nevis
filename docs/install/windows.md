@@ -7,25 +7,70 @@
 
 ---
 
-## Step 1: Download
+## Option 1: Install via PowerShell (recommended)
 
-Go to [github.com/simstm/lazy-nevis/releases](https://github.com/simstm/lazy-nevis/releases) and find the latest release.
+The install script downloads the latest release, verifies the SHA-256 checksum, checks GitHub build attestation, and runs the NSIS installer automatically.
+
+Open **PowerShell** (not Command Prompt) and run:
+
+### Stable release
+
+```powershell
+Invoke-WebRequest https://github.com/simstm/lazy-nevis/releases/latest/download/install.ps1 -OutFile install.ps1
+Get-Content .\install.ps1   # inspect before running — optional but recommended
+.\install.ps1
+```
+
+### Pre-release / RC build
+
+Pre-releases are not included in the `latest` URL. Download the script from the specific release and pass `-Prerelease`:
+
+```powershell
+# Replace v0.1.0-rc.1 with the actual RC version shown on the Releases page
+Invoke-WebRequest https://github.com/simstm/lazy-nevis/releases/download/v0.1.0-rc.1/install.ps1 -OutFile install.ps1
+Get-Content .\install.ps1
+.\install.ps1 -Prerelease
+```
+
+> **Why `-Prerelease`?** Without this flag, the script only selects stable releases. Pre-releases are skipped unless you opt in explicitly.
+
+Use `Get-Help .\install.ps1` for additional options (specific version pinning, custom install directory, dry-run).
+
+### SmartScreen warning after script install
+
+The script verifies the download and then launches the NSIS installer. Because the installer is unsigned, **Windows SmartScreen will still appear** when the installer runs:
+
+1. Click **More info** in the SmartScreen dialog.
+2. Click **Run anyway**.
+
+<!-- screenshot: SmartScreen "Windows protected your PC" dialog -->
+<!-- screenshot: SmartScreen dialog after clicking "More info", showing the Run anyway button -->
+
+This is expected for unsigned RC builds. See [docs/troubleshooting/smartscreen.md](../troubleshooting/smartscreen.md) for more context.
+
+> Signed stable releases will not require this step. See [docs/release/future-signing.md](../release/future-signing.md) for the signing plan.
+
+---
+
+## Option 2: Manual download from GitHub Releases
+
+### Step 1: Download
+
+Go to [github.com/simstm/lazy-nevis/releases](https://github.com/simstm/lazy-nevis/releases) and find the release you want. For pre-releases, look for releases labeled **Pre-release** — they do not appear as "Latest".
 
 <!-- screenshot: GitHub Releases page showing assets for the latest release -->
 
 Download the NSIS installer listed under **Assets**. The file name will look like `LazyNevis_x.y.z_x64-setup.exe` (or `_arm64-setup.exe` for ARM64 machines).
 
-Before running it, verify the checksum. The release page includes a `SHA256SUMS` file. In PowerShell:
+Verify the checksum before running it. The release page includes a `SHA256SUMS` file. In PowerShell:
 
 ```powershell
 Get-FileHash LazyNevis_x.y.z_x64-setup.exe -Algorithm SHA256
 ```
 
-Compare the output hash against the entry in `SHA256SUMS`.
+Compare the output hash against the matching entry in `SHA256SUMS`.
 
----
-
-## Step 2: SmartScreen warning (unsigned builds)
+### Step 2: SmartScreen warning (unsigned builds)
 
 LazyNevis is currently not signed with an Authenticode certificate. When you run the installer, Windows SmartScreen may block it with a message like **"Windows protected your PC."**
 
@@ -41,9 +86,7 @@ You only need to do this once per installer. See [docs/troubleshooting/smartscre
 
 > Signed stable releases will not require this step. See [docs/release/future-signing.md](../release/future-signing.md) for the signing plan.
 
----
-
-## Step 3: Run the NSIS installer
+### Step 3: Run the NSIS installer
 
 <!-- screenshot: step 3 — LazyNevis installer welcome screen -->
 

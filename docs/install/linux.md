@@ -29,25 +29,52 @@ If your desktop does not use `ayatana-appindicator`, an alternative such as `lib
 
 ---
 
-## AppImage
+## Option 1: Install via script (recommended)
+
+The install script downloads the AppImage, verifies the SHA-256 checksum, checks GitHub build attestation, installs it to `~/.local/bin/lazynevis`, and creates a desktop entry automatically.
+
+### Stable release
+
+```bash
+curl -fL https://github.com/simstm/lazy-nevis/releases/latest/download/install.sh -o install.sh
+less install.sh        # inspect before running — optional but recommended
+sh install.sh
+```
+
+### Pre-release / RC build
+
+Pre-releases are not included in the `latest` URL. Download the script from the specific release and pass `--prerelease`:
+
+```bash
+# Replace v0.1.0-rc.1 with the actual RC version shown on the Releases page
+curl -fL https://github.com/simstm/lazy-nevis/releases/download/v0.1.0-rc.1/install.sh -o install.sh
+less install.sh
+sh install.sh --prerelease
+```
+
+> **Why `--prerelease`?** Without this flag, the script only selects stable releases. Pre-releases are skipped unless you opt in explicitly.
+
+To install DEB or RPM instead of AppImage, pass `--package deb` or `--package rpm`. Use `sh install.sh --help` for all options (custom install directory, dry-run, version pinning).
+
+---
+
+## Option 2: Manual download from GitHub Releases
+
+Go to [github.com/simstm/lazy-nevis/releases](https://github.com/simstm/lazy-nevis/releases) and find the release you want. For pre-releases, look for releases labeled **Pre-release** — they do not appear as "Latest".
+
+### AppImage
 
 AppImage is the most portable option — it bundles its own libraries and runs on most x64 Linux distributions without installation.
 
-### Download
-
-Go to [github.com/simstm/lazy-nevis/releases](https://github.com/simstm/lazy-nevis/releases) and download the file ending in `.AppImage`.
-
 <!-- screenshot: GitHub Releases page showing AppImage asset -->
 
-Verify the checksum:
+Download the file ending in `.AppImage`, then verify the checksum:
 
 ```bash
 sha256sum LazyNevis_x.y.z_amd64.AppImage
 ```
 
 Compare the output against the `SHA256SUMS` file from the release page.
-
-### Run
 
 Make the file executable and launch it:
 
@@ -56,17 +83,15 @@ chmod +x LazyNevis_x.y.z_amd64.AppImage
 ./LazyNevis_x.y.z_amd64.AppImage
 ```
 
-### Desktop integration (optional)
+**Desktop integration (optional)**
 
 To add LazyNevis to your application launcher:
 
 ```bash
-# Move to a standard location
 mkdir -p ~/.local/bin
 cp LazyNevis_x.y.z_amd64.AppImage ~/.local/bin/lazynevis
 chmod +x ~/.local/bin/lazynevis
 
-# Create a .desktop entry
 mkdir -p ~/.local/share/applications
 cat > ~/.local/share/applications/lazynevis.desktop << 'EOF'
 [Desktop Entry]
@@ -80,7 +105,7 @@ EOF
 
 Replace `YOUR_USERNAME` with your actual username in the `Exec` line.
 
-### Uninstall (AppImage)
+**Uninstall (AppImage)**
 
 ```bash
 rm ~/.local/bin/lazynevis
@@ -89,7 +114,7 @@ rm ~/.local/share/applications/lazynevis.desktop
 
 ---
 
-## DEB package (Debian / Ubuntu)
+### DEB package (Debian / Ubuntu)
 
 <!-- screenshot: GitHub Releases page showing DEB asset -->
 
@@ -108,7 +133,7 @@ sudo apt-get install -f   # resolves any missing dependencies
 
 LazyNevis will be installed to `/usr/bin/lazynevis` and a `.desktop` entry will be created automatically.
 
-### Uninstall (DEB)
+**Uninstall (DEB)**
 
 ```bash
 sudo apt remove lazynevis
@@ -116,7 +141,7 @@ sudo apt remove lazynevis
 
 ---
 
-## RPM package (Fedora / openSUSE)
+### RPM package (Fedora / openSUSE)
 
 <!-- screenshot: GitHub Releases page showing RPM asset -->
 
@@ -140,7 +165,7 @@ Or with `rpm` directly:
 sudo rpm -i LazyNevis_x.y.z_amd64.rpm
 ```
 
-### Uninstall (RPM)
+**Uninstall (RPM)**
 
 ```bash
 sudo dnf remove lazynevis   # Fedora / RHEL

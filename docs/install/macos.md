@@ -9,23 +9,63 @@ Intel (x64) Macs are not currently supported.
 
 ---
 
-## Step 1: Download
+## Option 1: Install via script (recommended)
 
-Go to [github.com/simstm/lazy-nevis/releases](https://github.com/simstm/lazy-nevis/releases) and find the latest release.
+The install script downloads the latest release, verifies the SHA-256 checksum, checks GitHub build attestation, and installs the app to `/Applications` (or `~/Applications` if you prefer).
+
+### Stable release
+
+```bash
+curl -fL https://github.com/simstm/lazy-nevis/releases/latest/download/install.sh -o install.sh
+less install.sh        # inspect before running — optional but recommended
+sh install.sh
+```
+
+### Pre-release / RC build
+
+Pre-releases are not included in the `latest` URL. Download the script from the specific release and pass `--prerelease`:
+
+```bash
+# Replace v0.1.0-rc.1 with the actual RC version shown on the Releases page
+curl -fL https://github.com/simstm/lazy-nevis/releases/download/v0.1.0-rc.1/install.sh -o install.sh
+less install.sh
+sh install.sh --prerelease
+```
+
+> **Why `--prerelease`?** Without this flag, the script only selects stable releases. Pre-releases are skipped unless you opt in explicitly.
+
+Use `sh install.sh --help` for additional options (custom install directory, dry-run, specific version pinning).
+
+### Gatekeeper warning after script install
+
+The script copies the app and prints a warning if it is not Developer ID signed. You still need to approve the app in macOS once. After the script finishes, open LazyNevis from Applications. When Gatekeeper blocks it:
+
+1. Open **System Settings > Privacy & Security**.
+2. Scroll to the **Security** section.
+3. Click **Open Anyway** next to the LazyNevis message.
+4. Click **Open** in the confirmation dialog.
+
+You only need to do this once. See [Gatekeeper troubleshooting](../troubleshooting/gatekeeper.md) for more detail.
+
+---
+
+## Option 2: Manual download from GitHub Releases
+
+### Step 1: Download
+
+Go to [github.com/simstm/lazy-nevis/releases](https://github.com/simstm/lazy-nevis/releases) and find the release you want. For pre-releases, look for releases labeled **Pre-release** — they do not appear as "Latest".
 
 <!-- screenshot: GitHub Releases page showing assets for the latest release -->
 
 Download the `.dmg` file listed under **Assets**. The file name will look like `LazyNevis_x.y.z_aarch64.dmg`.
 
-Before opening it, verify the checksum. The release page includes a `SHA256SUMS` file:
+Verify the checksum before opening it. The release page includes a `SHA256SUMS` file:
 
 ```bash
 shasum -a 256 -c SHA256SUMS
 ```
 
----
-
-## Step 2: Gatekeeper warning (unsigned builds)
+### Step 2: Gatekeeper warning (unsigned builds)
 
 LazyNevis is currently not signed with an Apple Developer certificate. When you open the DMG or the app for the first time, macOS Gatekeeper will block it with a message like **"LazyNevis cannot be opened because Apple cannot check it for malicious software."**
 
@@ -37,13 +77,13 @@ This is expected for unsigned RC builds. Follow the **Open Anyway** path:
 4. Click **Open Anyway**.
 5. Confirm by clicking **Open** in the dialog that appears.
 
+<!-- screenshot: Privacy & Security settings showing the "Open Anyway" button for LazyNevis -->
+
 You only need to do this once. See [docs/troubleshooting/gatekeeper.md](../troubleshooting/gatekeeper.md) for more context.
 
 > Signed stable releases will not require this step. See [docs/release/future-signing.md](../release/future-signing.md) for the signing plan.
 
----
-
-## Step 3: Install from the DMG
+### Step 3: Install from the DMG
 
 <!-- screenshot: step 1 — DMG window showing LazyNevis icon and Applications folder alias -->
 
@@ -59,7 +99,7 @@ You only need to do this once. See [docs/troubleshooting/gatekeeper.md](../troub
 
 ---
 
-## Step 4: Grant Accessibility permission
+## Grant Accessibility permission
 
 Window monitoring requires Accessibility access. LazyNevis will prompt you on first launch, or you can grant it manually:
 
@@ -68,13 +108,13 @@ Window monitoring requires Accessibility access. LazyNevis will prompt you on fi
 3. Navigate to **Applications** and select **LazyNevis**.
 4. Enable the toggle next to LazyNevis.
 
-<!-- screenshot: step 4 — Accessibility settings with LazyNevis toggled on -->
+<!-- screenshot: Accessibility settings with LazyNevis toggled on -->
 
 Without this permission, LazyNevis cannot detect which app is active and window monitoring will not work.
 
 ---
 
-## Step 5: Grant Notifications permission (optional)
+## Grant Notifications permission (optional)
 
 If you want native notification alerts:
 
