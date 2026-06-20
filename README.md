@@ -5,8 +5,12 @@
 <p align="center"><img src="src/assets/brand/logo-dark.png" alt="LazyNevis" height="60"></p>
 <p align="center"><strong>for lazy people who don't give upis.</strong></p>
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <a href="https://github.com/simstm/lazy-nevis/actions/workflows/ci.yml"><img src="https://github.com/simstm/lazy-nevis/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/simstm/lazy-nevis/releases/latest"><img src="https://img.shields.io/github/v/release/simstm/lazy-nevis?label=release&color=brightgreen" alt="Latest Release"></a>
+  <a href="https://github.com/simstm/lazy-nevis/releases"><img src="https://img.shields.io/github/v/release/simstm/lazy-nevis?include_prereleases&label=pre-release&color=orange" alt="Latest Pre-release"></a>
+  <a href="https://github.com/simstm/lazy-nevis/releases"><img src="https://img.shields.io/github/downloads/simstm/lazy-nevis/total?label=downloads" alt="Total Downloads"></a>
+  <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey" alt="Platforms: macOS, Windows, Linux">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <a href="https://www.buymeacoffee.com/simstm"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-FFDD00?logo=buymeacoffee&logoColor=000" alt="Buy Me a Coffee"></a>
 </p>
 
