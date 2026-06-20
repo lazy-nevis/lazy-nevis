@@ -47,7 +47,7 @@ Pre-releases are not included in the `latest` URL. Download the script from the 
 
 ```bash
 # Replace v0.1.0-rc.1 with the actual RC version shown on the Releases page
-curl -fL https://github.com/simstm/lazy-nevis/releases/download/v0.1.0-rc.1/install.sh -o install.sh
+curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.sh -o install.sh
 less install.sh
 sh install.sh --prerelease
 ```

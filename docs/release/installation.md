@@ -34,7 +34,7 @@ To install a pre-release, download the script from the specific release tag and 
 
 ```bash
 # Replace v0.1.0-rc.1 with the RC version shown on the Releases page
-curl -fL https://github.com/simstm/lazy-nevis/releases/download/v0.1.0-rc.1/install.sh -o install.sh
+curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.sh -o install.sh
 less install.sh
 sh install.sh --prerelease
 ```
@@ -42,7 +42,7 @@ sh install.sh --prerelease
 **Windows (PowerShell):**
 
 ```powershell
-Invoke-WebRequest https://github.com/simstm/lazy-nevis/releases/download/v0.1.0-rc.1/install.ps1 -OutFile install.ps1
+Invoke-WebRequest https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.ps1 -OutFile install.ps1
 Get-Content .\install.ps1
 .\install.ps1 -Prerelease
 ```

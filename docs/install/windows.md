@@ -27,7 +27,7 @@ Pre-releases are not included in the `latest` URL. Download the script from the 
 
 ```powershell
 # Replace v0.1.0-rc.1 with the actual RC version shown on the Releases page
-Invoke-WebRequest https://github.com/simstm/lazy-nevis/releases/download/v0.1.0-rc.1/install.ps1 -OutFile install.ps1
+Invoke-WebRequest https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.ps1 -OutFile install.ps1
 Get-Content .\install.ps1
 .\install.ps1 -Prerelease
 ```
