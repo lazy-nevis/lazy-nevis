@@ -2,7 +2,13 @@
 
 [English](README.md) | [Português (Brasil)](README.pt-BR.md)
 
-<p align="center"><img src="src/assets/brand/logo-dark.png" alt="LazyNevis" height="60"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="src/assets/brand/logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="src/assets/brand/logo-light.png">
+    <img alt="LazyNevis" src="src/assets/brand/logo-light.png">
+  </picture>
+</p>
 <p align="center"><strong>for lazy people who don't give upis.</strong></p>
 <p align="center">
   <a href="https://github.com/simstm/lazy-nevis/actions/workflows/ci.yml"><img src="https://github.com/simstm/lazy-nevis/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
