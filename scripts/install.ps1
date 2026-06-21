@@ -11,9 +11,12 @@ $TemporaryDirectory = $null
 $InstallSucceeded = $false
 
 try {
-  $architecture = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
-  if ($architecture -notin @('X64', 'Arm64')) { throw "Unsupported Windows architecture: $architecture" }
-  $archName = if ($architecture -eq 'Arm64') { 'arm64' } else { 'x64' }
+  $archEnv = if ($env:PROCESSOR_ARCHITEW6432) { $env:PROCESSOR_ARCHITEW6432 } else { $env:PROCESSOR_ARCHITECTURE }
+  $archName = switch ($archEnv) {
+    'AMD64'  { 'x64' }
+    'ARM64'  { 'arm64' }
+    default  { throw "Unsupported Windows architecture: $archEnv" }
+  }
   $api = if ($Version) { "https://api.github.com/repos/$Repo/releases/tags/v$($Version.TrimStart('v'))" } else { "https://api.github.com/repos/$Repo/releases" }
   Write-Host "Resolving $(if ($Prerelease) {'prerelease'} else {'stable'}) for windows-$archName..."
   if ($DryRun) { Write-Host "Would query $api and require SHA256SUMS before installation."; return }
