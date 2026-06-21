@@ -22,17 +22,17 @@ try {
   if ($DryRun) { Write-Host "Would query $api and require SHA256SUMS before installation."; return }
 
   $response = Invoke-RestMethod -Uri $api -Headers @{ Accept = 'application/vnd.github+json' }
-  $releases = @($response) | Where-Object { -not $_.draft -and ($Prerelease -or -not $_.prerelease) }
-  if ($Version) { $releases = @($releases | Where-Object tag_name -eq "v$($Version.TrimStart('v'))") }
+  $releases = @(@($response) | Where-Object { -not $_.draft -and ($Prerelease -or -not $_.prerelease) })
+  if ($Version) { $releases = @($releases | Where-Object { $_.tag_name -eq "v$($Version.TrimStart('v'))" }) }
   if ($releases.Count -ne 1 -and $Version) { throw 'Release selection was not unique.' }
   if ($releases.Count -eq 0) { throw 'No matching published release.' }
   $release = $releases[0]
   $assets = @($release.assets)
-  $msiAssets = @($assets | Where-Object name -Match "windows-$archName.*\.msi$")
-  $exeAssets = @($assets | Where-Object name -Match "windows-$archName.*\.exe$")
-  $installer = if ($msiAssets.Count -eq 1) { $msiAssets } elseif ($msiAssets.Count -eq 0 -and $exeAssets.Count -eq 1) { $exeAssets } else { @() }
-  $checksums = @($assets | Where-Object name -EQ 'SHA256SUMS')
-  if ($installer.Count -ne 1 -or $checksums.Count -ne 1) { throw 'Installer or SHA256SUMS selection was not unique.' }
+  $msiAssets = @($assets | Where-Object { $_.name -match "windows-$archName.*\.msi$" })
+  $exeAssets = @($assets | Where-Object { $_.name -match "windows-$archName.*\.exe$" })
+  $installer = @(if ($msiAssets.Count -eq 1) { $msiAssets } elseif ($msiAssets.Count -eq 0 -and $exeAssets.Count -eq 1) { $exeAssets })
+  $checksums = @($assets | Where-Object { $_.name -eq 'SHA256SUMS' })
+  if ($installer.Count -ne 1 -or $checksums.Count -ne 1) { throw "Installer or SHA256SUMS selection was not unique. (msi=$($msiAssets.Count) exe=$($exeAssets.Count) sums=$($checksums.Count) assets=$($assets.Count))" }
   foreach ($asset in @($installer[0], $checksums[0])) {
     if (-not $asset.browser_download_url.StartsWith("https://github.com/$Repo/releases/download/", [StringComparison]::OrdinalIgnoreCase)) { throw 'Unofficial asset URL.' }
   }
