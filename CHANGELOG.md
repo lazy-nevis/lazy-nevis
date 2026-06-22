@@ -13,6 +13,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 
 ---
 
+## [0.10.0-rc.3] - 2026-06-22
+
+### Fixed
+- Repository references updated from `simstm/lazy-nevis` to `lazy-nevis/lazy-nevis` across all documentation, configuration, and source files.
+- Input focus lost on every keystroke when typing a session name in the Start Session modal — the Dialog `useEffect` re-ran on each render because `onClose` was in its dependency array; replaced with a stable ref so focus management only triggers when the dialog opens or closes.
+
+---
+
 ## [0.1.0-rc.2] - 2026-06-20
 
 ### Changed
@@ -90,5 +98,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 - 27 TypeScript tests (stores, hooks, formatters)
 - GitHub Actions CI matrix: Ubuntu, macOS, Windows
 
-[Unreleased]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.1.0-rc.1...HEAD
+[Unreleased]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.10.0-rc.3...HEAD
+[0.10.0-rc.3]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.1.0-rc.2...v0.10.0-rc.3
+[0.1.0-rc.2]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.1.0-rc.1...v0.1.0-rc.2
 [0.1.0-rc.1]: https://github.com/lazy-nevis/lazy-nevis/releases/tag/v0.1.0-rc.1
