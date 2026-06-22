@@ -62,7 +62,7 @@ impl AudioPlayer {
                                 tracing::error!("audio: failed to open output stream");
                                 continue;
                             };
-                            let player = Player::connect_new(&handle.mixer());
+                            let player = Player::connect_new(handle.mixer());
                             player.set_volume(volume.clamp(0.0, 1.0));
 
                             let Ok(file) = std::fs::File::open(&path) else {
