@@ -34,7 +34,7 @@ pub async fn list_running_apps() -> Result<Vec<RunningApp>> {
     use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, System};
 
     let mut sys = System::new();
-    sys.refresh_processes_specifics(ProcessesToUpdate::All, true, ProcessRefreshKind::new());
+    sys.refresh_processes_specifics(ProcessesToUpdate::All, true, ProcessRefreshKind::nothing());
 
     // Deduplicate by exe basename — keep lowest PID
     let mut by_exe: HashMap<String, RunningApp> = HashMap::new();
