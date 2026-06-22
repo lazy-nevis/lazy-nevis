@@ -29,19 +29,19 @@ impl AudioPlayer {
         let is_playing_bg = Arc::clone(&is_playing);
 
         std::thread::spawn(move || {
-            use rodio::{Decoder, OutputStream, Sink, Source};
+            use rodio::{Decoder, DeviceSinkBuilder, Player, Source};
             use std::io::BufReader;
 
-            // (stream, sink, is_looping) — keep both alive while playing
-            let mut active: Option<(OutputStream, Sink, bool)> = None;
+            // (handle, player, is_looping) — keep both alive while playing
+            let mut active: Option<(rodio::MixerDeviceSink, Player, bool)> = None;
 
             loop {
                 // Poll with a 150ms timeout so we can detect when non-looping sounds end
                 match rx.recv_timeout(std::time::Duration::from_millis(150)) {
                     Ok(cmd) => match cmd {
                         AudioCmd::Stop => {
-                            if let Some((_, ref sink, _)) = active {
-                                sink.stop();
+                            if let Some((_, ref player, _)) = active {
+                                player.stop();
                             }
                             active = None;
                             is_playing_bg.store(false, Ordering::Release);
@@ -52,21 +52,18 @@ impl AudioPlayer {
                             volume,
                             looping,
                         } => {
-                            if let Some((_, ref sink, _)) = active {
-                                sink.stop();
+                            if let Some((_, ref player, _)) = active {
+                                player.stop();
                             }
                             active = None;
                             is_playing_bg.store(false, Ordering::Release);
 
-                            let Ok((stream, handle)) = OutputStream::try_default() else {
+                            let Ok(handle) = DeviceSinkBuilder::open_default_sink() else {
                                 tracing::error!("audio: failed to open output stream");
                                 continue;
                             };
-                            let Ok(sink) = Sink::try_new(&handle) else {
-                                tracing::error!("audio: failed to create sink");
-                                continue;
-                            };
-                            sink.set_volume(volume.clamp(0.0, 1.0));
+                            let player = Player::connect_new(&handle.mixer());
+                            player.set_volume(volume.clamp(0.0, 1.0));
 
                             let Ok(file) = std::fs::File::open(&path) else {
                                 tracing::error!("audio: configured file is unavailable");
@@ -78,21 +75,21 @@ impl AudioPlayer {
                             };
 
                             if looping {
-                                sink.append(source.repeat_infinite());
+                                player.append(source.repeat_infinite());
                             } else {
-                                sink.append(source);
+                                player.append(source);
                             }
 
                             is_playing_bg.store(true, Ordering::Release);
-                            active = Some((stream, sink, looping));
+                            active = Some((handle, player, looping));
                             tracing::debug!(looping, "audio playback started");
                         }
                     },
 
                     Err(mpsc::RecvTimeoutError::Timeout) => {
                         // Detect non-looping sound completion
-                        if let Some((_, ref sink, looping)) = active {
-                            if !looping && sink.empty() {
+                        if let Some((_, ref player, looping)) = active {
+                            if !looping && player.empty() {
                                 tracing::debug!("audio: non-looping sound finished");
                                 is_playing_bg.store(false, Ordering::Release);
                                 active = None;
