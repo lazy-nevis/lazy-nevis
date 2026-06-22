@@ -36,7 +36,7 @@ The install script downloads the AppImage, verifies the SHA-256 checksum, checks
 ### Stable release
 
 ```bash
-bash <(curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.sh)
+bash <(curl -fL https://raw.githubusercontent.com/lazy-nevis/lazy-nevis/refs/heads/main/scripts/install.sh)
 ```
 
 ### Pre-release / RC build
@@ -44,7 +44,7 @@ bash <(curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/m
 Pre-releases are not included in the `latest` URL and require the `--prerelease` flag:
 
 ```bash
-bash <(curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.sh) --prerelease
+bash <(curl -fL https://raw.githubusercontent.com/lazy-nevis/lazy-nevis/refs/heads/main/scripts/install.sh) --prerelease
 ```
 
 > **Why `--prerelease`?** Without this flag, the script only selects stable releases. Pre-releases are skipped unless you opt in explicitly.

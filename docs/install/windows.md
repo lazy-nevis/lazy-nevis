@@ -16,7 +16,7 @@ Open **PowerShell** or **PowerShell 7** (not Command Prompt) and run:
 ### Stable release
 
 ```powershell
-& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.ps1' -UseBasicParsing).Content))
+& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/lazy-nevis/lazy-nevis/refs/heads/main/scripts/install.ps1' -UseBasicParsing).Content))
 ```
 
 ### Pre-release / RC build
@@ -24,7 +24,7 @@ Open **PowerShell** or **PowerShell 7** (not Command Prompt) and run:
 Pre-releases are not included in the `latest` URL and require the `-Prerelease` flag:
 
 ```powershell
-& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.ps1' -UseBasicParsing).Content)) -Prerelease
+& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/lazy-nevis/lazy-nevis/refs/heads/main/scripts/install.ps1' -UseBasicParsing).Content)) -Prerelease
 ```
 
 > **Why `-Prerelease`?** Without this flag, the script only selects stable releases. Pre-releases are skipped unless you opt in explicitly.

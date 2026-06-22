@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-REPO="SimStm/lazy-nevis"
+REPO="lazy-nevis/lazy-nevis"
 VERSION=""
 PRERELEASE=0
 DRY_RUN=0

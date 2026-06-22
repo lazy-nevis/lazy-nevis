@@ -3,9 +3,9 @@
 Exported 2026-06-19. Verify with:
 
 ```bash
-gh api repos/SimStm/lazy-nevis/rulesets
-gh api repos/SimStm/lazy-nevis/rulesets/17911118
-gh api repos/SimStm/lazy-nevis/rulesets/17911312
+gh api repos/lazy-nevis/lazy-nevis/rulesets
+gh api repos/lazy-nevis/lazy-nevis/rulesets/17911118
+gh api repos/lazy-nevis/lazy-nevis/rulesets/17911312
 ```
 
 ## Main branch (ID 17911118)

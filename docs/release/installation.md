@@ -11,13 +11,13 @@ The install scripts download the correct artifact for your platform, verify the 
 **macOS / Linux:**
 
 ```bash
-bash <(curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.sh)
+bash <(curl -fL https://raw.githubusercontent.com/lazy-nevis/lazy-nevis/refs/heads/main/scripts/install.sh)
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.ps1' -UseBasicParsing).Content))
+& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/lazy-nevis/lazy-nevis/refs/heads/main/scripts/install.ps1' -UseBasicParsing).Content))
 ```
 
 ### Pre-release / RC build
@@ -27,13 +27,13 @@ bash <(curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/m
 **macOS / Linux:**
 
 ```bash
-bash <(curl -fL https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.sh) --prerelease
+bash <(curl -fL https://raw.githubusercontent.com/lazy-nevis/lazy-nevis/refs/heads/main/scripts/install.sh) --prerelease
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/SimStm/lazy-nevis/refs/heads/main/scripts/install.ps1' -UseBasicParsing).Content)) -Prerelease
+& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/lazy-nevis/lazy-nevis/refs/heads/main/scripts/install.ps1' -UseBasicParsing).Content)) -Prerelease
 ```
 
 Pass `--version x.y.z-rc.N` (or `-Version`) together with `--prerelease` to pin to a specific RC version rather than selecting the latest available pre-release.
