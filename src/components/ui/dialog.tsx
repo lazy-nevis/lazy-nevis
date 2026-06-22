@@ -15,6 +15,8 @@ interface DialogProps {
 function Dialog({ open, onClose, children, className }: DialogProps) {
   const panelRef = React.useRef<HTMLDivElement>(null);
   const titleId = React.useId();
+  const onCloseRef = React.useRef(onClose);
+  React.useLayoutEffect(() => { onCloseRef.current = onClose; });
 
   React.useEffect(() => {
     if (!open) return;
@@ -27,7 +29,7 @@ function Dialog({ open, onClose, children, className }: DialogProps) {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (event.key !== "Tab") return;
@@ -52,7 +54,7 @@ function Dialog({ open, onClose, children, className }: DialogProps) {
       document.removeEventListener("keydown", onKeyDown);
       previouslyFocused?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 

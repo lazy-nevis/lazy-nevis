@@ -78,7 +78,7 @@ METADATA=$(awk \
   -v ver="$VERSION" \
   -v allow="$PRERELEASE" \
   -v suffix="$SUFFIX" \
-  -v pfx="https://github.com/simstm/lazy-nevis/releases/download/" \
+  -v pfx="https://github.com/lazy-nevis/lazy-nevis/releases/download/" \
   'BEGIN { bd=0; in_a=0; rel_tag=""; rel_d="false"; rel_p="false"
            asset_nm=""; asset_u=""; out_tag=""; out_nm=""; out_u=""
            out_sums=""; out_icon=""; mc=0; sc=0; ic=0; done=0 }

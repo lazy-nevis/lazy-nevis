@@ -1,6 +1,6 @@
 # Installation And Uninstall
 
-Download only from `https://github.com/simstm/lazy-nevis/releases`. Verify `SHA256SUMS` before opening an artifact and use native signature checks plus `gh attestation verify <file> --repo simstm/lazy-nevis` when available.
+Download only from `https://github.com/lazy-nevis/lazy-nevis/releases`. Verify `SHA256SUMS` before opening an artifact and use native signature checks plus `gh attestation verify <file> --repo lazy-nevis/lazy-nevis` when available.
 
 ## Install scripts
 

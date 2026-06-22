@@ -12,7 +12,7 @@ Thank you for taking the time to contribute. Every bug report, documentation fix
 - **Fix a bug** — look for issues labeled `good first issue` or `bug`.
 - **Add a feature** — discuss substantial new features in an issue before writing code.
 
-For usage questions, please use [Discussions](https://github.com/simstm/lazy-nevis/discussions) rather than issues.
+For usage questions, please use [Discussions](https://github.com/lazy-nevis/lazy-nevis/discussions) rather than issues.
 
 ---
 
@@ -36,7 +36,7 @@ For usage questions, please use [Discussions](https://github.com/simstm/lazy-nev
 **Steps:**
 
 ```bash
-git clone https://github.com/simstm/lazy-nevis.git
+git clone https://github.com/lazy-nevis/lazy-nevis.git
 cd lazy-nevis
 bun install --frozen-lockfile
 bun run tauri dev
@@ -209,7 +209,7 @@ After you open a PR:
 
 ## Getting help
 
-- Usage questions and troubleshooting: [GitHub Discussions](https://github.com/simstm/lazy-nevis/discussions).
+- Usage questions and troubleshooting: [GitHub Discussions](https://github.com/lazy-nevis/lazy-nevis/discussions).
 - Reproducible defects: use the Bug Report issue form; remove private window titles or paths from logs.
 - Vulnerabilities: report privately according to [SECURITY.md](SECURITY.md), never in a public issue.
 

@@ -51,7 +51,7 @@ This is expected for unsigned RC builds. See [docs/troubleshooting/smartscreen.m
 
 ### Step 1: Download
 
-Go to [github.com/simstm/lazy-nevis/releases](https://github.com/simstm/lazy-nevis/releases) and find the release you want. For pre-releases, look for releases labeled **Pre-release** — they do not appear as "Latest".
+Go to [github.com/lazy-nevis/lazy-nevis/releases](https://github.com/lazy-nevis/lazy-nevis/releases) and find the release you want. For pre-releases, look for releases labeled **Pre-release** — they do not appear as "Latest".
 
 <!-- screenshot: GitHub Releases page showing assets for the latest release -->
 

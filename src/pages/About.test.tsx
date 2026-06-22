@@ -7,7 +7,7 @@ import { About } from "./About";
 vi.mock("@/services/updates", () => ({
   checkForUpdate: vi.fn(() => Promise.resolve({
     version: "0.1.0-rc.2",
-    url: "https://github.com/simstm/lazy-nevis/releases/tag/v0.1.0-rc.2",
+    url: "https://github.com/lazy-nevis/lazy-nevis/releases/tag/v0.1.0-rc.2",
   })),
 }));
 

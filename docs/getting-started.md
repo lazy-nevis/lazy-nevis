@@ -16,7 +16,7 @@ Everything stays on your machine. There are no accounts, no cloud sync, and no t
 
 ## Installing
 
-Download the package for your platform from [GitHub Releases](https://github.com/simstm/lazy-nevis/releases).
+Download the package for your platform from [GitHub Releases](https://github.com/lazy-nevis/lazy-nevis/releases).
 
 | Platform | Guide |
 |---|---|

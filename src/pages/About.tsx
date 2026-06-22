@@ -118,7 +118,7 @@ export function About() {
         <div className="space-y-3">
           <Button
             variant="outline"
-            onClick={() => openLink("https://github.com/simstm/lazy-nevis")}
+            onClick={() => openLink("https://github.com/lazy-nevis/lazy-nevis")}
             className="gap-2 w-full"
           >
             <ExternalLink className="h-4 w-4" />
@@ -149,7 +149,7 @@ export function About() {
             <span>{t("about.version")} {version}</span>
             <span>·</span>
             <button
-              onClick={() => openLink("https://github.com/simstm/lazy-nevis/blob/main/LICENSE")}
+              onClick={() => openLink("https://github.com/lazy-nevis/lazy-nevis/blob/main/LICENSE")}
               className="hover:underline"
             >
               {t("about.license")}

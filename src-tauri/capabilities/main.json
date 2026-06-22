@@ -20,9 +20,9 @@
       "identifier": "opener:allow-open-url",
       "allow": [
         { "url": "https://github.com/simstm" },
-        { "url": "https://github.com/simstm/lazy-nevis" },
-        { "url": "https://github.com/simstm/lazy-nevis/blob/main/LICENSE" },
-        { "url": "https://github.com/simstm/lazy-nevis/releases*" },
+        { "url": "https://github.com/lazy-nevis/lazy-nevis" },
+        { "url": "https://github.com/lazy-nevis/lazy-nevis/blob/main/LICENSE" },
+        { "url": "https://github.com/lazy-nevis/lazy-nevis/releases*" },
         { "url": "https://sims.dev.br" },
         { "url": "https://www.buymeacoffee.com/simstm" }
       ]

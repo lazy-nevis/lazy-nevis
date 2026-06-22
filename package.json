@@ -11,9 +11,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/simstm/lazy-nevis"
+    "url": "https://github.com/lazy-nevis/lazy-nevis"
   },
-  "homepage": "https://github.com/simstm/lazy-nevis",
+  "homepage": "https://github.com/lazy-nevis/lazy-nevis",
   "keywords": ["focus", "productivity", "pomodoro", "tauri", "desktop"],
   "scripts": {
     "dev": "vite",

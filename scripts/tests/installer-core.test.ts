@@ -15,7 +15,7 @@ describe("installer contract", () => {
     expect(() => chooseRelease([rc], { version: "1.3.0-rc.1" })).toThrow();
   });
   test("asset selection rejects ambiguity and unofficial URLs", () => {
-    const asset = { name: "LazyNevis_1.2.3_linux-x64.AppImage", browser_download_url: "https://github.com/simstm/lazy-nevis/releases/download/v1.2.3/a" };
+    const asset = { name: "LazyNevis_1.2.3_linux-x64.AppImage", browser_download_url: "https://github.com/lazy-nevis/lazy-nevis/releases/download/v1.2.3/a" };
     expect(chooseAsset([asset], /AppImage$/)).toBe(asset);
     expect(() => chooseAsset([asset, asset], /AppImage$/)).toThrow();
     expect(() => chooseAsset([{ ...asset, browser_download_url: "https://example.com/a" }], /AppImage$/)).toThrow();

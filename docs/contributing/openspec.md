@@ -192,4 +192,4 @@ PRs with behavioral changes and no OpenSpec reference will be asked to add one b
 - Specs do not need to be exhaustive on first pass. A minimal set of requirements and scenarios for the proposed change is enough.
 - Reading the existing specs before proposing is the fastest way to understand where your change fits.
 
-Questions? Open a [GitHub Discussion](https://github.com/simstm/lazy-nevis/discussions).
+Questions? Open a [GitHub Discussion](https://github.com/lazy-nevis/lazy-nevis/discussions).

@@ -55,7 +55,7 @@ To install DEB or RPM instead of AppImage, pass `--package deb` or `--package rp
 
 ## Option 2: Manual download from GitHub Releases
 
-Go to [github.com/simstm/lazy-nevis/releases](https://github.com/simstm/lazy-nevis/releases) and find the release you want. For pre-releases, look for releases labeled **Pre-release** — they do not appear as "Latest".
+Go to [github.com/lazy-nevis/lazy-nevis/releases](https://github.com/lazy-nevis/lazy-nevis/releases) and find the release you want. For pre-releases, look for releases labeled **Pre-release** — they do not appear as "Latest".
 
 ### AppImage
 

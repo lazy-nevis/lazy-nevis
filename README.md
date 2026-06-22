@@ -11,13 +11,13 @@
 </p>
 <p align="center"><strong>for lazy people who don't give upis.</strong></p>
 <p align="center">
-  <a href="https://github.com/simstm/lazy-nevis/actions/workflows/ci.yml"><img src="https://github.com/simstm/lazy-nevis/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://deps.rs/repo/github/simstm/lazy-nevis"><img src="https://deps.rs/repo/github/simstm/lazy-nevis/status.svg" alt="Dependency Status"></a>
-  <a href="https://github.com/simstm/lazy-nevis/commits/main"><img src="https://img.shields.io/github/last-commit/simstm/lazy-nevis" alt="Last Commit"></a>
-  <a href="https://github.com/simstm/lazy-nevis/releases/latest"><img src="https://img.shields.io/github/v/release/simstm/lazy-nevis?label=release&color=brightgreen" alt="Latest Release"></a>
-  <a href="https://github.com/simstm/lazy-nevis/releases"><img src="https://img.shields.io/github/v/release/simstm/lazy-nevis?include_prereleases&label=pre-release&color=orange" alt="Latest Pre-release"></a>
-  <a href="https://github.com/simstm/lazy-nevis/releases"><img src="https://img.shields.io/github/downloads/simstm/lazy-nevis/total?label=downloads" alt="Total Downloads"></a>
-  <a href="https://github.com/simstm/lazy-nevis/issues"><img src="https://img.shields.io/github/issues/simstm/lazy-nevis" alt="Open Issues"></a>
+  <a href="https://github.com/lazy-nevis/lazy-nevis/actions/workflows/ci.yml"><img src="https://github.com/lazy-nevis/lazy-nevis/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://deps.rs/repo/github/lazy-nevis/lazy-nevis"><img src="https://deps.rs/repo/github/lazy-nevis/lazy-nevis/status.svg" alt="Dependency Status"></a>
+  <a href="https://github.com/lazy-nevis/lazy-nevis/commits/main"><img src="https://img.shields.io/github/last-commit/lazy-nevis/lazy-nevis" alt="Last Commit"></a>
+  <a href="https://github.com/lazy-nevis/lazy-nevis/releases/latest"><img src="https://img.shields.io/github/v/release/lazy-nevis/lazy-nevis?label=release&color=brightgreen" alt="Latest Release"></a>
+  <a href="https://github.com/lazy-nevis/lazy-nevis/releases"><img src="https://img.shields.io/github/v/release/lazy-nevis/lazy-nevis?include_prereleases&label=pre-release&color=orange" alt="Latest Pre-release"></a>
+  <a href="https://github.com/lazy-nevis/lazy-nevis/releases"><img src="https://img.shields.io/github/downloads/lazy-nevis/lazy-nevis/total?label=downloads" alt="Total Downloads"></a>
+  <a href="https://github.com/lazy-nevis/lazy-nevis/issues"><img src="https://img.shields.io/github/issues/lazy-nevis/lazy-nevis" alt="Open Issues"></a>
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey" alt="Platforms: macOS, Windows, Linux">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <a href="https://www.buymeacoffee.com/simstm"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-FFDD00?logo=buymeacoffee&logoColor=000" alt="Buy Me a Coffee"></a>
@@ -141,7 +141,7 @@ LazyNevis is for people who want to understand their focus patterns, get a gentl
 
 ## Download and Install
 
-Download only from [GitHub Releases](https://github.com/simstm/lazy-nevis/releases). Do not use unofficial mirrors.
+Download only from [GitHub Releases](https://github.com/lazy-nevis/lazy-nevis/releases). Do not use unofficial mirrors.
 
 | Platform | Architecture | Package | Install guide |
 |---|---|---|---|
@@ -180,7 +180,7 @@ All session data and settings stay in your OS application-data directory. See [P
 **Prerequisites:** [Bun](https://bun.sh/), stable Rust, and the [Tauri v2 system dependencies](https://v2.tauri.app/start/prerequisites/) for your OS.
 
 ```bash
-git clone https://github.com/simstm/lazy-nevis.git
+git clone https://github.com/lazy-nevis/lazy-nevis.git
 cd lazy-nevis
 bun install --frozen-lockfile
 bun run tauri dev
@@ -215,7 +215,7 @@ Contributor workflow: [CONTRIBUTING.md](CONTRIBUTING.md) — Architecture: [docs
 | Global shortcuts | [docs/troubleshooting/shortcuts.md](docs/troubleshooting/shortcuts.md) |
 | Linux libraries | [docs/troubleshooting/linux-libraries.md](docs/troubleshooting/linux-libraries.md) |
 
-Usage questions belong in [Discussions](https://github.com/simstm/lazy-nevis/discussions). Bugs use the issue form. Security vulnerabilities follow [SECURITY.md](SECURITY.md).
+Usage questions belong in [Discussions](https://github.com/lazy-nevis/lazy-nevis/discussions). Bugs use the issue form. Security vulnerabilities follow [SECURITY.md](SECURITY.md).
 
 ---
 

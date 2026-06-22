@@ -90,5 +90,5 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 - 27 TypeScript tests (stores, hooks, formatters)
 - GitHub Actions CI matrix: Ubuntu, macOS, Windows
 
-[Unreleased]: https://github.com/simstm/lazy-nevis/compare/v0.1.0-rc.1...HEAD
-[0.1.0-rc.1]: https://github.com/simstm/lazy-nevis/releases/tag/v0.1.0-rc.1
+[Unreleased]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.1.0-rc.1...HEAD
+[0.1.0-rc.1]: https://github.com/lazy-nevis/lazy-nevis/releases/tag/v0.1.0-rc.1

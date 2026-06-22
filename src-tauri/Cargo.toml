@@ -4,8 +4,8 @@ version = "0.1.0-rc.2"
 description = "LazyNevis — for lazy people who don't give upis."
 authors = ["Lucas Sims"]
 license = "MIT"
-homepage = "https://github.com/simstm/lazy-nevis"
-repository = "https://github.com/simstm/lazy-nevis"
+homepage = "https://github.com/lazy-nevis/lazy-nevis"
+repository = "https://github.com/lazy-nevis/lazy-nevis"
 keywords = ["focus", "productivity", "tauri", "desktop"]
 edition = "2021"
 
