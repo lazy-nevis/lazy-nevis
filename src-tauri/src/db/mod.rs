@@ -10,6 +10,36 @@ pub struct Database {
 
 impl Database {
     pub fn open(path: &Path) -> Result<Self> {
+        match Self::try_open(path) {
+            Ok(db) => return Ok(db),
+            Err(first_error) => {
+                // If WAL/SHM files are present and the open failed, try removing them
+                // and retrying. A force-kill can leave a WAL that prevents normal open.
+                let wal = path.with_extension("db-wal");
+                let shm = path.with_extension("db-shm");
+                let wal_exists = wal.exists();
+                let shm_exists = shm.exists();
+                if wal_exists || shm_exists {
+                    tracing::warn!(
+                        ?first_error,
+                        wal_present = wal_exists,
+                        shm_present = shm_exists,
+                        "database open failed with WAL/SHM present; removing and retrying"
+                    );
+                    if wal_exists {
+                        let _ = std::fs::remove_file(&wal);
+                    }
+                    if shm_exists {
+                        let _ = std::fs::remove_file(&shm);
+                    }
+                    return Self::try_open(path);
+                }
+                return Err(first_error);
+            }
+        }
+    }
+
+    fn try_open(path: &Path) -> Result<Self> {
         let conn = Connection::open(path).map_err(AppError::Database)?;
 
         conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;")

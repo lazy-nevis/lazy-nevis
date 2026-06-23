@@ -70,6 +70,7 @@ pub fn run() {
 
             let launched_from_autostart = std::env::args().any(|arg| arg == "--autostart");
             let start_minimized = settings.general.start_minimized || launched_from_autostart;
+            let language = settings.general.language.clone();
             let logger = Arc::new(Mutex::new(SessionLogger::new(Arc::clone(&db))));
 
             app.manage(AppState {
@@ -82,7 +83,25 @@ pub fn run() {
                 shortcut_registration_error: Mutex::new(None),
             });
 
-            recover_active_session(app)?;
+            let session_was_recovered = recover_active_session(app).unwrap_or_else(|error| {
+                // Session recovery is best-effort — a failure here must not prevent startup.
+                // The user loses the in-progress session but the app remains functional.
+                tracing::error!(?error, "session recovery failed; starting without recovery");
+                false
+            });
+
+            if session_was_recovered {
+                let app_handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
+                    if let Err(error) =
+                        commands::notifications::send_recovery_notification(app_handle, &language)
+                            .await
+                    {
+                        tracing::warn!(?error, "could not send session recovery notification");
+                    }
+                });
+            }
 
             if let Err(error) = setup_tray(app) {
                 tracing::warn!(?error, "tray unavailable; continuing with the main window");
@@ -274,7 +293,7 @@ fn set_private_file_permissions(_path: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-fn recover_active_session(app: &tauri::App) -> tauri::Result<()> {
+fn recover_active_session(app: &tauri::App) -> tauri::Result<bool> {
     let state = app.state::<AppState>();
     let recovered = {
         let logger = state
@@ -290,7 +309,7 @@ fn recover_active_session(app: &tauri::App) -> tauri::Result<()> {
     };
 
     let Some((session, runtime)) = recovered else {
-        return Ok(());
+        return Ok(false);
     };
 
     let session_id = session.id.clone();
@@ -335,7 +354,7 @@ fn recover_active_session(app: &tauri::App) -> tauri::Result<()> {
             .map_err(std::io::Error::other)?;
     }
     info!(session_id, "Recovered active session in paused state");
-    Ok(())
+    Ok(true)
 }
 
 fn migrate_legacy_app_data_dir(app_data_dir: &Path) -> std::io::Result<()> {

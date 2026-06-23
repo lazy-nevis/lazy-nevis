@@ -13,6 +13,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 
 ---
 
+## [0.10.0-rc.4] - 2026-06-23
+
+### Fixed
+- Startup crash after force-quitting the app during an active session: `start_monitor` was calling `tokio::spawn` during the Tauri setup callback (before the Tokio reactor is available); replaced with `tauri::async_runtime::spawn` which works from any thread.
+- `Database::open` now recovers from orphaned WAL/SHM files left by a force-kill: removes them and retries before propagating an error.
+- Session recovery failure during startup no longer crashes the app — the error is logged and the app starts fresh without the previous session.
+- Pause/resume button now shows the correct icon: Play when the session is paused, Pause when it is active (was always showing Pause).
+
+### Added
+- System notification sent on startup whenever a session is recovered after an unexpected shutdown, informing the user that the previous session was paused and inviting them to resume it. Clicking the notification activates the app. Notification text is localized (en-US / pt-BR).
+
+---
+
 ## [0.10.0-rc.3] - 2026-06-22
 
 ### Fixed
@@ -98,7 +111,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 - 27 TypeScript tests (stores, hooks, formatters)
 - GitHub Actions CI matrix: Ubuntu, macOS, Windows
 
-[Unreleased]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.10.0-rc.3...HEAD
+[Unreleased]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.10.0-rc.4...HEAD
+[0.10.0-rc.4]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.10.0-rc.3...v0.10.0-rc.4
 [0.10.0-rc.3]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.1.0-rc.2...v0.10.0-rc.3
 [0.1.0-rc.2]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.1.0-rc.1...v0.1.0-rc.2
 [0.1.0-rc.1]: https://github.com/lazy-nevis/lazy-nevis/releases/tag/v0.1.0-rc.1

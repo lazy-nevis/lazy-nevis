@@ -303,6 +303,8 @@
     "break_app": "Hora da pausa!"
   },
   "app": {
+    "recovery_notification_title": "LazyNevis — Sessão recuperada",
+    "recovery_notification_body": "O LazyNevis não foi finalizado corretamente. A sessão anterior foi pausada. Abra o app para continuá-la.",
     "close_warning_title": "Sessão de foco ativa",
     "close_warning_body": "Você tem uma sessão de foco em andamento. Fechar o app vai encerrá-la e salvar o progresso.",
     "close_keep": "Manter sessão ativa",

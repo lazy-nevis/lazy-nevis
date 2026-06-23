@@ -142,7 +142,7 @@ pub fn start_monitor(
         let mut idle_cache_ms: u64 = 0;
         let mut idle_cache_tick: u64 = 0;
 
-        tokio::spawn(async move {
+        tauri::async_runtime::spawn(async move {
             let mut interval = time::interval(Duration::from_millis(1000));
             let mut tick_count: u64 = 0;
 
@@ -384,7 +384,7 @@ pub fn start_monitor(
     }
 
     // ── Window-change detector ──────────────────────────────────────────────────
-    tokio::spawn(async move {
+    tauri::async_runtime::spawn(async move {
         let on_change = build_on_change(app, session_id, settings, active_session, logger);
         monitor_loop(polling_ms, 0, on_change, stop_rx).await;
     });

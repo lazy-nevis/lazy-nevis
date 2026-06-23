@@ -303,6 +303,8 @@
     "break_app": "Break time!"
   },
   "app": {
+    "recovery_notification_title": "LazyNevis — Session recovered",
+    "recovery_notification_body": "LazyNevis didn't close properly. Your previous session was paused. Open the app to continue it.",
     "close_warning_title": "Focus session is active",
     "close_warning_body": "You have an active focus session. Closing the app will end it and save your progress.",
     "close_keep": "Keep session running",

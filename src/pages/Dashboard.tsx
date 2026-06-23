@@ -165,7 +165,7 @@ export function Dashboard() {
             onClick={pauseSession}
             className="gap-1.5"
           >
-            <Pause className="h-4 w-4" />
+            {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
             {isPaused ? t("dashboard.session.resume_button") : t("dashboard.session.pause_button")}
           </Button>
 

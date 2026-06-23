@@ -64,6 +64,21 @@ async fn send_app_notification_inner(title: String, body: String, app: AppHandle
         .map_err(|error| AppError::Internal(error.to_string()))
 }
 
+pub async fn send_recovery_notification(app: AppHandle, language: &str) -> Result<()> {
+    let (title, body) = if language == "pt-BR" {
+        (
+            "LazyNevis \u{2014} Sess\u{e3}o recuperada".to_string(),
+            "O LazyNevis n\u{e3}o foi finalizado corretamente. A sess\u{e3}o anterior foi pausada. Abra o app para continu\u{e1}-la.".to_string(),
+        )
+    } else {
+        (
+            "LazyNevis \u{2014} Session recovered".to_string(),
+            "LazyNevis didn't close properly. Your previous session was paused. Open the app to continue it.".to_string(),
+        )
+    };
+    send_app_notification_inner(title, body, app).await
+}
+
 #[cfg(target_os = "macos")]
 fn resolve_notification_icon(app: &AppHandle) -> Option<PathBuf> {
     let mut candidates = Vec::new();
