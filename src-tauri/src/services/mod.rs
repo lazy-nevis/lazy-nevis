@@ -1,5 +1,8 @@
+pub mod app_status;
 pub mod audio_player;
+pub mod checklist;
 pub mod idle_monitor;
+pub mod notifications;
 pub mod permissions;
 pub mod rule_engine;
 pub mod session_logger;

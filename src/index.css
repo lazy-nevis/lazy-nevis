@@ -47,6 +47,53 @@
   }
 }
 
+/* Custom scrollbar following the app palette — thin, rounded, visible whenever
+   a block overflows so users can tell there is more content. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--muted-foreground) / 0.5);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Simple fade + slide entrance for transient alerts (e.g. update check result). */
+@keyframes fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-slide-in {
+  animation: fade-slide-in 0.2s ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -81,6 +128,14 @@
   html.overlay-window,
   body.overlay-window,
   body.overlay-window #root {
+    background: transparent;
+  }
+
+  /* Tray quick panel: transparent window so the native blur (vibrancy/acrylic)
+     and the rounded CSS container form a floating popover. */
+  html.tray-window,
+  body.tray-window,
+  body.tray-window #root {
     background: transparent;
   }
 

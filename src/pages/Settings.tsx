@@ -4,13 +4,15 @@ import type { TFunction } from "i18next";
 import {
   Plus, X, Volume2, Play, Square, FolderOpen, RefreshCw,
   Globe, Target, Bell, Music, Coffee, Keyboard, Database, Info, Cpu, Check, Clock,
-  Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, LogIn,
+  Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, ListPlus, LogIn, ListChecks,
 } from "lucide-react";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { HotkeyInput } from "@/components/ui/HotkeyInput";
 import { isPermissionGranted, requestPermission } from "@tauri-apps/plugin-notification";
 import { useSettings } from "@/hooks/useSettings";
-import { monitorService, audioService, overlayService, permissionsService, type RunningApp } from "@/services/tauri";
+import { monitorService, audioService, overlayService, permissionsService, settingsService, type RunningApp } from "@/services/tauri";
+import { findKnownConflict } from "@/utils/knownShortcutConflicts";
+import { parseAppList } from "@/utils/appLists";
 import { useUiStore } from "@/stores/uiStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,9 +22,9 @@ import { Select } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogHeader, DialogTitle, DialogClose, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/utils/cn";
-import type { AppSettings, PermissionState, PermissionsStatus } from "@/types";
+import type { AppSettings, PermissionState, PermissionsStatus, ShortcutStatus } from "@/types";
 
-type Tab = "general" | "focus_rules" | "alerts" | "audio" | "breaks" | "shortcuts" | "permissions" | "data";
+type Tab = "general" | "focus_rules" | "alerts" | "audio" | "breaks" | "checklist" | "shortcuts" | "permissions" | "data";
 
 const TAB_META: Record<Tab, { icon: React.ReactNode; labelKey: string }> = {
   general:     { icon: <Globe className="h-4 w-4" />,    labelKey: "settings.tabs.general" },
@@ -30,6 +32,7 @@ const TAB_META: Record<Tab, { icon: React.ReactNode; labelKey: string }> = {
   alerts:      { icon: <Bell className="h-4 w-4" />,     labelKey: "settings.tabs.alerts" },
   audio:       { icon: <Music className="h-4 w-4" />,    labelKey: "settings.tabs.audio" },
   breaks:      { icon: <Coffee className="h-4 w-4" />,   labelKey: "settings.tabs.breaks" },
+  checklist:   { icon: <ListChecks className="h-4 w-4" />, labelKey: "settings.tabs.checklist" },
   shortcuts:   { icon: <Keyboard className="h-4 w-4" />, labelKey: "settings.tabs.shortcuts" },
   permissions: { icon: <Shield className="h-4 w-4" />,   labelKey: "settings.tabs.permissions" },
   data:        { icon: <Database className="h-4 w-4" />, labelKey: "settings.tabs.data" },
@@ -75,6 +78,7 @@ export function Settings() {
         {activeTab === "alerts" && <AlertsTab settings={settings} update={update} t={t} />}
         {activeTab === "audio" && <AudioTab settings={settings} update={update} t={t} addToast={addToast} />}
         {activeTab === "breaks" && <BreaksTab settings={settings} update={update} t={t} />}
+        {activeTab === "checklist" && <ChecklistTab settings={settings} update={update} t={t} />}
         {activeTab === "shortcuts" && <ShortcutsTab settings={settings} update={update} t={t} />}
         {activeTab === "permissions" && <PermissionsTab t={t} />}
         {activeTab === "data" && (
@@ -222,6 +226,234 @@ function GeneralTab({ settings, update, t }: TabProps) {
 }
 
 // ─── Focus Rules ──────────────────────────────────────────────────────────────
+
+/**
+ * User-extendable ignore list: processes that never count as the focused app,
+ * on top of the built-in FOCUS_TRANSPARENT list.
+ * Spec: focus-rules/user-extendable-ignore-list.
+ */
+function IgnoredAppsSection({
+  settings, update, t, runningApps, loadingApps, onRefresh,
+}: TabProps & { runningApps: RunningApp[]; loadingApps: boolean; onRefresh: () => void }) {
+  const [query, setQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const ignored = settings.focus_rules.ignored_apps;
+  const has = (name: string) => ignored.some((a) => a.toLowerCase() === name.toLowerCase());
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+        inputRef.current && !inputRef.current.contains(e.target as Node)
+      ) setShowDropdown(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Search running apps by name or PID (spec: focus-rules/user-extendable-ignore-list).
+  const filtered = runningApps.filter((app) => {
+    const q = query.toLowerCase().trim();
+    return (
+      !q ||
+      app.exe.toLowerCase().includes(q) ||
+      app.name.toLowerCase().includes(q) ||
+      String(app.pid).includes(q)
+    );
+  });
+
+  const setIgnored = (next: string[]) =>
+    update({ focus_rules: { ...settings.focus_rules, ignored_apps: next } });
+
+  const addOne = (name?: string) => {
+    const app = (name ?? query).trim();
+    if (!app || has(app)) return;
+    setIgnored([...ignored, app]);
+    setQuery("");
+    setShowDropdown(false);
+  };
+
+  const bulkParsed = parseAppList(bulkText, ignored);
+
+  const addBulk = () => {
+    if (bulkParsed.length === 0) return;
+    setIgnored([...ignored, ...bulkParsed]);
+    setBulkText("");
+    setBulkOpen(false);
+  };
+
+  const toggleSelected = (name: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+
+  const removeOne = (name: string) => {
+    setIgnored(ignored.filter((a) => a !== name));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.delete(name);
+      return next;
+    });
+  };
+
+  const removeSelected = () => {
+    setIgnored(ignored.filter((a) => !selected.has(a)));
+    setSelected(new Set());
+  };
+
+  return (
+    <div className="mb-5 pt-4 border-t">
+      <p className="text-sm font-semibold mb-1">{t("settings.focus_rules.ignored_title")}</p>
+      <p className="text-xs text-muted-foreground mb-2">{t("settings.focus_rules.ignored_hint")}</p>
+
+      <div className="flex gap-2 mb-2">
+        <div className="relative flex-1">
+          <Input
+            ref={inputRef}
+            placeholder={t("settings.focus_rules.ignored_placeholder")}
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setShowDropdown(true); }}
+            onFocus={() => setShowDropdown(true)}
+            onKeyDown={(e) => { if (e.key === "Enter") addOne(); if (e.key === "Escape") setShowDropdown(false); }}
+            className="text-sm"
+          />
+          {showDropdown && filtered.length > 0 && (
+            <div
+              ref={dropdownRef}
+              className="absolute top-full left-0 right-0 z-50 mt-1 max-h-52 overflow-y-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-lg"
+            >
+              {filtered.slice(0, 40).map((app) => {
+                const alreadyAdded = has(app.exe);
+                return (
+                  <button
+                    key={`${app.exe}-${app.pid}`}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2 text-sm text-left hover:bg-accent hover:text-accent-foreground transition-colors",
+                      alreadyAdded && "opacity-50 pointer-events-none"
+                    )}
+                    onClick={() => { if (!alreadyAdded) addOne(app.exe); }}
+                    type="button"
+                  >
+                    <Cpu className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="font-medium truncate min-w-0 flex-1">{app.exe}</span>
+                    <span className="text-xs text-muted-foreground shrink-0 hidden sm:block">{app.name}</span>
+                    <span className="text-xs text-muted-foreground/50 shrink-0">PID {app.pid}</span>
+                    {alreadyAdded && <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <Button variant="outline" size="sm" onClick={() => addOne()} disabled={!query.trim()}>
+          <Plus className="h-4 w-4 mr-1" /> {t("settings.focus_rules.add_app")}
+        </Button>
+        <Button
+          variant={bulkOpen ? "secondary" : "outline"}
+          size="sm"
+          onClick={() => setBulkOpen((open) => !open)}
+          title={t("settings.focus_rules.bulk_toggle")}
+        >
+          <ListPlus className="h-4 w-4 mr-1" /> {t("settings.focus_rules.bulk_toggle")}
+        </Button>
+        <Button variant="outline" size="icon" onClick={onRefresh} disabled={loadingApps} title={t("common.refresh")} aria-label={t("common.refresh")}>
+          <RefreshCw className={cn("h-4 w-4", loadingApps && "animate-spin")} />
+        </Button>
+      </div>
+
+      {/* Bulk paste — one per line (commas/semicolons also split) */}
+      {bulkOpen && (
+        <div className="mb-2 rounded-lg border bg-muted/30 p-3">
+          <textarea
+            value={bulkText}
+            onChange={(e) => setBulkText(e.target.value)}
+            placeholder={t("settings.focus_rules.bulk_placeholder")}
+            rows={5}
+            className="w-full resize-y rounded-md border bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+            aria-label={t("settings.focus_rules.bulk_toggle")}
+          />
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">{t("settings.focus_rules.bulk_hint")}</p>
+            <Button size="sm" onClick={addBulk} disabled={bulkParsed.length === 0}>
+              <Plus className="h-4 w-4 mr-1" />
+              {t("settings.focus_rules.bulk_add_count", { count: bulkParsed.length })}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Chips: click to select for bulk removal, X removes one */}
+      {ignored.length > 0 && (
+        <>
+          <div className="mb-1.5 flex flex-wrap items-center gap-2 text-xs">
+            <button
+              type="button"
+              onClick={() => setSelected(new Set(ignored))}
+              className="text-muted-foreground hover:text-foreground hover:underline"
+            >
+              {t("settings.focus_rules.select_all")}
+            </button>
+            {selected.size > 0 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setSelected(new Set())}
+                  className="text-muted-foreground hover:text-foreground hover:underline"
+                >
+                  {t("settings.focus_rules.clear_selection")}
+                </button>
+                <Button variant="destructive" size="sm" className="h-6 px-2 text-xs" onClick={removeSelected}>
+                  <X className="h-3 w-3 mr-1" />
+                  {t("settings.focus_rules.remove_selected", { count: selected.size })}
+                </Button>
+              </>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {ignored.map((app) => {
+              const isSelected = selected.has(app);
+              return (
+                <span
+                  key={app}
+                  className={cn(
+                    "flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
+                    isSelected ? "bg-primary text-primary-foreground" : "bg-secondary"
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleSelected(app)}
+                    aria-pressed={isSelected}
+                    title={t("settings.focus_rules.toggle_select", { item: app })}
+                  >
+                    {app}
+                  </button>
+                  <button
+                    onClick={() => removeOne(app)}
+                    aria-label={t("common.remove", { item: app })}
+                    className="ml-1 opacity-60 hover:opacity-100"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 function FocusRulesTab({ settings, update, t, addToast }: TabProps & { addToast: (m: string, t?: "success" | "error" | "info") => void }) {
   const [newApp, setNewApp] = useState("");
@@ -379,6 +611,16 @@ function FocusRulesTab({ settings, update, t, addToast }: TabProps & { addToast:
         )}
       </div>
 
+      {/* Ignored in detection (spec: focus-rules/user-extendable-ignore-list) */}
+      <IgnoredAppsSection
+        settings={settings}
+        update={update}
+        t={t}
+        runningApps={runningApps}
+        loadingApps={loadingApps}
+        onRefresh={loadRunningApps}
+      />
+
       {/* Browser tab rules */}
       <div className="pt-4 border-t">
         <p className="text-sm font-semibold mb-1">{t("settings.focus_rules.browser_rules_title")}</p>
@@ -472,6 +714,15 @@ function AlertsTab({ settings, update, t }: TabProps) {
             className="w-20" />
           <span className="text-xs text-muted-foreground">{t("common.units.seconds")}</span>
         </div>
+      </SettingRow>
+
+      <SettingRow
+        icon={<Bell className="h-4 w-4" />}
+        label={t("settings.alerts.session_feedback")}
+        hint={t("settings.alerts.session_feedback_hint")}
+      >
+        <Switch checked={settings.alerts.session_feedback_notifications}
+          onCheckedChange={(v) => update({ alerts: { ...settings.alerts, session_feedback_notifications: v } })} />
       </SettingRow>
 
       {/* Test buttons */}
@@ -816,6 +1067,49 @@ function BreaksTab({ settings, update, t }: TabProps) {
   );
 }
 
+// ─── Checklist ────────────────────────────────────────────────────────────────
+
+function ChecklistTab({ settings, update, t }: TabProps) {
+  const msToSec = (ms: number) => Math.round(ms / 1000);
+  const secToMs = (s: number) => s * 1000;
+
+  return (
+    <div>
+      <SectionTitle
+        icon={<ListChecks className="h-4 w-4" />}
+        titleKey="settings.tabs.checklist"
+        descKey="settings.section_desc.checklist"
+        t={t}
+      />
+
+      <SettingRow
+        icon={<Clock className="h-4 w-4" />}
+        label={t("settings.checklist.grace_period")}
+        hint={t("settings.checklist.grace_period_hint")}
+      >
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            min={3}
+            max={60}
+            value={msToSec(settings.checklist.grace_period_ms)}
+            onChange={(e) =>
+              update({
+                checklist: {
+                  ...settings.checklist,
+                  grace_period_ms: secToMs(Number(e.target.value)),
+                },
+              })
+            }
+            className="w-20"
+          />
+          <span className="text-xs text-muted-foreground">{t("common.units.seconds")}</span>
+        </div>
+      </SettingRow>
+    </div>
+  );
+}
+
 // ─── Shortcuts ────────────────────────────────────────────────────────────────
 
 type ShortcutKey = "toggle_focus" | "stop_session" | "open_home" | "add_checkpoint";
@@ -828,6 +1122,24 @@ const SHORTCUT_META: { key: ShortcutKey; labelI18n: string; hintI18n: string }[]
 ];
 
 function ShortcutsTab({ settings, update, t }: TabProps) {
+  const [statuses, setStatuses] = useState<ShortcutStatus[]>([]);
+
+  // Registration happens on the debounced save; poll shortly after bindings change
+  // so the per-shortcut status reflects the OS result.
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      settingsService.getShortcutRegistrationStatus()
+        .then((result) => { if (!cancelled) setStatuses(result); })
+        .catch(() => undefined);
+    };
+    load();
+    const timer = setTimeout(load, 1200);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [settings.shortcuts]);
+
+  const statusFor = (key: ShortcutKey) => statuses.find((s) => s.action === key);
+
   return (
     <div>
       <SectionTitle
@@ -843,21 +1155,52 @@ function ShortcutsTab({ settings, update, t }: TabProps) {
         {t("settings.shortcuts.instructions_after")}
       </p>
 
-      {SHORTCUT_META.map(({ key, labelI18n, hintI18n }) => (
-        <SettingRow
-          key={key}
-          icon={<Keyboard className="h-4 w-4" />}
-          label={t(labelI18n)}
-          hint={t(hintI18n)}
-        >
-          <HotkeyInput
-            value={settings.shortcuts[key] ?? ""}
-            onChange={(v) =>
-              update({ shortcuts: { ...settings.shortcuts, [key]: v } })
-            }
-          />
-        </SettingRow>
-      ))}
+      {SHORTCUT_META.map(({ key, labelI18n, hintI18n }) => {
+        const binding = settings.shortcuts[key] ?? "";
+        const status = statusFor(key);
+        const conflict = findKnownConflict(binding);
+        return (
+          <SettingRow
+            key={key}
+            icon={<Keyboard className="h-4 w-4" />}
+            label={t(labelI18n)}
+            hint={t(hintI18n)}
+          >
+            <div className="flex flex-col items-end gap-1.5">
+              <div className="flex items-center gap-2">
+                {binding && status && (
+                  status.error ? (
+                    <span
+                      className="inline-flex items-center gap-1 text-xs text-destructive"
+                      title={status.error}
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                      {t("settings.shortcuts.status_failed")}
+                    </span>
+                  ) : status.registered ? (
+                    <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-500">
+                      <CheckCircle className="h-3.5 w-3.5" />
+                      {t("settings.shortcuts.status_registered")}
+                    </span>
+                  ) : null
+                )}
+                <HotkeyInput
+                  value={binding}
+                  onChange={(v) =>
+                    update({ shortcuts: { ...settings.shortcuts, [key]: v } })
+                  }
+                />
+              </div>
+              {conflict && (
+                <p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500 max-w-72 text-right">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  {t("settings.shortcuts.conflict_warning", { apps: conflict })}
+                </p>
+              )}
+            </div>
+          </SettingRow>
+        );
+      })}
     </div>
   );
 }

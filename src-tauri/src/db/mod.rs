@@ -97,6 +97,11 @@ impl Database {
             3,
             include_str!("migrations/0003_recent_audio_files.sql"),
         )?;
+        apply_sql_migration(
+            &mut self.conn,
+            4,
+            include_str!("migrations/0004_checklist.sql"),
+        )?;
         Ok(())
     }
 
@@ -218,6 +223,31 @@ pub fn checkpoint_from_row(row: &rusqlite::Row) -> rusqlite::Result<crate::model
     })
 }
 
+/// Maps a checklist row; tags are loaded separately by the service.
+pub fn checklist_item_from_row(
+    row: &rusqlite::Row,
+) -> rusqlite::Result<crate::models::ChecklistItem> {
+    use crate::models::ChecklistItem;
+    Ok(ChecklistItem {
+        id: row.get(0)?,
+        title: row.get(1)?,
+        created_at: row.get(2)?,
+        completed_at: row.get(3)?,
+        due_date: row.get(4)?,
+        sort_order: row.get(5)?,
+        tags: Vec::new(),
+    })
+}
+
+pub fn tag_from_row(row: &rusqlite::Row) -> rusqlite::Result<crate::models::Tag> {
+    use crate::models::Tag;
+    Ok(Tag {
+        id: row.get(0)?,
+        name: row.get(1)?,
+        created_at: row.get(2)?,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -264,10 +294,20 @@ mod tests {
             })
             .unwrap();
 
+        let checklist_table_count: i64 = db
+            .conn()
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('checklist_items', 'tags', 'checklist_item_tags', 'checklist_item_sessions')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+
         assert_eq!(idle_column_count, 1);
         assert_eq!(runtime_table_count, 1);
         assert_eq!(recent_audio_table_count, 1);
-        assert_eq!(migration_count, 3);
+        assert_eq!(checklist_table_count, 4);
+        assert_eq!(migration_count, 4);
 
         drop(db);
         Database::open(&path).unwrap();

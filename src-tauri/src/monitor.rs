@@ -1,6 +1,7 @@
 use crate::error::Result;
 use crate::models::settings::{AppSettings, FocusRules};
 use crate::models::{focus_percent, EventType};
+use crate::services::app_status::{SessionSummary, TraySessionState};
 use crate::services::idle_monitor::get_idle_time_ms;
 use crate::services::rule_engine::RuleEngine;
 use crate::services::session_logger::SessionLogger;
@@ -83,6 +84,18 @@ pub struct BreakReminderPayload {
     pub alert_type: String,
 }
 
+/// Tray-facing summary of the live session (spec: tray-status/icon-follows-lifecycle).
+pub fn session_summary(session: &SessionData) -> SessionSummary {
+    SessionSummary {
+        state: if session.paused || session.on_break {
+            TraySessionState::Paused
+        } else {
+            TraySessionState::Running
+        },
+        elapsed_ms: session.focus_ms + session.distracted_ms + session.idle_ms,
+    }
+}
+
 fn tick_payload(session: &SessionData) -> TickPayload {
     TickPayload {
         session_id: session.session.id.clone(),
@@ -127,6 +140,7 @@ pub fn start_monitor(
     let active_session = Arc::clone(&state.active_session);
     let settings = Arc::clone(&state.settings);
     let logger = Arc::clone(&state.logger);
+    let app_status = Arc::clone(&state.app_status);
 
     // ── 1-second ticker: time accumulation + ALERT CHECKING ────────────────────
     // KEY FIX: alerts were only checked on window change events, so if the user
@@ -142,6 +156,7 @@ pub fn start_monitor(
         let mut idle_cache_ms: u64 = 0;
         let mut idle_cache_tick: u64 = 0;
 
+        let status_tick = Arc::clone(&app_status);
         tauri::async_runtime::spawn(async move {
             let mut interval = time::interval(Duration::from_millis(1000));
             let mut tick_count: u64 = 0;
@@ -149,6 +164,7 @@ pub fn start_monitor(
             loop {
                 interval.tick().await;
                 tick_count += 1;
+                let mut tray_summary: Option<SessionSummary> = None;
 
                 let should_continue = {
                     if let Ok(mut lock) = active.lock() {
@@ -184,6 +200,7 @@ pub fn start_monitor(
                                     let _ = app_tick.emit("break:ended", ());
                                 }
                                 let _ = app_tick.emit("session:tick", tick_payload(s));
+                                tray_summary = Some(session_summary(s));
                                 if tick_count.is_multiple_of(5) {
                                     if let Ok(log) = logger_tick.lock() {
                                         let _ = log.persist_runtime(&s.runtime_snapshot(now));
@@ -361,6 +378,7 @@ pub fn start_monitor(
                                 // ────────────────────────────────────────────────────────
 
                                 let _ = app_tick.emit("session:tick", tick_payload(s));
+                                tray_summary = Some(session_summary(s));
                                 if interrupted || tick_count.is_multiple_of(5) {
                                     if let Ok(log) = logger_tick.lock() {
                                         let _ = log.persist_runtime(&s.runtime_snapshot(now));
@@ -376,6 +394,11 @@ pub fn start_monitor(
                     }
                 };
 
+                // Outside the active_session lock (spec: tray-status).
+                if let Some(summary) = tray_summary {
+                    status_tick.update_session(&app_tick, summary);
+                }
+
                 if !should_continue {
                     break;
                 }
@@ -385,8 +408,24 @@ pub fn start_monitor(
 
     // ── Window-change detector ──────────────────────────────────────────────────
     tauri::async_runtime::spawn(async move {
+        // Built-in focus-transparent list plus the user's ignored apps, read
+        // live so settings edits apply without restarting the session
+        // (spec: focus-rules/focus-transparent-apps).
+        let settings_skip = Arc::clone(&settings);
+        let should_skip = move |window: &crate::models::WindowInfo| {
+            crate::services::rule_engine::is_focus_transparent(window)
+                || settings_skip
+                    .lock()
+                    .map(|s| {
+                        crate::services::rule_engine::is_user_ignored(
+                            window,
+                            &s.focus_rules.ignored_apps,
+                        )
+                    })
+                    .unwrap_or(false)
+        };
         let on_change = build_on_change(app, session_id, settings, active_session, logger);
-        monitor_loop(polling_ms, 0, on_change, stop_rx).await;
+        monitor_loop(polling_ms, 0, should_skip, on_change, stop_rx).await;
     });
 
     Ok(())
@@ -498,6 +537,7 @@ mod tests {
             fullscreen_enabled: true,
             fullscreen_threshold_ms: 60_000,
             cooldown_ms: 10_000,
+            session_feedback_notifications: true,
         };
         assert_eq!(select_alert_channel(&alerts, 29_999, true), None);
         assert_eq!(

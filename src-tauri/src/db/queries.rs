@@ -178,3 +178,116 @@ pub const TRIM_RECENT_AUDIO: &str = "
     )
 ";
 pub const DELETE_ALL_USER_ACTIVITY: &str = "DELETE FROM sessions; DELETE FROM recent_audio_files;";
+
+// ── Daily checklist (spec: daily-checklist) ─────────────────────────────────
+
+pub const INSERT_CHECKLIST_ITEM: &str = "
+    INSERT INTO checklist_items (id, title, created_at, completed_at, due_date, sort_order)
+    VALUES (?1, ?2, ?3, NULL, ?4, ?5)
+";
+
+pub const SELECT_CHECKLIST_ITEM_BY_ID: &str = "
+    SELECT id, title, created_at, completed_at, due_date, sort_order
+    FROM checklist_items WHERE id = ?1
+";
+
+/// Recently-completed items still inside a grace window (?1 = cutoff ms) are
+/// returned together with open items so every window can render the countdown.
+pub const SELECT_OPEN_OR_GRACE_CHECKLIST_ITEMS: &str = "
+    SELECT id, title, created_at, completed_at, due_date, sort_order
+    FROM checklist_items
+    WHERE completed_at IS NULL OR completed_at >= ?1
+    ORDER BY sort_order ASC, created_at ASC
+";
+
+pub const UPDATE_CHECKLIST_ITEM: &str = "
+    UPDATE checklist_items SET title = ?1, due_date = ?2 WHERE id = ?3
+";
+
+pub const UPDATE_CHECKLIST_COMPLETED_AT: &str = "
+    UPDATE checklist_items SET completed_at = ?1 WHERE id = ?2
+";
+
+pub const UPDATE_CHECKLIST_SORT_ORDER: &str = "
+    UPDATE checklist_items SET sort_order = ?1 WHERE id = ?2
+";
+
+pub const SELECT_MAX_CHECKLIST_SORT_ORDER: &str = "
+    SELECT COALESCE(MAX(sort_order), 0) FROM checklist_items WHERE completed_at IS NULL
+";
+
+pub const DELETE_CHECKLIST_ITEM: &str = "DELETE FROM checklist_items WHERE id = ?1";
+
+pub const INSERT_TAG: &str = "
+    INSERT INTO tags (id, name, created_at) VALUES (?1, ?2, ?3)
+    ON CONFLICT(name) DO NOTHING
+";
+
+pub const SELECT_TAG_BY_NAME: &str = "
+    SELECT id, name, created_at FROM tags WHERE name = ?1 COLLATE NOCASE
+";
+
+pub const SELECT_ALL_TAGS: &str = "
+    SELECT id, name, created_at FROM tags ORDER BY name COLLATE NOCASE ASC
+";
+
+pub const INSERT_CHECKLIST_ITEM_TAG: &str = "
+    INSERT OR IGNORE INTO checklist_item_tags (item_id, tag_id) VALUES (?1, ?2)
+";
+
+pub const DELETE_CHECKLIST_ITEM_TAGS: &str = "
+    DELETE FROM checklist_item_tags WHERE item_id = ?1
+";
+
+pub const SELECT_TAGS_FOR_CHECKLIST_ITEM: &str = "
+    SELECT t.id, t.name, t.created_at
+    FROM tags t
+    JOIN checklist_item_tags cit ON cit.tag_id = t.id
+    WHERE cit.item_id = ?1
+    ORDER BY t.name COLLATE NOCASE ASC
+";
+
+pub const INSERT_CHECKLIST_ITEM_SESSION: &str = "
+    INSERT OR IGNORE INTO checklist_item_sessions (item_id, session_id, created_at)
+    VALUES (?1, ?2, ?3)
+";
+
+// History = completed items; the date range applies to the column matching the
+// active sort mode (spec: daily-checklist/history-filtering-and-sorting).
+
+pub const SELECT_CHECKLIST_HISTORY_BY_CREATED: &str = "
+    SELECT id, title, created_at, completed_at, due_date, sort_order
+    FROM checklist_items
+    WHERE completed_at IS NOT NULL
+      AND (?1 IS NULL OR created_at >= ?1)
+      AND (?2 IS NULL OR created_at <= ?2)
+    ORDER BY created_at DESC
+";
+
+pub const SELECT_CHECKLIST_HISTORY_BY_DUE: &str = "
+    SELECT id, title, created_at, completed_at, due_date, sort_order
+    FROM checklist_items
+    WHERE completed_at IS NOT NULL
+      AND (?1 IS NULL OR due_date >= ?1)
+      AND (?2 IS NULL OR due_date <= ?2)
+    ORDER BY due_date DESC, created_at DESC
+";
+
+pub const SELECT_CHECKLIST_HISTORY_BY_COMPLETED: &str = "
+    SELECT id, title, created_at, completed_at, due_date, sort_order
+    FROM checklist_items
+    WHERE completed_at IS NOT NULL
+      AND (?1 IS NULL OR completed_at >= ?1)
+      AND (?2 IS NULL OR completed_at <= ?2)
+    ORDER BY completed_at DESC
+";
+
+/// Latest still-open item linked to a session (spec: daily-checklist/stop-prompts-completion).
+pub const SELECT_OPEN_ITEM_FOR_SESSION: &str = "
+    SELECT i.id, i.title, i.created_at, i.completed_at, i.due_date, i.sort_order
+    FROM checklist_items i
+    JOIN checklist_item_sessions cis ON cis.item_id = i.id
+    WHERE cis.session_id = ?1 AND i.completed_at IS NULL
+    ORDER BY cis.created_at DESC
+    LIMIT 1
+";

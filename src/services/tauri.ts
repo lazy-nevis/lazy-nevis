@@ -1,13 +1,20 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
+  AppMode,
   AppSettings,
+  AppStatusPayload,
   ActiveSessionRuntime,
   Checkpoint,
+  ChecklistItem,
+  ChecklistSortMode,
   LiveStats,
   OverlayAlertPayload,
   Session,
   SessionStats,
   SessionSummary,
+  ShortcutStatus,
+  Tag,
+  TrayLabels,
   WindowInfo,
 } from "@/types";
 
@@ -64,8 +71,8 @@ export const settingsService = {
 
   reset: (): Promise<AppSettings> => invoke("reset_settings"),
 
-  getShortcutRegistrationError: (): Promise<string | null> =>
-    invoke("get_shortcut_registration_error"),
+  getShortcutRegistrationStatus: (): Promise<ShortcutStatus[]> =>
+    invoke("get_shortcut_registration_status"),
 };
 
 export interface RecentAudioFile {
@@ -104,8 +111,48 @@ export const overlayService = {
 };
 
 export const notificationService = {
-  send: (title: string, body: string): Promise<void> =>
-    invoke("send_app_notification", { title, body }),
+  send: (title: string, body: string, onlyIfInactive = false): Promise<void> =>
+    invoke("send_app_notification", { title, body, onlyIfInactive }),
+};
+
+// Daily checklist commands (spec: daily-checklist)
+export const checklistService = {
+  create: (title: string, tags: string[] = [], dueDate?: number): Promise<ChecklistItem> =>
+    invoke("create_checklist_item", { args: { title, due_date: dueDate ?? null, tags } }),
+
+  update: (id: string, title: string, tags: string[] = [], dueDate?: number | null): Promise<ChecklistItem> =>
+    invoke("update_checklist_item", { args: { id, title, due_date: dueDate ?? null, tags } }),
+
+  complete: (id: string): Promise<ChecklistItem> =>
+    invoke("complete_checklist_item", { id }),
+
+  uncomplete: (id: string): Promise<ChecklistItem> =>
+    invoke("uncomplete_checklist_item", { id }),
+
+  delete: (id: string): Promise<void> =>
+    invoke("delete_checklist_item", { id }),
+
+  reorder: (ids: string[]): Promise<void> =>
+    invoke("reorder_checklist_items", { ids }),
+
+  listOpen: (): Promise<ChecklistItem[]> =>
+    invoke("list_open_checklist_items"),
+
+  listHistory: (
+    from: number | null,
+    to: number | null,
+    sort: ChecklistSortMode,
+    tags: string[] = [],
+  ): Promise<ChecklistItem[]> =>
+    invoke("list_checklist_history", { args: { from, to, sort, tags } }),
+
+  listTags: (): Promise<Tag[]> => invoke("list_checklist_tags"),
+
+  linkSession: (itemId: string, sessionId: string): Promise<void> =>
+    invoke("link_checklist_session", { itemId, sessionId }),
+
+  getLinkedItem: (sessionId: string): Promise<ChecklistItem | null> =>
+    invoke("get_linked_checklist_item", { sessionId }),
 };
 
 export interface RunningApp {
@@ -124,9 +171,24 @@ export const monitorService = {
 
   getIdleTime: (): Promise<number> =>
     invoke("get_idle_time"),
+};
 
-  updateTrayStatus: (label: string): Promise<void> =>
-    invoke("update_tray_status", { label }),
+// Tray commands (spec: tray-status)
+export const trayService = {
+  setLabels: (labels: TrayLabels): Promise<void> =>
+    invoke("set_tray_labels", { labels }),
+};
+
+// App mode commands (spec: app-modes)
+export const appModeService = {
+  getStatus: (): Promise<AppStatusPayload> => invoke("get_app_status"),
+
+  setMode: (mode: AppMode): Promise<void> => invoke("set_app_mode", { mode }),
+
+  setPin: (pinned: boolean): Promise<void> => invoke("set_window_pin", { pinned }),
+
+  openSecondary: (pane: "settings" | "history" | "checklist-history" | "about"): Promise<void> =>
+    invoke("open_secondary_window", { pane }),
 };
 
 // Permissions commands

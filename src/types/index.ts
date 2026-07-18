@@ -116,6 +116,8 @@ export interface FocusRules {
   apps: string[];
   browser_tab_mode: "allowlist" | "blocklist";
   browser_tab_terms: string[];
+  /** User-added processes ignored by focus detection (extends the built-in list). */
+  ignored_apps: string[];
 }
 
 export interface AlertSettings {
@@ -124,6 +126,7 @@ export interface AlertSettings {
   fullscreen_enabled: boolean;
   fullscreen_threshold_ms: number;
   cooldown_ms: number;
+  session_feedback_notifications: boolean;
 }
 
 export interface AudioSettings {
@@ -148,6 +151,82 @@ export interface ShortcutSettings {
   add_checkpoint: string;
 }
 
+export type ShortcutAction = keyof ShortcutSettings;
+
+// Daily checklist (spec: daily-checklist)
+export interface Tag {
+  id: string;
+  name: string;
+  created_at: number;
+}
+
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  created_at: number;
+  completed_at: number | null;
+  due_date: number | null;
+  sort_order: number;
+  tags: Tag[];
+}
+
+export type ChecklistSortMode = "created" | "due" | "completed";
+
+export interface ChecklistSettings {
+  grace_period_ms: number;
+  history_sort: ChecklistSortMode;
+}
+
+export interface ChecklistChangedPayload {
+  reason: string;
+  item_id: string | null;
+}
+
+// App modes (spec: app-modes)
+export type AppMode = "full" | "compact";
+
+export interface AppStatusPayload {
+  mode: AppMode;
+  pinned: boolean;
+  session_state: "idle" | "running" | "paused";
+  session_elapsed_ms: number;
+  /** True while the main window is in native OS fullscreen. */
+  is_fullscreen: boolean;
+}
+
+export interface WindowGeometry {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface AppModeSettings {
+  mode: AppMode;
+  pinned: boolean;
+  full_geometry: WindowGeometry | null;
+  compact_geometry: WindowGeometry | null;
+}
+
+// Tray (spec: tray-status)
+export interface TrayLabels {
+  show: string;
+  toggle_focus: string;
+  stop_session: string;
+  quit: string;
+  state_idle: string;
+  state_running: string;
+  state_paused: string;
+  open_quick_panel: string;
+}
+
+export interface ShortcutStatus {
+  action: string;
+  shortcut: string;
+  registered: boolean;
+  error: string | null;
+}
+
 export interface AppSettings {
   general: GeneralSettings;
   focus_rules: FocusRules;
@@ -155,9 +234,17 @@ export interface AppSettings {
   audio: AudioSettings;
   breaks: BreakSettings;
   shortcuts: ShortcutSettings;
+  checklist: ChecklistSettings;
+  app_mode: AppModeSettings;
 }
 
 // Event payloads from Rust
+export interface SessionLifecyclePayload {
+  session_id: string;
+  label: string | null;
+  elapsed_ms: number;
+}
+
 export interface TickPayload {
   session_id: string;
   focus_ms: number;

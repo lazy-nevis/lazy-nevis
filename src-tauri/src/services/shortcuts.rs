@@ -1,9 +1,16 @@
 use crate::error::{AppError, Result};
 use crate::models::settings::ShortcutSettings;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 use tauri::{AppHandle, Emitter, Runtime};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Shortcut, ShortcutState};
+
+pub const ACTIONS: [&str; 4] = [
+    "toggle_focus",
+    "stop_session",
+    "open_home",
+    "add_checkpoint",
+];
 
 const EVENTS: [&str; 4] = [
     "shortcut:toggle_focus",
@@ -21,11 +28,30 @@ fn values(settings: &ShortcutSettings) -> [&str; 4] {
     ]
 }
 
-pub fn parse_shortcuts(settings: &ShortcutSettings) -> Result<Vec<Shortcut>> {
+/// One configured binding. `shortcut == None` means the binding is disabled (empty string).
+#[derive(Debug, Clone, Copy)]
+pub struct ParsedShortcut {
+    pub action: &'static str,
+    pub event: &'static str,
+    pub shortcut: Option<Shortcut>,
+}
+
+/// Parse and validate bindings. Empty strings are valid and mean "disabled"
+/// (spec: global-shortcuts/disable-one-shortcut). Parse/validation errors remain hard
+/// errors so invalid settings are rejected before persisting.
+pub fn parse_shortcuts(settings: &ShortcutSettings) -> Result<Vec<ParsedShortcut>> {
     let mut ids = HashSet::new();
     values(settings)
         .into_iter()
-        .map(|value| {
+        .zip(ACTIONS.into_iter().zip(EVENTS))
+        .map(|(value, (action, event))| {
+            if value.trim().is_empty() {
+                return Ok(ParsedShortcut {
+                    action,
+                    event,
+                    shortcut: None,
+                });
+            }
             let shortcut = Shortcut::from_str(value).map_err(|error| {
                 AppError::InvalidArgument(format!("Invalid shortcut '{value}': {error}"))
             })?;
@@ -44,18 +70,31 @@ pub fn parse_shortcuts(settings: &ShortcutSettings) -> Result<Vec<Shortcut>> {
                     "Shortcut '{value}' is assigned more than once"
                 )));
             }
-            Ok(shortcut)
+            Ok(ParsedShortcut {
+                action,
+                event,
+                shortcut: Some(shortcut),
+            })
         })
         .collect()
 }
 
-fn register_parsed<R: Runtime>(app: &AppHandle<R>, shortcuts: &[Shortcut]) -> Result<()> {
-    let mut registered_now = Vec::new();
-    for (shortcut, event_name) in shortcuts.iter().copied().zip(EVENTS) {
+/// Best-effort registration: each binding registers independently; failures are collected
+/// per action instead of aborting the whole set
+/// (spec: global-shortcuts/os-conflict — one failure must not disable the others).
+fn register_parsed<R: Runtime>(
+    app: &AppHandle<R>,
+    shortcuts: &[ParsedShortcut],
+) -> HashMap<String, String> {
+    let mut errors = HashMap::new();
+    for parsed in shortcuts {
+        let Some(shortcut) = parsed.shortcut else {
+            continue; // disabled
+        };
         if app.global_shortcut().is_registered(shortcut) {
             continue;
         }
-        let event_name = event_name.to_string();
+        let event_name = parsed.event.to_string();
         if let Err(error) = app
             .global_shortcut()
             .on_shortcut(shortcut, move |app, _, event| {
@@ -64,48 +103,46 @@ fn register_parsed<R: Runtime>(app: &AppHandle<R>, shortcuts: &[Shortcut]) -> Re
                 }
             })
         {
-            for registered in registered_now {
-                let _ = app.global_shortcut().unregister(registered);
-            }
-            return Err(AppError::InvalidArgument(format!(
-                "Could not register shortcut: {error}"
-            )));
+            errors.insert(parsed.action.to_string(), error.to_string());
         }
-        registered_now.push(shortcut);
     }
-    Ok(())
+    errors
 }
 
+/// Register all configured shortcuts, returning per-action registration errors
+/// (empty map = everything registered).
 pub fn register_shortcuts<R: Runtime>(
     app: &AppHandle<R>,
     settings: &ShortcutSettings,
-) -> Result<()> {
+) -> Result<HashMap<String, String>> {
     let shortcuts = parse_shortcuts(settings)?;
-    register_parsed(app, &shortcuts)
+    Ok(register_parsed(app, &shortcuts))
 }
 
+/// Swap registrations when settings change: unregister the previous set, then register the
+/// next set best-effort. Returns the per-action error map for the new set.
 pub fn replace_shortcuts<R: Runtime>(
     app: &AppHandle<R>,
     previous: &ShortcutSettings,
     next: &ShortcutSettings,
-) -> Result<()> {
+) -> Result<HashMap<String, String>> {
     let previous = parse_shortcuts(previous)?;
     let next = parse_shortcuts(next)?;
-    for shortcut in &previous {
-        if app.global_shortcut().is_registered(*shortcut) {
-            if let Err(error) = app.global_shortcut().unregister(*shortcut) {
-                let _ = register_parsed(app, &previous);
-                return Err(AppError::Internal(error.to_string()));
+    for parsed in &previous {
+        let Some(shortcut) = parsed.shortcut else {
+            continue;
+        };
+        if app.global_shortcut().is_registered(shortcut) {
+            if let Err(error) = app.global_shortcut().unregister(shortcut) {
+                tracing::warn!(
+                    ?error,
+                    action = parsed.action,
+                    "failed to unregister shortcut"
+                );
             }
         }
     }
-    if let Err(error) = register_parsed(app, &next) {
-        if let Err(restore_error) = register_parsed(app, &previous) {
-            tracing::error!(?restore_error, "failed to restore previous shortcuts");
-        }
-        return Err(error);
-    }
-    Ok(())
+    Ok(register_parsed(app, &next))
 }
 
 #[cfg(test)]
@@ -114,10 +151,23 @@ mod tests {
 
     #[test]
     fn parses_defaults() {
-        assert_eq!(
-            parse_shortcuts(&ShortcutSettings::default()).unwrap().len(),
-            4
-        );
+        let parsed = parse_shortcuts(&ShortcutSettings::default()).unwrap();
+        assert_eq!(parsed.len(), 4);
+        assert!(parsed.iter().all(|p| p.shortcut.is_some()));
+    }
+
+    // Spec scenario: global-shortcuts/disable-one-shortcut
+    #[test]
+    fn test_shortcut_disable_empty_binding_is_valid_and_skipped() {
+        let settings = ShortcutSettings {
+            toggle_focus: "".into(),
+            ..ShortcutSettings::default()
+        };
+        let parsed = parse_shortcuts(&settings).unwrap();
+        assert_eq!(parsed.len(), 4);
+        assert!(parsed[0].shortcut.is_none());
+        assert_eq!(parsed[0].action, "toggle_focus");
+        assert!(parsed[1..].iter().all(|p| p.shortcut.is_some()));
     }
 
     #[test]
@@ -133,5 +183,21 @@ mod tests {
         assert!(parse_shortcuts(&settings).is_err());
         settings.toggle_focus = "CmdOrCtrl+Escape".into();
         assert!(parse_shortcuts(&settings).is_err());
+    }
+
+    // Spec scenario: global-shortcuts/upgrade-preserves-bindings — the new defaults are
+    // triple-modifier combos and must parse.
+    #[test]
+    fn new_defaults_use_triple_modifiers() {
+        let defaults = ShortcutSettings::default();
+        for value in [
+            &defaults.toggle_focus,
+            &defaults.stop_session,
+            &defaults.open_home,
+            &defaults.add_checkpoint,
+        ] {
+            assert!(value.contains("Alt"), "{value} should include Alt");
+        }
+        parse_shortcuts(&defaults).unwrap();
     }
 }

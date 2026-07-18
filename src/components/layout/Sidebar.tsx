@@ -1,7 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, History, Settings, Info } from "lucide-react";
+import { LayoutDashboard, History, ListChecks, Minimize2, Settings, Info } from "lucide-react";
+import { appModeService } from "@/services/tauri";
 import { cn } from "@/utils/cn";
+import { useAppStatusStore } from "@/stores/appStatusStore";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useUiStore } from "@/stores/uiStore";
@@ -11,6 +13,7 @@ import iconLight from "@/assets/brand/icon-light.png";
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "nav.dashboard" },
   { to: "/history", icon: History, label: "nav.history" },
+  { to: "/checklist", icon: ListChecks, label: "nav.checklist" },
   { to: "/settings", icon: Settings, label: "nav.settings" },
   { to: "/about", icon: Info, label: "nav.about" },
 ];
@@ -20,6 +23,7 @@ export function Sidebar() {
   const activeSession = useSessionStore((s) => s.activeSession);
   const theme = useSettingsStore((s) => s.settings.general.theme);
   const updateAvailable = useUiStore((s) => s.updateAvailable);
+  const isFullscreen = useAppStatusStore((s) => s.isFullscreen);
 
   // Determine effective dark mode from settings + system preference
   const isDark =
@@ -61,6 +65,25 @@ export function Sidebar() {
         />
       </div>
 
+      {/* Compact Mode toggle lives at the top, mirroring the compact top bar,
+          so the mode switch is always in the same region of the app
+          (spec: app-modes/switch-to-compact). Hidden in native fullscreen,
+          where switching to the narrow layout doesn't make sense
+          (spec: app-modes/fullscreen-follows-full-mode). */}
+      {!isFullscreen && (
+        <button
+          type="button"
+          onClick={() => void appModeService.setMode("compact")}
+          title={t("app_modes.switch_to_compact")}
+          aria-label={t("app_modes.switch_to_compact")}
+          className="mb-1 flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <Minimize2 className="h-5 w-5" />
+        </button>
+      )}
+
+      <div className="mb-1 h-px w-8 bg-border" />
+
       {navItems.map(({ to, icon: Icon, label }) => (
         <NavLink
           key={to}
@@ -80,6 +103,7 @@ export function Sidebar() {
           )}
         </NavLink>
       ))}
+
     </aside>
   );
 }

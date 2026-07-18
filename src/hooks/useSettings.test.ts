@@ -115,6 +115,27 @@ describe("useSettings", () => {
     expect(resetSpy).toHaveBeenCalledOnce();
   });
 
+  // Spec scenario: tray-status/language-change
+  it("pushes localized tray labels on startup and on language change", async () => {
+    vi.spyOn(tauriService.settingsService, "get").mockResolvedValue(mockSettings);
+    vi.spyOn(tauriService.settingsService, "save").mockResolvedValue();
+    const setLabels = vi.spyOn(tauriService.trayService, "setLabels").mockResolvedValue();
+
+    const { result } = renderHook(() => useSettings());
+    await waitFor(() => expect(setLabels).toHaveBeenCalledTimes(1));
+    expect(setLabels.mock.calls[0][0].quit).toBe("Quit");
+
+    const toPortuguese = {
+      ...mockSettings,
+      general: { ...mockSettings.general, language: "pt-BR" },
+    };
+    await act(async () => {
+      await result.current.saveSettings(toPortuguese);
+    });
+    await waitFor(() => expect(setLabels).toHaveBeenCalledTimes(2));
+    expect(setLabels.mock.calls[1][0].quit).toBe("Sair");
+  });
+
   it("reports a rejected shortcut save and keeps the process usable", async () => {
     useSettingsStore.setState({ settings: mockSettings, loaded: true });
     vi.spyOn(tauriService.settingsService, "save").mockRejectedValue(new Error("shortcut conflict"));

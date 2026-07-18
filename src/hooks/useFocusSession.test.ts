@@ -140,6 +140,60 @@ describe("useFocusSession", () => {
     expect(result.current.checkpoints).toHaveLength(0);
   });
 
+  // Spec scenario: notification-feedback/shortcut-trigger-while-app-inactive
+  it("forwards session lifecycle events as inactive-only notifications", async () => {
+    const handlers = new Map<string, (ev: { payload: unknown }) => void | Promise<void>>();
+    vi.mocked(listen).mockImplementation(async (event, handler) => {
+      handlers.set(event as string, handler as never);
+      return () => {};
+    });
+    const send = vi.spyOn(tauriService.notificationService, "send").mockResolvedValue();
+
+    renderHook(() => useFocusSession());
+    await waitFor(() => expect(handlers.has("session:started")).toBe(true));
+
+    await act(async () => {
+      await handlers.get("session:started")!({
+        payload: { session_id: "sess-1", label: "Deep work", elapsed_ms: 0 },
+      });
+    });
+
+    await waitFor(() => expect(send).toHaveBeenCalled());
+    // Third argument = onlyIfInactive → Rust suppresses it when the app is focused.
+    expect(send.mock.calls[0][2]).toBe(true);
+  });
+
+  // Spec scenario: notification-feedback/feedback-disabled
+  it("does not notify lifecycle events when feedback is disabled in settings", async () => {
+    const { useSettingsStore } = await import("@/stores/settingsStore");
+    const current = useSettingsStore.getState().settings;
+    useSettingsStore.setState({
+      settings: {
+        ...current,
+        alerts: { ...current.alerts, session_feedback_notifications: false },
+      },
+    });
+
+    const handlers = new Map<string, (ev: { payload: unknown }) => void | Promise<void>>();
+    vi.mocked(listen).mockImplementation(async (event, handler) => {
+      handlers.set(event as string, handler as never);
+      return () => {};
+    });
+    const send = vi.spyOn(tauriService.notificationService, "send").mockResolvedValue();
+
+    renderHook(() => useFocusSession());
+    await waitFor(() => expect(handlers.has("session:stopped")).toBe(true));
+
+    await act(async () => {
+      await handlers.get("session:stopped")!({
+        payload: { session_id: "sess-1", label: null, elapsed_ms: 60_000 },
+      });
+    });
+
+    expect(send).not.toHaveBeenCalled();
+    useSettingsStore.setState({ settings: current });
+  });
+
   it("registers one listener per event and removes all listeners on cleanup", async () => {
     const cleanups: Array<ReturnType<typeof vi.fn>> = [];
     vi.mocked(listen).mockImplementation(async () => {
@@ -149,12 +203,20 @@ describe("useFocusSession", () => {
     });
 
     const { unmount } = renderHook(() => useFocusSession());
-    await waitFor(() => expect(listen).toHaveBeenCalledTimes(8));
+    await waitFor(() => expect(listen).toHaveBeenCalledTimes(12));
 
     const events = vi.mocked(listen).mock.calls.map(([event]) => event);
     expect(new Set(events).size).toBe(events.length);
+    expect(events).toEqual(
+      expect.arrayContaining([
+        "session:started",
+        "session:paused",
+        "session:resumed",
+        "session:stopped",
+      ]),
+    );
     unmount();
-    expect(cleanups).toHaveLength(8);
+    expect(cleanups).toHaveLength(12);
     expect(cleanups.every((cleanup) => cleanup.mock.calls.length === 1)).toBe(true);
   });
 });

@@ -14,8 +14,6 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use tauri::{
     image::Image,
-    menu::{Menu, MenuItem, PredefinedMenuItem},
-    path::BaseDirectory,
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Emitter, Manager,
 };
@@ -72,6 +70,7 @@ pub fn run() {
             let start_minimized = settings.general.start_minimized || launched_from_autostart;
             let language = settings.general.language.clone();
             let logger = Arc::new(Mutex::new(SessionLogger::new(Arc::clone(&db))));
+            let checklist = Arc::new(services::checklist::ChecklistService::new(Arc::clone(&db)));
 
             app.manage(AppState {
                 db,
@@ -80,7 +79,9 @@ pub fn run() {
                 active_session: Arc::new(Mutex::new(None)),
                 settings: Arc::new(Mutex::new(settings)),
                 active_overlay: Mutex::new(None),
-                shortcut_registration_error: Mutex::new(None),
+                shortcut_registration_status: Mutex::new(std::collections::HashMap::new()),
+                checklist,
+                app_status: Arc::new(services::app_status::AppStatusManager::new()),
             });
 
             let session_was_recovered = recover_active_session(app).unwrap_or_else(|error| {
@@ -106,6 +107,18 @@ pub fn run() {
             if let Err(error) = setup_tray(app) {
                 tracing::warn!(?error, "tray unavailable; continuing with the main window");
             }
+            // Reflect a recovered (paused) session on the tray right away.
+            {
+                let state = app.state::<AppState>();
+                let recovered_summary = state
+                    .active_session
+                    .lock()
+                    .ok()
+                    .and_then(|guard| guard.as_ref().map(monitor::session_summary));
+                if let Some(summary) = recovered_summary {
+                    state.app_status.update_session(app.handle(), summary);
+                }
+            }
             let configured_shortcuts = app
                 .state::<AppState>()
                 .settings
@@ -113,21 +126,69 @@ pub fn run() {
                 .map_err(|_| std::io::Error::other("settings lock poisoned"))?
                 .shortcuts
                 .clone();
-            if let Err(error) =
-                services::shortcuts::register_shortcuts(app.handle(), &configured_shortcuts)
-            {
-                tracing::warn!(?error, "configured global shortcuts are unavailable");
-                *app.state::<AppState>()
-                    .shortcut_registration_error
-                    .lock()
-                    .map_err(|_| std::io::Error::other("shortcut status lock poisoned"))? =
-                    Some(error.to_string());
+            match services::shortcuts::register_shortcuts(app.handle(), &configured_shortcuts) {
+                Ok(status) => {
+                    if !status.is_empty() {
+                        tracing::warn!(?status, "some global shortcuts failed to register");
+                    }
+                    *app.state::<AppState>()
+                        .shortcut_registration_status
+                        .lock()
+                        .map_err(|_| std::io::Error::other("shortcut status lock poisoned"))? =
+                        status;
+                }
+                Err(error) => {
+                    // Saved bindings failed to parse — mark every action so the UI can explain.
+                    tracing::warn!(?error, "configured global shortcuts are unavailable");
+                    let message = error.to_string();
+                    *app.state::<AppState>()
+                        .shortcut_registration_status
+                        .lock()
+                        .map_err(|_| std::io::Error::other("shortcut status lock poisoned"))? =
+                        services::shortcuts::ACTIONS
+                            .iter()
+                            .map(|action| (action.to_string(), message.clone()))
+                            .collect();
+                }
             }
             commands::monitor::ensure_overlay_window(app.handle())?;
+            if let Err(error) = commands::monitor::ensure_tray_window(app.handle()) {
+                tracing::warn!(?error, "tray quick panel unavailable");
+            }
+            // Pre-create the secondary window hidden so opening it later is
+            // instant, with no blank webview flash (spec: app-modes/instant-secondary-window).
+            if let Err(error) = commands::app_mode::ensure_secondary_window(app.handle()) {
+                tracing::warn!(?error, "secondary window unavailable");
+            }
             #[cfg(debug_assertions)]
             {
                 maybe_run_overlay_smoke_test(app);
                 maybe_run_notification_smoke_test(app);
+            }
+
+            // Apply the persisted app mode before the window is shown
+            // (spec: app-modes/switch-to-compact).
+            {
+                let state = app.state::<AppState>();
+                let (mode, pinned) = state
+                    .settings
+                    .lock()
+                    .map(|settings| {
+                        (
+                            services::app_status::AppMode::parse(&settings.app_mode.mode)
+                                .unwrap_or(services::app_status::AppMode::Full),
+                            settings.app_mode.pinned,
+                        )
+                    })
+                    .unwrap_or((services::app_status::AppMode::Full, false));
+                state.app_status.init_mode_pin(mode, pinned);
+                if mode == services::app_status::AppMode::Compact {
+                    if let Err(error) =
+                        commands::app_mode::apply_mode(app.handle(), &state, mode, false)
+                    {
+                        tracing::warn!(?error, "could not apply persisted compact mode");
+                    }
+                }
             }
 
             // FIX: window starts with visible:false in config.
@@ -148,6 +209,47 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
+            // The reusable secondary window hides on close so reopening stays
+            // instant (spec: app-modes/instant-secondary-window).
+            if window.label() == commands::app_mode::SECONDARY_WINDOW_LABEL {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+                return;
+            }
+
+            // Quick panel: hide on blur (spec: tray-quick-panel/focus-loss-hides).
+            if window.label() == commands::monitor::TRAY_WINDOW_LABEL {
+                match event {
+                    tauri::WindowEvent::Focused(false)
+                        if !commands::monitor::popover_recently_shown() =>
+                    {
+                        let _ = window.hide();
+                    }
+                    tauri::WindowEvent::CloseRequested { api, .. } => {
+                        api.prevent_close();
+                        let _ = window.hide();
+                    }
+                    _ => {}
+                }
+                return;
+            }
+
+            // Native macOS fullscreen (the green traffic-light button) has no
+            // dedicated Tauri event — detect the transition on resize and let
+            // Compact Mode borrow the Full Mode layout while fullscreen
+            // (spec: app-modes/fullscreen-follows-full-mode).
+            if window.label() == "main" {
+                if let tauri::WindowEvent::Resized(_) = event {
+                    let app = window.app_handle();
+                    if let Some(state) = app.try_state::<AppState>() {
+                        let is_fullscreen = window.is_fullscreen().unwrap_or(false);
+                        state.app_status.sync_native_fullscreen(app, is_fullscreen);
+                    }
+                }
+            }
+
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
 
@@ -201,7 +303,7 @@ pub fn run() {
             commands::settings::get_settings,
             commands::settings::save_settings,
             commands::settings::reset_settings,
-            commands::settings::get_shortcut_registration_error,
+            commands::settings::get_shortcut_registration_status,
             commands::audio::play_sound,
             commands::audio::stop_sound,
             commands::audio::list_builtin_sounds,
@@ -210,13 +312,28 @@ pub fn run() {
             commands::monitor::get_current_window,
             commands::monitor::get_idle_time,
             commands::monitor::list_running_apps,
-            commands::monitor::update_tray_status,
+            commands::monitor::set_tray_labels,
             commands::monitor::show_overlay_alert,
             commands::monitor::get_active_overlay_alert,
             commands::monitor::dismiss_overlay_alert,
             commands::monitor::cancel_active_alerts,
             commands::monitor::hide_overlay_alert,
             commands::notifications::send_app_notification,
+            commands::app_mode::get_app_status,
+            commands::app_mode::set_app_mode,
+            commands::app_mode::set_window_pin,
+            commands::app_mode::open_secondary_window,
+            commands::checklist::create_checklist_item,
+            commands::checklist::update_checklist_item,
+            commands::checklist::complete_checklist_item,
+            commands::checklist::uncomplete_checklist_item,
+            commands::checklist::delete_checklist_item,
+            commands::checklist::reorder_checklist_items,
+            commands::checklist::list_open_checklist_items,
+            commands::checklist::list_checklist_history,
+            commands::checklist::list_checklist_tags,
+            commands::checklist::link_checklist_session,
+            commands::checklist::get_linked_checklist_item,
             commands::permissions::check_permissions,
             commands::permissions::request_notification_permission,
             commands::permissions::open_accessibility_settings,
@@ -500,6 +617,7 @@ fn maybe_run_notification_smoke_test(app: &tauri::App) {
             tauri::async_runtime::block_on(commands::notifications::send_app_notification(
                 "LazyNevis notification test".to_string(),
                 "Notification identity and icon are configured correctly.".to_string(),
+                None,
                 app.clone(),
             ));
 
@@ -526,52 +644,44 @@ fn show_window(app: &tauri::AppHandle) {
 }
 
 fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
-    let show = MenuItem::with_id(app, "show", "Open LazyNevis", true, None::<&str>)?;
-    let toggle = MenuItem::with_id(
-        app,
-        "toggle_focus",
-        "Start Focus Session",
-        true,
-        None::<&str>,
-    )?;
-    let stop = MenuItem::with_id(app, "stop_session", "Stop Session", true, None::<&str>)?;
-    let sep = PredefinedMenuItem::separator(app)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&show, &toggle, &stop, &sep, &quit])?;
+    use services::app_status::{build_tray_menu, icon_bytes, TraySessionState, TRAY_ID};
 
-    let icon_path = app
-        .path()
-        .resolve("icons/96x96_monochrome.png", BaseDirectory::Resource)
-        .map_err(|error| std::io::Error::other(error.to_string()))?;
-    let tray_icon = Image::from_path(icon_path).or_else(|_| {
+    let labels = app
+        .try_state::<AppState>()
+        .map(|state| state.app_status.labels())
+        .unwrap_or_default();
+    let menu = build_tray_menu(app, &labels)?;
+
+    // Embedded bytes, not a resolved resource path — see `icon_bytes`'s doc
+    // comment for why (Tauri's resource glob flattens the `tray/` subdirectory).
+    let tray_icon = Image::from_bytes(icon_bytes(TraySessionState::Idle)).or_else(|_| {
         app.default_window_icon()
             .cloned()
             .ok_or_else(|| tauri::Error::AssetNotFound("tray icon".into()))
     })?;
 
-    TrayIconBuilder::new()
+    TrayIconBuilder::with_id(TRAY_ID)
         .icon(tray_icon)
         .icon_as_template(true)
         .menu(&menu)
-        .tooltip("LazyNevis")
+        // Left click toggles the quick panel; the native menu stays on right click
+        // (spec: tray-quick-panel/left-click-toggle).
+        .show_menu_on_left_click(false)
+        .tooltip(&labels.state_idle)
         .on_tray_icon_event(|tray, event| {
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
                 button_state: MouseButtonState::Up,
+                rect,
                 ..
             } = event
             {
-                show_window(tray.app_handle());
+                commands::monitor::toggle_tray_popover(tray.app_handle(), Some(rect));
             }
         })
         .on_menu_event(|app, event| match event.id.as_ref() {
             "show" => show_window(app),
-            "toggle_focus" => {
-                let _ = app.emit("shortcut:toggle_focus", ());
-            }
-            "stop_session" => {
-                let _ = app.emit("shortcut:stop_session", ());
-            }
+            "open_quick_panel" => commands::monitor::open_tray_popover(app),
             "quit" => {
                 // Stop any active session before quitting
                 if let Some(state) = app.try_state::<AppState>() {

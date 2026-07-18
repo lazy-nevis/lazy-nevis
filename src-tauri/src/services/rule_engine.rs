@@ -14,6 +14,83 @@ pub const ALWAYS_IGNORED: &[&str] = &[
     "loginwindow",
 ];
 
+/// Background/system-chrome processes that never count as the user's "real"
+/// focused app: LazyNevis itself, OS shell surfaces, and menu-bar/tray managers
+/// (e.g. Thaw, Bartender). When one of these is frontmost the monitor keeps
+/// attributing time to the previously focused app.
+/// Spec: focus-rules/focus-transparent-apps.
+pub const FOCUS_TRANSPARENT: &[&str] = &[
+    // LazyNevis itself (tray popover, compact window, overlay)
+    "lazy-nevis",
+    "lazynevis",
+    "lazy_nevis",
+    // macOS system chrome
+    "SystemUIServer",
+    "Dock",
+    "loginwindow",
+    "NotificationCenter",
+    "Notification Center",
+    "ControlCenter",
+    "Control Center",
+    "Spotlight",
+    "WindowManager",
+    "Window Server",
+    "screencaptureui",
+    // macOS menu-bar/tray managers
+    "Thaw",
+    "Bartender",
+    "Bartender 4",
+    "Bartender 5",
+    "Ice",
+    "Hidden Bar",
+    "Dozer",
+    "Vanilla",
+    // Windows shell surfaces
+    "ShellExperienceHost",
+    "StartMenuExperienceHost",
+    "SearchHost",
+    "SearchUI",
+    "SearchApp",
+    "TextInputHost",
+    "LockApp",
+    // Linux shells / panels
+    "gnome-shell",
+    "plasmashell",
+    "xfce4-panel",
+    "polybar",
+    "waybar",
+    "lxpanel",
+    "mate-panel",
+    "cinnamon",
+];
+
+/// Case-insensitive, `.exe`-insensitive process-name comparison.
+fn process_name_matches(name: &str, candidate: &str) -> bool {
+    let name = name.to_lowercase();
+    let name = name.trim_end_matches(".exe");
+    let candidate = candidate.to_lowercase();
+    let candidate = candidate.trim_end_matches(".exe");
+    name == candidate
+}
+
+/// True when the frontmost window belongs to a focus-transparent process and
+/// should be skipped by the window monitor (previous app stays "current").
+pub fn is_focus_transparent(window: &WindowInfo) -> bool {
+    FOCUS_TRANSPARENT.iter().any(|&ignored| {
+        process_name_matches(&window.app_exe, ignored)
+            || process_name_matches(&window.app_name, ignored)
+    })
+}
+
+/// True when the window matches a user-configured ignored app
+/// (`focus_rules.ignored_apps` — spec: focus-rules/focus-transparent-apps).
+pub fn is_user_ignored(window: &WindowInfo, ignored_apps: &[String]) -> bool {
+    ignored_apps.iter().any(|ignored| {
+        process_name_matches(&window.app_exe, ignored)
+            || process_name_matches(&window.app_name, ignored)
+    })
+}
+
 pub struct RuleEngine;
 
 impl RuleEngine {
@@ -111,6 +188,7 @@ mod tests {
             apps: apps.into_iter().map(String::from).collect(),
             browser_tab_mode: "blocklist".to_string(),
             browser_tab_terms: vec!["YouTube".to_string()],
+            ..FocusRules::default()
         }
     }
 
@@ -120,6 +198,7 @@ mod tests {
             apps: apps.into_iter().map(String::from).collect(),
             browser_tab_mode: "blocklist".to_string(),
             browser_tab_terms: vec!["YouTube".to_string()],
+            ..FocusRules::default()
         }
     }
 
@@ -173,6 +252,7 @@ mod tests {
             apps: vec!["chrome.exe".to_string()],
             browser_tab_mode: "blocklist".to_string(),
             browser_tab_terms: vec!["YouTube".to_string()],
+            ..FocusRules::default()
         };
         let window = make_window("chrome.exe", "Google Chrome", true, "YouTube - Watch Later");
         assert!(RuleEngine::is_distraction(&rules, &window));
@@ -185,6 +265,7 @@ mod tests {
             apps: vec!["chrome.exe".to_string()],
             browser_tab_mode: "blocklist".to_string(),
             browser_tab_terms: vec!["YouTube".to_string()],
+            ..FocusRules::default()
         };
         let window = make_window("chrome.exe", "Google Chrome", true, "GitHub - Code Review");
         assert!(!RuleEngine::is_distraction(&rules, &window));
@@ -197,6 +278,7 @@ mod tests {
             apps: vec![],
             browser_tab_mode: "allowlist".to_string(),
             browser_tab_terms: vec!["docs.rust-lang.org".to_string(), "GitHub".to_string()],
+            ..FocusRules::default()
         };
         // Tab matches allowlist → not a distraction
         let focus_win = make_window("firefox.exe", "Firefox", true, "GitHub - Pull Request");
@@ -220,5 +302,55 @@ mod tests {
         let rules = blocklist_rules(vec!["lazy-nevis"]);
         let window = make_window("lazy-nevis.exe", "LazyNevis", false, "LazyNevis");
         assert!(!RuleEngine::is_distraction(&rules, &window));
+    }
+
+    // Spec scenario: focus-rules/focus-transparent-apps
+    #[test]
+    fn tray_managers_and_lazy_nevis_are_focus_transparent() {
+        for (exe, name) in [
+            ("lazy-nevis", "LazyNevis"),
+            ("Thaw", "Thaw"),
+            ("bartender 5", "Bartender 5"),
+            ("plasmashell", "plasmashell"),
+            ("ShellExperienceHost.exe", "ShellExperienceHost"),
+        ] {
+            let window = make_window(exe, name, false, "");
+            assert!(is_focus_transparent(&window), "{exe} should be transparent");
+        }
+    }
+
+    #[test]
+    fn real_apps_are_not_focus_transparent() {
+        for (exe, name) in [
+            ("code.exe", "Code"),
+            ("chrome.exe", "Google Chrome"),
+            ("Finder", "Finder"),
+            ("explorer.exe", "Explorer"),
+        ] {
+            let window = make_window(exe, name, false, "");
+            assert!(!is_focus_transparent(&window), "{exe} should be tracked");
+        }
+    }
+
+    // Spec scenario: focus-rules/user-extendable-ignore-list
+    #[test]
+    fn user_ignored_apps_match_case_and_exe_insensitively() {
+        let ignored = vec!["MyWidget".to_string(), "helper.exe".to_string()];
+        assert!(is_user_ignored(
+            &make_window("mywidget.exe", "MyWidget", false, ""),
+            &ignored
+        ));
+        assert!(is_user_ignored(
+            &make_window("Helper", "Helper", false, ""),
+            &ignored
+        ));
+        assert!(!is_user_ignored(
+            &make_window("code.exe", "Code", false, ""),
+            &ignored
+        ));
+        assert!(!is_user_ignored(
+            &make_window("code.exe", "Code", false, ""),
+            &[]
+        ));
     }
 }

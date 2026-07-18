@@ -2,11 +2,20 @@ use crate::error::{AppError, Result};
 use crate::models::{focus_percent, Checkpoint, Session, SessionStats};
 use crate::state::{now_ms, AppState, SessionData};
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Emitter, State};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StartSessionArgs {
     pub label: Option<String>,
+}
+
+/// Payload for the `session:started/paused/resumed/stopped` lifecycle events.
+/// Spec: notification-feedback (main window turns these into OS notifications).
+#[derive(Debug, Clone, Serialize)]
+pub struct SessionLifecyclePayload {
+    pub session_id: String,
+    pub label: Option<String>,
+    pub elapsed_ms: i64,
 }
 
 #[derive(Debug, Serialize)]
@@ -92,9 +101,25 @@ pub async fn start_session(
                 .lock()
                 .map_err(|_| AppError::Internal("lock".into()))?
                 .persist_runtime(&snapshot)?;
-            crate::monitor::start_monitor(app, inner, s)?;
+            crate::monitor::start_monitor(app.clone(), inner, s)?;
         }
     }
+
+    let _ = app.emit(
+        "session:started",
+        SessionLifecyclePayload {
+            session_id: session.id.clone(),
+            label: session.label.clone(),
+            elapsed_ms: 0,
+        },
+    );
+    state.app_status.update_session(
+        &app,
+        crate::services::app_status::SessionSummary {
+            state: crate::services::app_status::TraySessionState::Running,
+            elapsed_ms: 0,
+        },
+    );
 
     Ok(session)
 }
@@ -153,12 +178,26 @@ pub async fn stop_session(
             .ok_or_else(|| AppError::NotFound(session_id.clone()))?
     };
 
+    let _ = app.emit(
+        "session:stopped",
+        SessionLifecyclePayload {
+            session_id,
+            label: session.label.clone(),
+            elapsed_ms: session_state.focus_ms
+                + session_state.distracted_ms
+                + session_state.idle_ms,
+        },
+    );
+    state
+        .app_status
+        .update_session(&app, crate::services::app_status::SessionSummary::idle());
+
     Ok(SessionSummary::from(session))
 }
 
 #[tauri::command]
-pub async fn pause_session(state: State<'_, AppState>) -> Result<()> {
-    let snapshot = {
+pub async fn pause_session(app: AppHandle, state: State<'_, AppState>) -> Result<()> {
+    let (snapshot, lifecycle_event, payload) = {
         let mut active = state
             .active_session
             .lock()
@@ -166,13 +205,35 @@ pub async fn pause_session(state: State<'_, AppState>) -> Result<()> {
         let s = active.as_mut().ok_or(AppError::NoActiveSession)?;
         s.paused = !s.paused;
         s.last_tick_ms = now_ms();
-        s.runtime_snapshot(s.last_tick_ms)
+        let event = if s.paused {
+            "session:paused"
+        } else {
+            "session:resumed"
+        };
+        let payload = SessionLifecyclePayload {
+            session_id: s.session.id.clone(),
+            label: s.session.label.clone(),
+            elapsed_ms: s.focus_ms + s.distracted_ms + s.idle_ms,
+        };
+        (s.runtime_snapshot(s.last_tick_ms), event, payload)
     };
     state
         .logger
         .lock()
         .map_err(|_| AppError::Internal("lock".into()))?
         .persist_runtime(&snapshot)?;
+    state.app_status.update_session(
+        &app,
+        crate::services::app_status::SessionSummary {
+            state: if lifecycle_event == "session:paused" {
+                crate::services::app_status::TraySessionState::Paused
+            } else {
+                crate::services::app_status::TraySessionState::Running
+            },
+            elapsed_ms: payload.elapsed_ms,
+        },
+    );
+    let _ = app.emit(lifecycle_event, payload);
     Ok(())
 }
 

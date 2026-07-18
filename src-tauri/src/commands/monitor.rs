@@ -64,16 +64,184 @@ pub async fn list_running_apps() -> Result<Vec<RunningApp>> {
     Ok(apps)
 }
 
-/// Update the tray tooltip to reflect current session state.
+/// Receive localized tray labels from the frontend (the i18n owner) and refresh
+/// the tray menu/tooltip. Spec: tray-status/language-change.
 #[tauri::command]
-pub async fn update_tray_status(label: String, app: AppHandle) -> Result<()> {
-    if label.len() > 255 || label.contains(['\n', '\r']) {
-        return Err(AppError::InvalidArgument("Invalid tray label".into()));
+pub async fn set_tray_labels(
+    labels: crate::services::app_status::TrayLabels,
+    app: AppHandle,
+    state: tauri::State<'_, crate::state::AppState>,
+) -> Result<()> {
+    let values = [
+        &labels.show,
+        &labels.toggle_focus,
+        &labels.stop_session,
+        &labels.quit,
+        &labels.state_idle,
+        &labels.state_running,
+        &labels.state_paused,
+    ];
+    if values
+        .iter()
+        .any(|value| value.trim().is_empty() || value.len() > 255 || value.contains(['\n', '\r']))
+    {
+        return Err(AppError::InvalidArgument("Invalid tray labels".into()));
     }
-    if let Some(tray) = app.tray_by_id("LazyNevis").or_else(|| app.tray_by_id("1")) {
-        let _ = tray.set_tooltip(Some(&label));
-    }
+    state.app_status.set_labels(&app, labels);
     Ok(())
+}
+
+// ── Tray quick panel (spec: tray-quick-panel) ────────────────────────────────
+
+pub const TRAY_WINDOW_LABEL: &str = "tray";
+const TRAY_POPOVER_WIDTH: f64 = 340.0;
+const TRAY_POPOVER_HEIGHT: f64 = 480.0;
+const POPOVER_MARGIN: f64 = 8.0;
+
+/// Guards against the blur that can race the click which opened the panel.
+static POPOVER_SHOWN_AT_MS: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(0);
+
+pub fn popover_recently_shown() -> bool {
+    let shown = POPOVER_SHOWN_AT_MS.load(std::sync::atomic::Ordering::Relaxed);
+    crate::state::now_ms() - shown < 300
+}
+
+/// Create the quick-panel window once, hidden, so the first click is instant.
+/// Transparent + native blur where supported, so the CSS can round the corners
+/// into a floating native-feeling popover (spec: tray-quick-panel/native-popover-look).
+pub fn ensure_tray_window(app: &AppHandle) -> Result<WebviewWindow> {
+    if let Some(existing) = app.get_webview_window(TRAY_WINDOW_LABEL) {
+        return Ok(existing);
+    }
+    let builder =
+        WebviewWindowBuilder::new(app, TRAY_WINDOW_LABEL, WebviewUrl::App("#/tray".into()))
+            .title("")
+            .inner_size(TRAY_POPOVER_WIDTH, TRAY_POPOVER_HEIGHT)
+            .decorations(false)
+            .always_on_top(true)
+            .skip_taskbar(true)
+            .resizable(false)
+            .visible(false);
+
+    // Linux compositors don't guarantee transparency; keep the window opaque there.
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
+    let builder = builder.transparent(true);
+
+    let window = builder
+        .build()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+
+    #[cfg(target_os = "macos")]
+    if let Err(error) = window_vibrancy::apply_vibrancy(
+        &window,
+        window_vibrancy::NSVisualEffectMaterial::Popover,
+        None,
+        Some(12.0),
+    ) {
+        tracing::warn!(?error, "tray popover vibrancy unavailable");
+    }
+    #[cfg(target_os = "windows")]
+    if let Err(error) = window_vibrancy::apply_acrylic(&window, None) {
+        tracing::warn!(?error, "tray popover acrylic unavailable");
+    }
+
+    Ok(window)
+}
+
+/// Anchor position for the panel, in physical pixels
+/// (spec: tray-quick-panel/left-click-toggle). Pure for unit testing:
+/// centered on the icon's x; below the icon when it sits in the top half of the
+/// work area (macOS menubar), above otherwise (Windows taskbar); clamped.
+pub fn popover_position(
+    icon: (f64, f64, f64, f64),      // x, y, w, h
+    window: (f64, f64),              // w, h
+    work_area: (f64, f64, f64, f64), // x, y, w, h
+    margin: f64,
+) -> (f64, f64) {
+    let (icon_x, icon_y, icon_w, icon_h) = icon;
+    let (win_w, win_h) = window;
+    let (area_x, area_y, area_w, area_h) = work_area;
+
+    let mut x = icon_x + icon_w / 2.0 - win_w / 2.0;
+    let icon_center_y = icon_y + icon_h / 2.0;
+    let mut y = if icon_center_y < area_y + area_h / 2.0 {
+        icon_y + icon_h + margin // icon at top (menubar) → open below
+    } else {
+        icon_y - win_h - margin // icon at bottom (taskbar) → open above
+    };
+
+    x = x.clamp(area_x, (area_x + area_w - win_w).max(area_x));
+    y = y.clamp(area_y, (area_y + area_h - win_h).max(area_y));
+    (x, y)
+}
+
+/// Left-click handler: hide when visible, otherwise anchor near the icon and show.
+pub fn toggle_tray_popover(app: &AppHandle, icon_rect: Option<tauri::Rect>) {
+    let Ok(window) = ensure_tray_window(app) else {
+        return;
+    };
+    if window.is_visible().unwrap_or(false) {
+        let _ = window.hide();
+        return;
+    }
+    show_tray_popover_at(app, &window, icon_rect);
+}
+
+fn show_tray_popover_at(app: &AppHandle, window: &WebviewWindow, icon_rect: Option<tauri::Rect>) {
+    let scale = window
+        .current_monitor()
+        .ok()
+        .flatten()
+        .map(|monitor| monitor.scale_factor())
+        .unwrap_or(1.0);
+    let icon = icon_rect.map(|rect| {
+        let position = rect.position.to_physical::<f64>(scale);
+        let size = rect.size.to_physical::<f64>(scale);
+        (position.x, position.y, size.width, size.height)
+    });
+
+    let monitor = icon
+        .and_then(|(x, y, w, h)| {
+            app.monitor_from_point(x + w / 2.0, y + h / 2.0)
+                .ok()
+                .flatten()
+        })
+        .or_else(|| app.primary_monitor().ok().flatten());
+
+    if let Some(monitor) = monitor {
+        let area = monitor.work_area();
+        let work_area = (
+            area.position.x as f64,
+            area.position.y as f64,
+            area.size.width as f64,
+            area.size.height as f64,
+        );
+        let window_size = window
+            .outer_size()
+            .map(|size| (size.width as f64, size.height as f64))
+            .unwrap_or((TRAY_POPOVER_WIDTH, TRAY_POPOVER_HEIGHT));
+        // Without an icon rect (Linux menu fallback), pin near the work-area corner.
+        let (x, y) = match icon {
+            Some(icon) => popover_position(icon, window_size, work_area, POPOVER_MARGIN),
+            None => (
+                work_area.0 + work_area.2 - window_size.0 - POPOVER_MARGIN,
+                work_area.1 + work_area.3 - window_size.1 - POPOVER_MARGIN,
+            ),
+        };
+        let _ = window.set_position(tauri::PhysicalPosition::new(x, y));
+    }
+
+    POPOVER_SHOWN_AT_MS.store(crate::state::now_ms(), std::sync::atomic::Ordering::Relaxed);
+    let _ = window.show();
+    let _ = window.set_focus();
+}
+
+/// Linux fallback entry point (menu item) — also used by tests/dev tools.
+pub fn open_tray_popover(app: &AppHandle) {
+    let Ok(window) = ensure_tray_window(app) else {
+        return;
+    };
+    show_tray_popover_at(app, &window, None);
 }
 
 /// Create the transparent overlay window once and keep it hidden until needed.
@@ -510,4 +678,42 @@ pub async fn cancel_active_alerts(app: AppHandle, state: State<'_, AppState>) ->
 #[tauri::command]
 pub async fn hide_overlay_alert(app: AppHandle, state: State<'_, AppState>) -> Result<()> {
     cancel_active_alerts_inner(&app, &state, false, None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::popover_position;
+
+    const WORK_AREA: (f64, f64, f64, f64) = (0.0, 25.0, 1440.0, 875.0);
+    const WINDOW: (f64, f64) = (340.0, 480.0);
+
+    // Spec scenario: tray-quick-panel/left-click-toggle (macOS menubar → below icon)
+    #[test]
+    fn test_quick_panel_opens_below_menubar_icon() {
+        let icon = (1200.0, 0.0, 24.0, 24.0);
+        let (x, y) = popover_position(icon, WINDOW, WORK_AREA, 8.0);
+        assert_eq!(y, 24.0 + 8.0);
+        assert!((x - (1212.0 - 170.0)).abs() < f64::EPSILON);
+    }
+
+    // Windows taskbar at the bottom → panel opens above the icon.
+    #[test]
+    fn test_quick_panel_opens_above_taskbar_icon() {
+        let work_area = (0.0, 0.0, 1920.0, 1040.0);
+        let icon = (1800.0, 1045.0, 24.0, 24.0);
+        let (_, y) = popover_position(icon, WINDOW, work_area, 8.0);
+        assert_eq!(y, 1045.0 - 480.0 - 8.0);
+    }
+
+    // Icon near the screen edge → x clamps inside the work area.
+    #[test]
+    fn test_quick_panel_clamps_to_work_area() {
+        let icon = (1430.0, 0.0, 24.0, 24.0);
+        let (x, _) = popover_position(icon, WINDOW, WORK_AREA, 8.0);
+        assert_eq!(x, 1440.0 - 340.0);
+
+        let icon_left = (2.0, 0.0, 24.0, 24.0);
+        let (x_left, _) = popover_position(icon_left, WINDOW, WORK_AREA, 8.0);
+        assert_eq!(x_left, 0.0);
+    }
 }

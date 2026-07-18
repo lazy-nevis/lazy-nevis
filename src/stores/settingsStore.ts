@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     apps: [],
     browser_tab_mode: "blocklist",
     browser_tab_terms: ["YouTube", "Twitter", "Instagram", "Reddit", "TikTok"],
+    ignored_apps: [],
   },
   alerts: {
     notification_enabled: true,
@@ -23,6 +24,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     fullscreen_enabled: false,
     fullscreen_threshold_ms: 60_000,
     cooldown_ms: 10_000,
+    session_feedback_notifications: true,
   },
   audio: {
     notification_sound: "builtin:alert1.wav",
@@ -38,10 +40,20 @@ const DEFAULT_SETTINGS: AppSettings = {
     alert_type: "notification",
   },
   shortcuts: {
-    toggle_focus: "CmdOrCtrl+Shift+F",
-    stop_session: "CmdOrCtrl+Shift+S",
-    open_home: "CmdOrCtrl+Shift+O",
-    add_checkpoint: "CmdOrCtrl+Shift+C",
+    toggle_focus: "CmdOrCtrl+Alt+Shift+F",
+    stop_session: "CmdOrCtrl+Alt+Shift+S",
+    open_home: "CmdOrCtrl+Alt+Shift+O",
+    add_checkpoint: "CmdOrCtrl+Alt+Shift+C",
+  },
+  checklist: {
+    grace_period_ms: 10_000,
+    history_sort: "created",
+  },
+  app_mode: {
+    mode: "full",
+    pinned: false,
+    full_geometry: null,
+    compact_geometry: null,
   },
 };
 
