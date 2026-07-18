@@ -1,6 +1,21 @@
 /// <reference types="vitest/globals" />
 import "@testing-library/jest-dom";
 
+// jsdom has no matchMedia; theme-aware components (BrandLogo, useThemeSync) need it.
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
 // Mock Tauri APIs that aren't available in test environment
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(() => Promise.resolve(null)),

@@ -11,7 +11,11 @@
     "error": "Something went wrong",
     "refresh": "Refresh",
     "remove": "Remove {{item}}",
-    "units": { "ms": "ms", "seconds": "sec", "minutes": "min" },
+    "units": {
+      "ms": "ms",
+      "seconds": "sec",
+      "minutes": "min"
+    },
     "unavailable": "Unavailable",
     "app_name": "LazyNevis",
     "tagline": "for lazy people who don't give upis.",
@@ -21,7 +25,8 @@
     "dashboard": "Dashboard",
     "history": "History",
     "settings": "Settings",
-    "about": "About"
+    "about": "About",
+    "checklist": "Checklist"
   },
   "dashboard": {
     "session": {
@@ -41,7 +46,9 @@
       "sync_error": "LazyNevis couldn't confirm the current session state.",
       "try_again": "Try again",
       "already_active": "A session is already active",
-      "saved": "Session saved!"
+      "saved": "Session saved!",
+      "paused_toast": "Session paused",
+      "resumed_toast": "Session resumed"
     },
     "timer": {
       "total": "Total",
@@ -141,7 +148,8 @@
       "breaks": "Breaks",
       "shortcuts": "Shortcuts",
       "data": "Data",
-      "permissions": "Permissions"
+      "permissions": "Permissions",
+      "checklist": "Checklist"
     },
     "section_desc": {
       "general": "Language, theme, and window monitoring parameters.",
@@ -150,7 +158,8 @@
       "audio": "Audio cues play when alerts fire. Use the built-in sounds or pick any MP3, WAV, or OGG file from your computer.",
       "breaks": "Break reminders nudge you to step away after long focus streaks. Compatible with Pomodoro (25 min focus + 5 min break).",
       "shortcuts": "Global keyboard shortcuts work from any app — no need to open LazyNevis first.",
-      "data": "All data is stored locally on your device. Nothing is ever sent to external servers."
+      "data": "All data is stored locally on your device. Nothing is ever sent to external servers.",
+      "checklist": "Behavior of the daily checklist."
     },
     "general": {
       "language": "Language",
@@ -183,6 +192,17 @@
       "apps_placeholder": "Executable name (e.g. code, chrome.exe)",
       "add_app": "Add",
       "detect_current": "Detect active app",
+      "ignored_title": "Ignored in detection",
+      "ignored_hint": "Processes here never count as the focused app — the previous app keeps the focus. Useful for tray managers and background widgets (e.g. Thaw, Bartender). LazyNevis and common system processes are always ignored.",
+      "ignored_placeholder": "Search running apps by name or PID, or type a name",
+      "bulk_toggle": "Add multiple",
+      "bulk_placeholder": "Paste one app per line — commas and semicolons also work",
+      "bulk_hint": "Duplicates and empty lines are skipped automatically.",
+      "bulk_add_count": "Add {{count}}",
+      "select_all": "Select all",
+      "clear_selection": "Clear selection",
+      "remove_selected": "Remove selected ({{count}})",
+      "toggle_select": "Select {{item}} for removal",
       "browser_rules_title": "Browser tab rules",
       "browser_rules_hint": "When a browser is open, LazyNevis checks the tab title to decide if it's focus or distraction. Only applies to browsers (Chrome, Firefox, Edge, etc.).",
       "browser_tab_mode": "Browser tab mode",
@@ -202,7 +222,9 @@
       "cooldown": "Cooldown between alerts",
       "cooldown_hint": "After dismissing an alert, LazyNevis won't fire another one for this duration. Prevents spam.",
       "threshold_hint": "Time in distraction before alert fires (seconds)",
-      "seconds_suffix": "seconds in a distraction app"
+      "seconds_suffix": "seconds in a distraction app",
+      "session_feedback": "Session feedback notifications",
+      "session_feedback_hint": "Notify when a session starts, pauses, resumes, or ends while the app is hidden or unfocused (e.g. via shortcut or tray)."
     },
     "audio": {
       "notification_sound": "Notification sound",
@@ -249,7 +271,12 @@
       "instructions_before": "Select a field and press a key combination, or",
       "instructions_after": "to cancel. Shortcuts require Ctrl/Cmd, Alt, or Shift.",
       "save_failed": "That shortcut couldn't be registered. The previous shortcuts remain active.",
-      "startup_failed": "Saved shortcuts couldn't be registered on this computer. Review them in Settings."
+      "startup_failed": "Saved shortcuts couldn't be registered on this computer. Review them in Settings.",
+      "disabled_placeholder": "Disabled — click to record",
+      "clear": "Disable shortcut",
+      "status_registered": "Active",
+      "status_failed": "Failed",
+      "conflict_warning": "Commonly used by {{apps}}. It may trigger here while you use those apps."
     },
     "data": {
       "export_all": "Export all data",
@@ -257,6 +284,10 @@
       "clear_history_confirm": "This will permanently delete all your session history. Are you sure?",
       "reset_settings": "Reset settings to defaults",
       "destructive_warning": "Destructive actions below cannot be undone."
+    },
+    "checklist": {
+      "grace_period": "Undo grace period",
+      "grace_period_hint": "How long a completed item stays visible with an undo option before moving to history."
     }
   },
   "permissions": {
@@ -305,6 +336,7 @@
   "app": {
     "recovery_notification_title": "LazyNevis — Session recovered",
     "recovery_notification_body": "LazyNevis didn't close properly. Your previous session was paused. Open the app to continue it.",
+    "window_title": "LazyNevis — {{screen}}",
     "close_warning_title": "Focus session is active",
     "close_warning_body": "You have an active focus session. Closing the app will end it and save your progress.",
     "close_keep": "Keep session running",
@@ -332,5 +364,75 @@
     "up_to_date": "You're up to date.",
     "update_failed": "Couldn't check for updates. Check your connection and try again.",
     "open_release": "Open release page"
+  },
+  "notifications": {
+    "unnamed_session": "Unnamed session",
+    "session_started_title": "Session started",
+    "session_started_body": "“{{label}}” is now running.",
+    "session_paused_title": "Session paused",
+    "session_paused_body": "“{{label}}” paused after {{time}}.",
+    "session_resumed_title": "Session resumed",
+    "session_resumed_body": "“{{label}}” is running again ({{time}} so far).",
+    "session_stopped_title": "Session ended",
+    "session_stopped_body": "“{{label}}” ended after {{time}}."
+  },
+  "checklist": {
+    "open_title": "Today's checklist",
+    "open_count": "{{count}} open",
+    "history_title": "Previous activities",
+    "add_item": "Add item",
+    "add_placeholder": "What needs doing? Use #tags to categorize…",
+    "empty_open": "Nothing open. Add your first item below.",
+    "empty_history": "No completed items for this filter.",
+    "complete": "Mark as done",
+    "undo": "Undo",
+    "restore": "Reopen item",
+    "overdue": "overdue",
+    "set_due_date": "Set due date",
+    "remove_tag": "Remove tag {{tag}}",
+    "show_tags": "{{count}} tag",
+    "show_tags_other": "{{count}} tags",
+    "created_days_ago": "{{count}} day ago",
+    "created_days_ago_other": "{{count}} days ago",
+    "completed_on": "Done {{date}}",
+    "start_focus": "Start focus session",
+    "prev_day": "Previous day",
+    "next_day": "Next day",
+    "filter_from": "From date",
+    "filter_to": "To date",
+    "sort_created": "Created",
+    "sort_due": "Due",
+    "sort_completed": "Completed",
+    "delete_confirm_title": "Delete item?",
+    "delete_confirm_body": "“{{title}}” and its tags will be removed. This cannot be undone.",
+    "linked_prompt_title": "Complete the linked item?",
+    "linked_prompt_body": "This session was started from “{{title}}”. Mark it as done too?",
+    "linked_prompt_complete": "Complete item",
+    "linked_prompt_keep": "Keep open"
+  },
+  "tray": {
+    "show": "Open LazyNevis",
+    "toggle_focus": "Start / Pause Focus Session",
+    "stop_session": "Stop Session",
+    "quit": "Quit",
+    "state_idle": "Idle",
+    "state_running": "Focusing",
+    "state_paused": "Paused",
+    "open_quick_panel": "Quick Panel"
+  },
+  "tray_panel": {
+    "focus": "Focus",
+    "distracted": "Distracted",
+    "idle": "Idle",
+    "session_name_placeholder": "Session name (optional)"
+  },
+  "app_modes": {
+    "compact_title": "LazyNevis",
+    "switch_to_compact": "Switch to Compact Mode",
+    "switch_to_full": "Switch to Full Mode",
+    "pin": "Pin on top",
+    "unpin": "Unpin",
+    "view_reports": "View reports",
+    "view_previous_activities": "View previous activities"
   }
 }

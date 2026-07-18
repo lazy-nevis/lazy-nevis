@@ -138,7 +138,7 @@ export function HotkeyInput({ value, onChange, disabled, placeholder, className 
     ? (partial || "Press a key combination…")
     : value
     ? displayShortcut(value)
-    : placeholder ?? "Click to record";
+    : placeholder ?? t("settings.shortcuts.disabled_placeholder");
 
   return (
     <div className="relative inline-flex items-center">
@@ -175,6 +175,19 @@ export function HotkeyInput({ value, onChange, disabled, placeholder, className 
           className="absolute right-2 flex items-center justify-center w-5 h-5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
           title={t("common.cancel")}
           aria-label={t("common.cancel")}
+        >
+          <X className="h-3 w-3" />
+        </button>
+      )}
+
+      {/* Clear (disable) button — empty binding means the shortcut is disabled */}
+      {!recording && !disabled && value && (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          className="absolute right-2 flex items-center justify-center w-5 h-5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          title={t("settings.shortcuts.clear")}
+          aria-label={t("settings.shortcuts.clear")}
         >
           <X className="h-3 w-3" />
         </button>

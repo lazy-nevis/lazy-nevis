@@ -56,9 +56,3 @@
 - Break reminders are wired to start/end controls and ticker-driven completion.
 - About performs a manual, bounded official-GitHub release check; there is no automatic updater.
 - Some hardcoded user-visible strings still exist; do not add more.
-
-## Commit Attribution
-AI commits MUST include:
-```
-Co-Authored-By: (agent name) <noreply@example.com>
-```

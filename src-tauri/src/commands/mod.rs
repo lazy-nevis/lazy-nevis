@@ -1,4 +1,6 @@
+pub mod app_mode;
 pub mod audio;
+pub mod checklist;
 pub mod monitor;
 pub mod notifications;
 pub mod permissions;

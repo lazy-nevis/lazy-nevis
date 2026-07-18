@@ -11,7 +11,11 @@
     "error": "Algo deu errado",
     "refresh": "Atualizar",
     "remove": "Remover {{item}}",
-    "units": { "ms": "ms", "seconds": "s", "minutes": "min" },
+    "units": {
+      "ms": "ms",
+      "seconds": "s",
+      "minutes": "min"
+    },
     "unavailable": "Indisponível",
     "app_name": "LazyNevis",
     "tagline": "para quem é leizis, mas não desistis.",
@@ -21,7 +25,8 @@
     "dashboard": "Painel",
     "history": "Histórico",
     "settings": "Configurações",
-    "about": "Sobre"
+    "about": "Sobre",
+    "checklist": "Checklist"
   },
   "dashboard": {
     "session": {
@@ -41,7 +46,9 @@
       "sync_error": "O LazyNevis não conseguiu confirmar o estado atual da sessão.",
       "try_again": "Tentar novamente",
       "already_active": "Já existe uma sessão ativa",
-      "saved": "Sessão salva!"
+      "saved": "Sessão salva!",
+      "paused_toast": "Sessão pausada",
+      "resumed_toast": "Sessão retomada"
     },
     "timer": {
       "total": "Total",
@@ -141,7 +148,8 @@
       "breaks": "Pausas",
       "shortcuts": "Atalhos",
       "data": "Dados",
-      "permissions": "Permissões"
+      "permissions": "Permissões",
+      "checklist": "Checklist"
     },
     "section_desc": {
       "general": "Idioma, tema e parâmetros de monitoramento de janelas.",
@@ -150,7 +158,8 @@
       "audio": "Sons tocam quando os alertas disparam. Use os sons embutidos ou escolha qualquer arquivo MP3, WAV ou OGG do computador.",
       "breaks": "Lembretes de pausa te avisam quando é hora de descansar depois de muito tempo em foco. Compatível com Pomodoro (25 min foco + 5 min pausa).",
       "shortcuts": "Atalhos globais funcionam de qualquer app — sem precisar abrir o LazyNevis.",
-      "data": "Todos os dados ficam salvos localmente no seu dispositivo. Nada é enviado para servidores externos."
+      "data": "Todos os dados ficam salvos localmente no seu dispositivo. Nada é enviado para servidores externos.",
+      "checklist": "Comportamento da checklist diária."
     },
     "general": {
       "language": "Idioma",
@@ -183,6 +192,17 @@
       "apps_placeholder": "Nome do executável (ex: code, chrome.exe)",
       "add_app": "Adicionar",
       "detect_current": "Detectar app ativo",
+      "ignored_title": "Ignorados na detecção",
+      "ignored_hint": "Processos aqui nunca contam como o app em foco — o app anterior continua com o foco. Útil para gerenciadores de tray e widgets de segundo plano (ex.: Thaw, Bartender). O LazyNevis e processos comuns do sistema são sempre ignorados.",
+      "ignored_placeholder": "Busque apps em execução por nome ou PID, ou digite um nome",
+      "bulk_toggle": "Adicionar vários",
+      "bulk_placeholder": "Cole um app por linha — vírgulas e ponto e vírgula também funcionam",
+      "bulk_hint": "Duplicados e linhas vazias são ignorados automaticamente.",
+      "bulk_add_count": "Adicionar {{count}}",
+      "select_all": "Selecionar todos",
+      "clear_selection": "Limpar seleção",
+      "remove_selected": "Remover selecionados ({{count}})",
+      "toggle_select": "Selecionar {{item}} para remoção",
       "browser_rules_title": "Regras para abas do browser",
       "browser_rules_hint": "Quando um navegador está aberto, o LazyNevis verifica o título da aba para decidir se é foco ou distração. Aplica apenas a navegadores (Chrome, Firefox, Edge, etc.).",
       "browser_tab_mode": "Modo para abas",
@@ -202,7 +222,9 @@
       "cooldown": "Cooldown entre alertas",
       "cooldown_hint": "Após dispensar um alerta, o LazyNevis não dispara outro por este tempo. Evita spam de alertas.",
       "threshold_hint": "Tempo em distração antes do alerta (segundos)",
-      "seconds_suffix": "segundos em app de distração"
+      "seconds_suffix": "segundos em app de distração",
+      "session_feedback": "Notificações de feedback da sessão",
+      "session_feedback_hint": "Notifica quando uma sessão inicia, pausa, retoma ou encerra com o app oculto ou sem foco (ex.: via atalho ou bandeja)."
     },
     "audio": {
       "notification_sound": "Som da notificação",
@@ -249,7 +271,12 @@
       "instructions_before": "Selecione um campo e pressione uma combinação, ou",
       "instructions_after": "para cancelar. Atalhos exigem Ctrl/Cmd, Alt ou Shift.",
       "save_failed": "Não foi possível registrar esse atalho. Os atalhos anteriores continuam ativos.",
-      "startup_failed": "Não foi possível registrar os atalhos salvos neste computador. Revise-os nas Configurações."
+      "startup_failed": "Não foi possível registrar os atalhos salvos neste computador. Revise-os nas Configurações.",
+      "disabled_placeholder": "Desativado — clique para gravar",
+      "clear": "Desativar atalho",
+      "status_registered": "Ativo",
+      "status_failed": "Falhou",
+      "conflict_warning": "Muito usado por {{apps}}. Pode disparar aqui enquanto você usa esses apps."
     },
     "data": {
       "export_all": "Exportar todos os dados",
@@ -257,6 +284,10 @@
       "clear_history_confirm": "Isso vai apagar permanentemente todo o seu histórico de sessões. Tem certeza?",
       "reset_settings": "Restaurar configurações padrão",
       "destructive_warning": "As ações abaixo não podem ser desfeitas."
+    },
+    "checklist": {
+      "grace_period": "Tempo para desfazer",
+      "grace_period_hint": "Por quanto tempo um item concluído continua visível com opção de desfazer antes de ir para o histórico."
     }
   },
   "permissions": {
@@ -305,6 +336,7 @@
   "app": {
     "recovery_notification_title": "LazyNevis — Sessão recuperada",
     "recovery_notification_body": "O LazyNevis não foi finalizado corretamente. A sessão anterior foi pausada. Abra o app para continuá-la.",
+    "window_title": "LazyNevis — {{screen}}",
     "close_warning_title": "Sessão de foco ativa",
     "close_warning_body": "Você tem uma sessão de foco em andamento. Fechar o app vai encerrá-la e salvar o progresso.",
     "close_keep": "Manter sessão ativa",
@@ -332,5 +364,75 @@
     "up_to_date": "Você está usando a versão mais recente.",
     "update_failed": "Não foi possível verificar atualizações. Confira sua conexão e tente novamente.",
     "open_release": "Abrir página da versão"
+  },
+  "notifications": {
+    "unnamed_session": "Sessão sem nome",
+    "session_started_title": "Sessão iniciada",
+    "session_started_body": "“{{label}}” está em andamento.",
+    "session_paused_title": "Sessão pausada",
+    "session_paused_body": "“{{label}}” foi pausada após {{time}}.",
+    "session_resumed_title": "Sessão retomada",
+    "session_resumed_body": "“{{label}}” está em andamento novamente ({{time}} até agora).",
+    "session_stopped_title": "Sessão encerrada",
+    "session_stopped_body": "“{{label}}” foi encerrada após {{time}}."
+  },
+  "checklist": {
+    "open_title": "Checklist de hoje",
+    "open_count": "{{count}} em aberto",
+    "history_title": "Atividades anteriores",
+    "add_item": "Adicionar item",
+    "add_placeholder": "O que precisa ser feito? Use #tags para categorizar…",
+    "empty_open": "Nada em aberto. Adicione seu primeiro item abaixo.",
+    "empty_history": "Nenhum item concluído para este filtro.",
+    "complete": "Marcar como concluído",
+    "undo": "Desfazer",
+    "restore": "Reabrir item",
+    "overdue": "atrasado",
+    "set_due_date": "Definir previsão de término",
+    "remove_tag": "Remover tag {{tag}}",
+    "show_tags": "{{count}} tag",
+    "show_tags_other": "{{count}} tags",
+    "created_days_ago": "há {{count}} dia",
+    "created_days_ago_other": "há {{count}} dias",
+    "completed_on": "Concluído em {{date}}",
+    "start_focus": "Iniciar sessão de foco",
+    "prev_day": "Dia anterior",
+    "next_day": "Próximo dia",
+    "filter_from": "Data inicial",
+    "filter_to": "Data final",
+    "sort_created": "Criação",
+    "sort_due": "Previsão",
+    "sort_completed": "Conclusão",
+    "delete_confirm_title": "Excluir item?",
+    "delete_confirm_body": "“{{title}}” e suas tags serão removidos. Isso não pode ser desfeito.",
+    "linked_prompt_title": "Concluir o item vinculado?",
+    "linked_prompt_body": "Esta sessão foi iniciada a partir de “{{title}}”. Marcar como concluído também?",
+    "linked_prompt_complete": "Concluir item",
+    "linked_prompt_keep": "Manter aberto"
+  },
+  "tray": {
+    "show": "Abrir o LazyNevis",
+    "toggle_focus": "Iniciar / Pausar sessão de foco",
+    "stop_session": "Encerrar sessão",
+    "quit": "Sair",
+    "state_idle": "Ocioso",
+    "state_running": "Focando",
+    "state_paused": "Pausado",
+    "open_quick_panel": "Painel rápido"
+  },
+  "tray_panel": {
+    "focus": "Foco",
+    "distracted": "Distração",
+    "idle": "Ocioso",
+    "session_name_placeholder": "Nome da sessão (opcional)"
+  },
+  "app_modes": {
+    "compact_title": "LazyNevis",
+    "switch_to_compact": "Mudar para o Modo Compacto",
+    "switch_to_full": "Mudar para o Modo Completo",
+    "pin": "Fixar no topo",
+    "unpin": "Desafixar",
+    "view_reports": "Ver relatórios",
+    "view_previous_activities": "Ver atividades anteriores"
   }
 }

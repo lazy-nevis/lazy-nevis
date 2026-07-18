@@ -58,6 +58,9 @@ pub struct FocusRules {
     pub apps: Vec<String>,
     pub browser_tab_mode: String,
     pub browser_tab_terms: Vec<String>,
+    /// User-added processes ignored by focus detection, on top of the built-in
+    /// FOCUS_TRANSPARENT list (spec: focus-rules/focus-transparent-apps).
+    pub ignored_apps: Vec<String>,
 }
 
 impl Default for FocusRules {
@@ -66,6 +69,7 @@ impl Default for FocusRules {
             mode: "blocklist".to_string(),
             apps: vec![],
             browser_tab_mode: "blocklist".to_string(),
+            ignored_apps: vec![],
             browser_tab_terms: vec![
                 "YouTube".to_string(),
                 "Twitter".to_string(),
@@ -85,6 +89,7 @@ pub struct AlertSettings {
     pub fullscreen_enabled: bool,
     pub fullscreen_threshold_ms: u64,
     pub cooldown_ms: u64,
+    pub session_feedback_notifications: bool,
 }
 
 impl Default for AlertSettings {
@@ -95,6 +100,7 @@ impl Default for AlertSettings {
             fullscreen_enabled: false,
             fullscreen_threshold_ms: 60_000,
             cooldown_ms: 10_000,
+            session_feedback_notifications: true,
         }
     }
 }
@@ -152,11 +158,62 @@ pub struct ShortcutSettings {
 
 impl Default for ShortcutSettings {
     fn default() -> Self {
+        // Triple-modifier combos minimize collisions with other apps' shortcuts
+        // (spec: global-shortcuts/upgrade-preserves-bindings — existing users keep
+        // their saved values; these apply to fresh installs only).
         Self {
-            toggle_focus: "CmdOrCtrl+Shift+F".to_string(),
-            stop_session: "CmdOrCtrl+Shift+S".to_string(),
-            open_home: "CmdOrCtrl+Shift+O".to_string(),
-            add_checkpoint: "CmdOrCtrl+Shift+C".to_string(),
+            toggle_focus: "CmdOrCtrl+Alt+Shift+F".to_string(),
+            stop_session: "CmdOrCtrl+Alt+Shift+S".to_string(),
+            open_home: "CmdOrCtrl+Alt+Shift+O".to_string(),
+            add_checkpoint: "CmdOrCtrl+Alt+Shift+C".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ChecklistSettings {
+    /// Visual grace period after completing an item (spec: daily-checklist).
+    pub grace_period_ms: u64,
+    /// Last-used history sort: "created" | "due" | "completed".
+    pub history_sort: String,
+}
+
+impl Default for ChecklistSettings {
+    fn default() -> Self {
+        Self {
+            grace_period_ms: 10_000,
+            history_sort: "created".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub struct WindowGeometry {
+    pub x: i32,
+    pub y: i32,
+    pub width: u32,
+    pub height: u32,
+}
+
+/// Written exclusively by the backend mode/pin commands
+/// (spec: settings-persistence/debounced-save-cannot-clobber-mode).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct AppModeSettings {
+    pub mode: String, // "full" | "compact"
+    pub pinned: bool,
+    pub full_geometry: Option<WindowGeometry>,
+    pub compact_geometry: Option<WindowGeometry>,
+}
+
+impl Default for AppModeSettings {
+    fn default() -> Self {
+        Self {
+            mode: "full".to_string(),
+            pinned: false,
+            full_geometry: None,
+            compact_geometry: None,
         }
     }
 }
@@ -175,6 +232,10 @@ pub struct AppSettings {
     pub breaks: BreakSettings,
     #[serde(default)]
     pub shortcuts: ShortcutSettings,
+    #[serde(default)]
+    pub checklist: ChecklistSettings,
+    #[serde(default)]
+    pub app_mode: AppModeSettings,
 }
 
 impl AppSettings {
@@ -204,6 +265,19 @@ impl AppSettings {
         {
             return Err(invalid("Focus rule mode must be allowlist or blocklist"));
         }
+        if self.focus_rules.ignored_apps.len() > 1_000 {
+            return Err(invalid("Too many ignored apps (max 1000)"));
+        }
+        if self
+            .focus_rules
+            .ignored_apps
+            .iter()
+            .any(|app| app.trim().is_empty() || app.len() > 255)
+        {
+            return Err(invalid(
+                "Ignored app names must be non-empty and at most 255 characters",
+            ));
+        }
         if self.alerts.notification_threshold_ms < 1_000
             || self.alerts.fullscreen_threshold_ms < 1_000
             || self.alerts.cooldown_ms < 1_000
@@ -223,6 +297,30 @@ impl AppSettings {
             return Err(invalid("Invalid break settings"));
         }
         crate::services::shortcuts::parse_shortcuts(&self.shortcuts)?;
+        if !(3_000..=60_000).contains(&self.checklist.grace_period_ms) {
+            return Err(invalid(
+                "Checklist grace period must be between 3 and 60 seconds",
+            ));
+        }
+        if !matches!(
+            self.checklist.history_sort.as_str(),
+            "created" | "due" | "completed"
+        ) {
+            return Err(invalid("Invalid checklist history sort"));
+        }
+        if !matches!(self.app_mode.mode.as_str(), "full" | "compact") {
+            return Err(invalid("Invalid app mode"));
+        }
+        for geometry in [self.app_mode.full_geometry, self.app_mode.compact_geometry]
+            .into_iter()
+            .flatten()
+        {
+            if !(200..=20_000).contains(&geometry.width)
+                || !(200..=20_000).contains(&geometry.height)
+            {
+                return Err(invalid("Invalid stored window geometry"));
+            }
+        }
         Ok(())
     }
 }
@@ -288,5 +386,24 @@ mod app_settings_tests {
         let mut settings = AppSettings::default();
         settings.shortcuts.open_home = "Escape".into();
         assert!(settings.validate().is_err());
+
+        // Spec scenario: settings-persistence/out-of-range-value-rejected
+        let mut settings = AppSettings::default();
+        settings.checklist.grace_period_ms = 1_000;
+        assert!(settings.validate().is_err());
+
+        let mut settings = AppSettings::default();
+        settings.checklist.history_sort = "invalid".into();
+        assert!(settings.validate().is_err());
+    }
+
+    // Spec scenario: settings-persistence/upgrade-from-older-settings
+    #[test]
+    fn test_settings_upgrade_defaults_checklist_section() {
+        let settings: AppSettings =
+            serde_json::from_str(r#"{"general":{"language":"pt-BR"}}"#).unwrap();
+        assert_eq!(settings.checklist.grace_period_ms, 10_000);
+        assert_eq!(settings.checklist.history_sort, "created");
+        settings.validate().unwrap();
     }
 }

@@ -131,7 +131,12 @@ pub struct AppState {
     pub active_session: Arc<Mutex<Option<SessionData>>>,
     pub settings: Arc<Mutex<AppSettings>>,
     pub active_overlay: Mutex<Option<OverlayAlertPayload>>,
-    pub shortcut_registration_error: Mutex<Option<String>>,
+    /// Per-action global-shortcut registration errors (action → error; absent = registered).
+    pub shortcut_registration_status: Mutex<std::collections::HashMap<String, String>>,
+    /// Daily checklist persistence (locks the shared database internally).
+    pub checklist: Arc<crate::services::checklist::ChecklistService>,
+    /// Owner of tray presentation state (icon, tooltip, localized menu).
+    pub app_status: Arc<crate::services::app_status::AppStatusManager>,
 }
 
 pub fn now_ms() -> i64 {

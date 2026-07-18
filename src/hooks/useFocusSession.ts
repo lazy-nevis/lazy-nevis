@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { isPermissionGranted, requestPermission } from "@tauri-apps/plugin-notification";
 import { useTranslation } from "react-i18next";
-import { notificationService, overlayService, sessionService } from "@/services/tauri";
+import { overlayService, sessionService } from "@/services/tauri";
+import { notifyManager } from "@/services/notifications";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { audioService } from "@/services/tauri";
-import type { AlertPayload, TickPayload } from "@/types";
+import type { AlertPayload, SessionLifecyclePayload, TickPayload } from "@/types";
 import { formatDurationHuman } from "@/utils/formatters";
 
 interface BreakReminderPayload {
@@ -81,19 +81,10 @@ export function useFocusSession() {
           if (cfg.audio.notification_sound_enabled) {
             audioService.play(cfg.audio.notification_sound, cfg.audio.volume, false).catch(() => {});
           }
-          try {
-            let ok = await isPermissionGranted();
-            if (!ok) {
-              const r = await requestPermission();
-              ok = r === "granted";
-            }
-            if (ok) {
-              await notificationService.send(
-                tRef.current("alerts.notification_title"),
-                tRef.current("alerts.notification_body", { app: app_name, time: timeStr }),
-              );
-            }
-          } catch { /* notifications unavailable */ }
+          await notifyManager.notify(
+            tRef.current("alerts.notification_title"),
+            tRef.current("alerts.notification_body", { app: app_name, time: timeStr }),
+          );
         }
       });
       if (cancelled) { unNotif(); return; }
@@ -123,16 +114,10 @@ export function useFocusSession() {
           settingsRef.current.general.language,
         );
         if (alert_type === "notification") {
-          try {
-            let ok = await isPermissionGranted();
-            if (!ok) { const r = await requestPermission(); ok = r === "granted"; }
-            if (ok) {
-              await notificationService.send(
-                tRef.current("alerts.break_notification_title"),
-                tRef.current("alerts.break_notification_body", { time: timeStr }),
-              );
-            }
-          } catch { /* */ }
+          await notifyManager.notify(
+            tRef.current("alerts.break_notification_title"),
+            tRef.current("alerts.break_notification_body", { time: timeStr }),
+          );
         }
         if (alert_type === "fullscreen") {
           overlayService.show(tRef.current("alerts.break_app"), focused_ms, false).catch(() => {});
@@ -142,6 +127,34 @@ export function useFocusSession() {
       if (cancelled) { unBreak(); return; }
       cleanups.push(unBreak);
 
+      // ── Session lifecycle feedback ────────────────────────────────────────
+      // Emitted by Rust for every entry point (UI, shortcut, tray). Rust only
+      // delivers the notification when the main window is hidden/unfocused,
+      // so in-app actions stay quiet.
+      // Spec: notification-feedback/shortcut-trigger-while-app-inactive.
+      const lifecycleEvents = [
+        ["session:started", "started"],
+        ["session:paused", "paused"],
+        ["session:resumed", "resumed"],
+        ["session:stopped", "stopped"],
+      ] as const;
+      for (const [eventName, kind] of lifecycleEvents) {
+        const unLifecycle = await listen<SessionLifecyclePayload>(eventName, async (ev) => {
+          const cfg = settingsRef.current;
+          if (!cfg.alerts.session_feedback_notifications) return;
+          const label = ev.payload.label ?? tRef.current("notifications.unnamed_session");
+          await notifyManager.notifyIfInactive(
+            tRef.current(`notifications.session_${kind}_title`),
+            tRef.current(`notifications.session_${kind}_body`, {
+              label,
+              time: formatDurationHuman(ev.payload.elapsed_ms, cfg.general.language),
+            }),
+          );
+        });
+        if (cancelled) { unLifecycle(); return; }
+        cleanups.push(unLifecycle);
+      }
+
       // ── Shortcuts ─────────────────────────────────────────────────────────
       const handleToggle = async () => {
         if (shortcutLock.current) return;
@@ -150,10 +163,19 @@ export function useFocusSession() {
           const active = await sessionService.getActive();
           if (active) {
             await sessionService.pause();
+            const paused = !useSessionStore.getState().liveStats?.is_paused;
+            useUiStore.getState().addToast(
+              tRef.current(paused ? "dashboard.session.paused_toast" : "dashboard.session.resumed_toast"),
+              "info",
+            );
           } else {
             const session = await sessionService.start();
             setActiveSession(session);
             resetCheckpoints();
+            useUiStore.getState().addToast(
+              tRef.current("dashboard.session.status_focused"),
+              "info",
+            );
           }
         } catch { /* */ } finally {
           setTimeout(() => { shortcutLock.current = false; }, 800);
@@ -172,6 +194,7 @@ export function useFocusSession() {
           await overlayService.cancelActive().catch(() => {});
           setActiveSession(null);
           resetCheckpoints();
+          useUiStore.getState().addToast(tRef.current("dashboard.session.saved"), "success");
         } catch { /* */ } finally {
           setTimeout(() => { shortcutLock.current = false; }, 800);
         }

@@ -10,14 +10,17 @@ pub struct WindowChangeEvent {
 }
 
 /// Poll the active window at the given interval and emit changes via callback.
-/// Runs until `stop_rx` receives a signal.
-pub async fn monitor_loop<F>(
+/// Runs until `stop_rx` receives a signal. `should_skip` marks focus-transparent
+/// windows (built-in list + user-configured) that never become "current".
+pub async fn monitor_loop<F, S>(
     interval_ms: u64,
     micro_threshold_ms: u64,
+    should_skip: S,
     mut on_change: F,
     mut stop_rx: tokio::sync::oneshot::Receiver<()>,
 ) where
     F: FnMut(WindowChangeEvent) + Send + 'static,
+    S: Fn(&WindowInfo) -> bool + Send + 'static,
 {
     let mut last_window: Option<WindowInfo> = None;
     let mut last_change_time = std::time::Instant::now();
@@ -27,6 +30,12 @@ pub async fn monitor_loop<F>(
             _ = &mut stop_rx => break,
             _ = sleep(Duration::from_millis(interval_ms)) => {
                 if let Some(current) = get_active_window() {
+                    // Tray managers, shell chrome, LazyNevis itself, and any
+                    // user-ignored process never steal focus: keep the previous
+                    // app as "current" (spec: focus-rules/focus-transparent-apps).
+                    if should_skip(&current) {
+                        continue;
+                    }
                     let elapsed = last_change_time.elapsed().as_millis() as u64;
 
                     if let Some(ref prev) = last_window {

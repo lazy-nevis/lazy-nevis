@@ -1,8 +1,10 @@
+pub mod checklist;
 pub mod overlay;
 pub mod session;
 pub mod settings;
 pub mod window_info;
 
+pub use checklist::{ChecklistItem, Tag};
 pub use overlay::OverlayAlertPayload;
 pub use session::{
     focus_percent, Checkpoint, EventType, Session, SessionRuntimeSnapshot, SessionStats,
