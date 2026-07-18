@@ -13,6 +13,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 
 ---
 
+## [0.10.0-rc.5] - 2026-07-18
+
+### Added
+- Centralized notification manager: session start/pause/resume/stop notifications fire only when the main window is hidden or unfocused, with a settings toggle.
+- Global shortcuts now register best-effort per binding (one conflicting shortcut no longer disables the other three), with per-shortcut status, known-conflict warnings, and the ability to disable a binding.
+- Daily checklist: notepad-style entry with `#tag` parsing, drag-and-drop reorder, a configurable undo grace period, filterable history (date/tag/sort), and starting a focus session directly from an item with a completion prompt on stop.
+- Dynamic tray icon, tooltip, and menu reflecting idle/running/paused session state, with menu labels following the app language and a minimal 2-item native menu.
+- Tray quick panel: left-click opens a themed popover (native macOS vibrancy / Windows acrylic) anchored to the tray icon with session controls and a compact checklist, without disturbing the main window.
+- Full/Compact app modes with per-mode window geometry persistence, a pinned always-on-top compact window, a reusable secondary window for Settings/Reports, a custom macOS overlay title bar, and native-fullscreen-follows-Full-Mode behavior.
+- User-configurable ignore list for focus-transparent apps (tray managers, OS shell chrome) that should never steal focus attribution, with a searchable running-apps picker.
+
+### Fixed
+- Tray idle/running/paused icons rendering as a flat white square on macOS: Tauri's resource glob flattened `icons/tray/*.png` into `icons/*.png`, so the runtime path lookup silently failed and fell back to the opaque default app icon. Icons are now embedded via `include_bytes!`.
+
+---
+
 ## [0.10.0-rc.4] - 2026-06-23
 
 ### Fixed
@@ -111,7 +127,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 - 27 TypeScript tests (stores, hooks, formatters)
 - GitHub Actions CI matrix: Ubuntu, macOS, Windows
 
-[Unreleased]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.10.0-rc.4...HEAD
+[Unreleased]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.10.0-rc.5...HEAD
+[0.10.0-rc.5]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.10.0-rc.4...v0.10.0-rc.5
 [0.10.0-rc.4]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.10.0-rc.3...v0.10.0-rc.4
 [0.10.0-rc.3]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.1.0-rc.2...v0.10.0-rc.3
 [0.1.0-rc.2]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.1.0-rc.1...v0.1.0-rc.2
