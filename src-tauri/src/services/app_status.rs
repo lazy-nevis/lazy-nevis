@@ -206,7 +206,7 @@ pub fn build_tray_menu<R: Runtime, M: Manager<R>>(
             None::<Image>,
             None::<&str>,
         )?;
-        return Menu::with_items(manager, &[&show, &quick_panel, &sep, &quit]);
+        Menu::with_items(manager, &[&show, &quick_panel, &sep, &quit])
     }
     #[cfg(not(target_os = "linux"))]
     Menu::with_items(manager, &[&show, &sep, &quit])
