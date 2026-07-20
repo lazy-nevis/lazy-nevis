@@ -39,6 +39,8 @@ export interface CatalogShot {
   sessionPose?: SessionPose;
   overlayPose?: OverlayPose;
   settingsTab?: string;
+  /** Open History session detail for the seeded hero session. */
+  historyDetail?: boolean;
   settleMs?: number;
   required?: boolean;
   title: string;

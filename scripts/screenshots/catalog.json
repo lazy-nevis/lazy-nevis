@@ -3,7 +3,7 @@
   "version": 1,
   "defaults": {
     "locale": "en-US",
-    "settleMs": 700,
+    "settleMs": 800,
     "window": "main",
     "mode": "full",
     "required": true
@@ -78,6 +78,32 @@
       "tags": ["readme", "docs", "history"]
     },
     {
+      "id": "history-detail-light",
+      "file": "history-detail-light.png",
+      "route": "/history",
+      "feature": "history",
+      "state": "session-detail",
+      "theme": "light",
+      "sessionPose": "idle",
+      "historyDetail": true,
+      "settleMs": 1100,
+      "title": "Session report detail with timeline and stats (light)",
+      "tags": ["readme", "docs", "history", "report"]
+    },
+    {
+      "id": "history-detail-dark",
+      "file": "history-detail-dark.png",
+      "route": "/history",
+      "feature": "history",
+      "state": "session-detail",
+      "theme": "dark",
+      "sessionPose": "idle",
+      "historyDetail": true,
+      "settleMs": 1100,
+      "title": "Session report detail with timeline and stats (dark)",
+      "tags": ["readme", "docs", "history", "report"]
+    },
+    {
       "id": "settings-light",
       "file": "settings-light.png",
       "route": "/settings",
@@ -102,33 +128,6 @@
       "tags": ["readme", "docs", "settings"]
     },
     {
-      "id": "fullscreen-alert",
-      "file": "fullscreen-alert.png",
-      "window": "overlay",
-      "route": "/overlay",
-      "feature": "alerts",
-      "state": "fullscreen-overlay",
-      "theme": "dark",
-      "sessionPose": "running_distracted",
-      "overlayPose": "fullscreen",
-      "title": "Fullscreen overlay alert in action",
-      "tags": ["readme", "docs", "alerts"]
-    },
-    {
-      "id": "notification-alert",
-      "file": "notification-alert.png",
-      "window": "main",
-      "route": "/",
-      "feature": "alerts",
-      "state": "notification",
-      "theme": "light",
-      "sessionPose": "running_distracted",
-      "overlayPose": "notification",
-      "title": "Native-style notification alert context",
-      "tags": ["readme", "docs", "alerts"],
-      "notes": "May capture main window + notification chrome depending on OS adapter capabilities."
-    },
-    {
       "id": "checklist-light",
       "file": "checklist-light.png",
       "route": "/checklist",
@@ -137,8 +136,18 @@
       "theme": "light",
       "sessionPose": "idle",
       "title": "Daily checklist with seeded items (light)",
-      "tags": ["docs", "checklist"],
-      "required": false
+      "tags": ["docs", "checklist"]
+    },
+    {
+      "id": "checklist-dark",
+      "file": "checklist-dark.png",
+      "route": "/checklist",
+      "feature": "checklist",
+      "state": "seeded",
+      "theme": "dark",
+      "sessionPose": "idle",
+      "title": "Daily checklist with seeded items (dark)",
+      "tags": ["docs", "checklist"]
     },
     {
       "id": "about-light",
@@ -149,8 +158,71 @@
       "theme": "light",
       "sessionPose": "idle",
       "title": "About page (light)",
-      "tags": ["docs", "about"],
-      "required": false
+      "tags": ["docs", "about"]
+    },
+    {
+      "id": "about-dark",
+      "file": "about-dark.png",
+      "route": "/about",
+      "feature": "about",
+      "state": "default",
+      "theme": "dark",
+      "sessionPose": "idle",
+      "title": "About page (dark)",
+      "tags": ["docs", "about"]
+    },
+    {
+      "id": "fullscreen-alert",
+      "file": "fullscreen-alert.png",
+      "window": "overlay",
+      "route": "/overlay",
+      "feature": "alerts",
+      "state": "fullscreen-overlay",
+      "theme": "dark",
+      "sessionPose": "running_distracted",
+      "overlayPose": "fullscreen",
+      "settleMs": 1200,
+      "title": "Fullscreen overlay alert in action",
+      "tags": ["readme", "docs", "alerts"]
+    },
+    {
+      "id": "notification-alert-light",
+      "file": "notification-alert-light.png",
+      "legacyFilenames": ["notification-alert.png"],
+      "window": "main",
+      "route": "/",
+      "feature": "alerts",
+      "state": "notification",
+      "theme": "light",
+      "sessionPose": "running_distracted",
+      "overlayPose": "notification",
+      "title": "Dashboard context for notification alert (light)",
+      "tags": ["readme", "docs", "alerts"]
+    },
+    {
+      "id": "notification-alert-dark",
+      "file": "notification-alert-dark.png",
+      "window": "main",
+      "route": "/",
+      "feature": "alerts",
+      "state": "notification",
+      "theme": "dark",
+      "sessionPose": "running_distracted",
+      "overlayPose": "notification",
+      "title": "Dashboard context for notification alert (dark)",
+      "tags": ["docs", "alerts"]
+    },
+    {
+      "id": "compact-running-light",
+      "file": "compact-running-light.png",
+      "route": "/",
+      "feature": "app-modes",
+      "state": "compact-running",
+      "theme": "light",
+      "mode": "compact",
+      "sessionPose": "running_focused",
+      "title": "Compact mode with active session (light)",
+      "tags": ["docs", "compact", "session"]
     },
     {
       "id": "compact-running-dark",
@@ -162,25 +234,37 @@
       "mode": "compact",
       "sessionPose": "running_focused",
       "title": "Compact mode with active session (dark)",
-      "tags": ["docs", "compact", "session"],
-      "required": false
+      "tags": ["docs", "compact", "session"]
     },
     {
-      "id": "tray-running",
-      "file": "tray-running.png",
+      "id": "tray-running-light",
+      "file": "tray-running-light.png",
+      "window": "tray",
+      "route": "/tray",
+      "feature": "tray-quick-panel",
+      "state": "running",
+      "theme": "light",
+      "sessionPose": "running_focused",
+      "title": "Tray quick panel with active session (light)",
+      "tags": ["docs", "tray"]
+    },
+    {
+      "id": "tray-running-dark",
+      "file": "tray-running-dark.png",
+      "legacyFilenames": ["tray-running.png"],
       "window": "tray",
       "route": "/tray",
       "feature": "tray-quick-panel",
       "state": "running",
       "theme": "dark",
       "sessionPose": "running_focused",
-      "title": "Tray quick panel with active session",
-      "tags": ["docs", "tray"],
-      "required": false
+      "title": "Tray quick panel with active session (dark)",
+      "tags": ["docs", "tray"]
     },
     {
-      "id": "secondary-settings",
-      "file": "secondary-settings.png",
+      "id": "secondary-settings-light",
+      "file": "secondary-settings-light.png",
+      "legacyFilenames": ["secondary-settings.png"],
       "window": "secondary",
       "route": "/secondary",
       "pane": "settings",
@@ -189,9 +273,24 @@
       "theme": "light",
       "mode": "compact",
       "sessionPose": "running_focused",
-      "title": "Secondary window Settings pane from Compact Mode",
-      "tags": ["docs", "secondary"],
-      "required": false
+      "settleMs": 1400,
+      "title": "Secondary window Settings pane from Compact Mode (light)",
+      "tags": ["docs", "secondary"]
+    },
+    {
+      "id": "secondary-settings-dark",
+      "file": "secondary-settings-dark.png",
+      "window": "secondary",
+      "route": "/secondary",
+      "pane": "settings",
+      "feature": "app-modes",
+      "state": "secondary-settings",
+      "theme": "dark",
+      "mode": "compact",
+      "sessionPose": "running_focused",
+      "settleMs": 1400,
+      "title": "Secondary window Settings pane from Compact Mode (dark)",
+      "tags": ["docs", "secondary"]
     }
   ]
 }

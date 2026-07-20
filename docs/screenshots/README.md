@@ -6,14 +6,18 @@ titles, paths, or history. Capture at 1440×900 or higher and crop consistently.
 ## Automation
 
 ```bash
-# 1) Build the app
+# Release path: build once, then run against that binary
 bun run tauri build
+bun run screenshots
 
-# 2) Optional: point at a specific binary
+# Optional: point at a specific binary
 # export LAZYNEVIS_BIN="/path/to/LazyNevis.app/Contents/MacOS/lazy-nevis"
 
-# 3) Run the catalog (isolated data dir + manifest)
-bun run screenshots
+# Dev path: starts \`bun run tauri dev\` (Vite + app). Demo paths go via
+# LAZYNEVIS_* env (CLI args after \`tauri dev --\` break \`cargo run\`).
+# Close any existing \`tauri dev\` first (port 1420).
+bun run screenshots:dev
+# or: bun run screenshots -- --use-dev
 ```
 
 The orchestrator launches:
@@ -45,8 +49,12 @@ Drop the folder into the marketing project and map assets by `manifest.shots[].i
 | [`scripts/screenshots/run.ts`](../../scripts/screenshots/run.ts) | Bun launcher |
 | OpenSpec | [`openspec/changes/2026-07-screenshot-automation/`](../../openspec/changes/2026-07-screenshot-automation/) |
 
-**macOS note:** window capture via `xcap` may require Screen Recording permission for the terminal
-or the LazyNevis binary in System Settings → Privacy & Security.
+**macOS notes**
+
+- Window capture uses `screencapture -l` (Screen Recording permission may be required).
+- Keep LazyNevis on the **current desktop** — avoid Mission Control / Stage Manager covering the
+  app while shots run. Do not leave the terminal fullscreen over the capture Space.
+- Overlay shots use a floating (non-screensaver) window so capture APIs can see them.
 
 ## Expected filenames (priority set)
 

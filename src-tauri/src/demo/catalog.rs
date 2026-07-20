@@ -48,6 +48,9 @@ pub struct CatalogShot {
     pub overlay_pose: Option<String>,
     #[serde(rename = "settingsTab")]
     pub settings_tab: Option<String>,
+    /// When true on a /history shot, open the richest seeded session detail.
+    #[serde(rename = "historyDetail")]
+    pub history_detail: Option<bool>,
     #[serde(rename = "settleMs")]
     pub settle_ms: Option<u64>,
     pub required: Option<bool>,
@@ -267,10 +270,16 @@ async fn capture_one_shot(
         pose_defaults,
     )?;
 
+    // Screenshot framing — taller than product defaults so more UI fits.
+    if window_label == "main" {
+        apply_shot_frame(app, mode)?;
+    }
+
     match window_label {
         "overlay" => {
             hide_sibling_windows(app, "overlay");
             show_overlay_pose(app, state)?;
+            tokio::time::sleep(std::time::Duration::from_millis(settle_ms.max(1000))).await;
         }
         "tray" => {
             hide_sibling_windows(app, "tray");
@@ -278,9 +287,17 @@ async fn capture_one_shot(
             monitor::open_tray_popover(app);
         }
         "secondary" => {
-            hide_sibling_windows(app, "secondary");
+            // Keep main visible under compact so secondary open is valid, then
+            // hide siblings except secondary for a clean capture.
+            navigate_main(app, "/").await?;
             let pane = shot.pane.as_deref().unwrap_or("settings");
             app_mode::open_secondary_window(pane.to_string(), app.clone()).await?;
+            hide_sibling_windows(app, "secondary");
+            let _ = app.emit(
+                "demo:settings-tab",
+                serde_json::json!({ "tab": "focus_rules" }),
+            );
+            tokio::time::sleep(std::time::Duration::from_millis(settle_ms.max(1200))).await;
         }
         _ => {
             hide_sibling_windows(app, "main");
@@ -288,6 +305,13 @@ async fn capture_one_shot(
             navigate_main(app, route).await?;
             if let Some(ref tab) = shot.settings_tab {
                 let _ = app.emit("demo:settings-tab", serde_json::json!({ "tab": tab }));
+            }
+            if shot.history_detail.unwrap_or(false) {
+                let _ = app.emit(
+                    "demo:open-history-detail",
+                    serde_json::json!({ "sessionId": "demo-hero-session" }),
+                );
+                tokio::time::sleep(std::time::Duration::from_millis(600)).await;
             }
             if shot.overlay_pose.as_deref() == Some("notification") {
                 let _ = app.emit(
@@ -425,6 +449,21 @@ pub fn apply_appearance(
 pub fn apply_mode(app: &AppHandle, state: &AppState, mode: &str) -> Result<()> {
     let parsed = AppMode::parse(mode).unwrap_or(AppMode::Full);
     app_mode::apply_mode(app, state, parsed, true)
+}
+
+fn apply_shot_frame(app: &AppHandle, mode: &str) -> Result<()> {
+    use tauri::{LogicalSize, Size};
+    let Some(main) = app.get_webview_window("main") else {
+        return Ok(());
+    };
+    let (width, height) = if mode == "compact" {
+        (380.0, 860.0)
+    } else {
+        (1100.0, 820.0)
+    };
+    main.set_size(Size::Logical(LogicalSize::new(width, height)))
+        .map_err(|error| AppError::Internal(error.to_string()))?;
+    Ok(())
 }
 
 pub async fn navigate_main(app: &AppHandle, path: &str) -> Result<()> {
@@ -603,7 +642,7 @@ fn show_overlay_pose(app: &AppHandle, state: &AppState) -> Result<()> {
         language,
         time_format,
     };
-    monitor::show_overlay_payload(app, payload)
+    monitor::show_overlay_payload_for_screenshots(app, payload)
 }
 
 /// Public pose helpers used by Tauri commands.

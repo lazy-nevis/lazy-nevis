@@ -29,7 +29,8 @@
     "check:agents": "bun scripts/check-agent-docs.mjs",
     "spec:validate": "openspec validate --all --strict --no-interactive",
     "test:installers": "bun test scripts/tests",
-    "screenshots": "bun run scripts/screenshots/run.ts",
+    "screenshots": "bun scripts/screenshots/run.ts",
+    "screenshots:dev": "bun scripts/screenshots/run.ts --use-dev",
     "quality:repository": "bun run check:version && bun run check:i18n && bun run check:hardcoded && bun run check:agents && bun run spec:validate && bun run test:installers",
     "quality": "bun run quality:repository && bun run test && bun run build && cargo fmt --manifest-path src-tauri/Cargo.toml -- --check && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings && cargo test --manifest-path src-tauri/Cargo.toml"
   },

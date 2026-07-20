@@ -512,6 +512,123 @@ pub fn show_overlay_payload(app: &AppHandle, payload: OverlayAlertPayload) -> Re
     rx.recv().map_err(|e| AppError::Internal(e.to_string()))?
 }
 
+/// Screenshot-friendly overlay: normal floating level (not screensaver),
+/// fixed size so window capture APIs can see it (Mission Control safe).
+pub fn show_overlay_payload_for_screenshots(
+    app: &AppHandle,
+    payload: OverlayAlertPayload,
+) -> Result<()> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    let app = app.clone();
+    app.clone()
+        .run_on_main_thread(move || {
+            let result = show_overlay_payload_for_screenshots_now(&app, payload);
+            if let Err(error) = &result {
+                tracing::error!(?error, "failed to show screenshot overlay");
+            }
+            let _ = tx.send(result);
+        })
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    rx.recv().map_err(|e| AppError::Internal(e.to_string()))?
+}
+
+fn show_overlay_payload_for_screenshots_now(
+    app: &AppHandle,
+    payload: OverlayAlertPayload,
+) -> Result<()> {
+    use tauri::{LogicalPosition, LogicalSize};
+
+    let overlay = ensure_overlay_window(app)?;
+    let _ = overlay.set_title("LazyNevis — overlay");
+    configure_overlay_window_for_screenshots(&overlay);
+
+    // Prefer a large windowed alert over true fullscreen so capture tools
+    // (and Mission Control) can see a normal window of this process.
+    let _ = overlay.set_size(LogicalSize::new(1100.0, 780.0));
+    if let Ok(Some(monitor)) = overlay
+        .current_monitor()
+        .or_else(|_| overlay.primary_monitor())
+    {
+        let scale = monitor.scale_factor();
+        let pos = monitor.position();
+        let size = monitor.size();
+        let mon_w = size.width as f64 / scale;
+        let mon_h = size.height as f64 / scale;
+        let x = (pos.x as f64 / scale) + ((mon_w - 1100.0) / 2.0).max(0.0);
+        let y = (pos.y as f64 / scale) + ((mon_h - 780.0) / 2.0).max(40.0);
+        let _ = overlay.set_position(LogicalPosition::new(x, y));
+    } else {
+        let _ = overlay.center();
+    }
+
+    overlay
+        .set_always_on_top(true)
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    overlay
+        .show()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    let _ = overlay.set_focus();
+    raise_overlay_window_for_screenshots(&overlay);
+
+    let state = app.state::<AppState>();
+    *state
+        .active_overlay
+        .lock()
+        .map_err(|_| AppError::Internal("lock".into()))? = Some(payload.clone());
+
+    register_overlay_escape_shortcut(app);
+
+    if let Err(error) = overlay.emit("overlay:show", payload) {
+        let _ = cancel_active_alerts_inner(app, &state, false, None);
+        return Err(AppError::Internal(error.to_string()));
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn configure_overlay_window_for_screenshots(window: &WebviewWindow) {
+    use objc2_app_kit::{NSColor, NSFloatingWindowLevel, NSWindow};
+
+    let Ok(ns_window_ptr) = window.ns_window() else {
+        return;
+    };
+    let ns_window = unsafe { &*(ns_window_ptr as *mut NSWindow) };
+    let clear = NSColor::clearColor();
+
+    ns_window.setOpaque(false);
+    ns_window.setBackgroundColor(Some(&clear));
+    // Floating (not screensaver) so CGWindowList / screencapture can see it.
+    ns_window.setLevel(NSFloatingWindowLevel);
+    ns_window.setCanHide(false);
+    ns_window.setIgnoresMouseEvents(false);
+    unsafe {
+        ns_window.setReleasedWhenClosed(false);
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn configure_overlay_window_for_screenshots(window: &WebviewWindow) {
+    configure_overlay_window(window);
+}
+
+#[cfg(target_os = "macos")]
+fn raise_overlay_window_for_screenshots(window: &WebviewWindow) {
+    use objc2_app_kit::{NSFloatingWindowLevel, NSWindow};
+
+    let Ok(ns_window_ptr) = window.ns_window() else {
+        return;
+    };
+    let ns_window = unsafe { &*(ns_window_ptr as *mut NSWindow) };
+    ns_window.setLevel(NSFloatingWindowLevel);
+    ns_window.orderFrontRegardless();
+}
+
+#[cfg(not(target_os = "macos"))]
+fn raise_overlay_window_for_screenshots(window: &WebviewWindow) {
+    raise_overlay_window(window);
+}
+
 #[cfg(all(debug_assertions, target_os = "macos"))]
 pub fn overlay_window_level(app: &AppHandle) -> Result<isize> {
     let (tx, rx) = std::sync::mpsc::channel();

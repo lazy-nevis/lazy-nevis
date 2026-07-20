@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { listen } from "@tauri-apps/api/event";
 import { Trash2, Download, ChevronLeft, Clock, Target, Bell, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { sessionService } from "@/services/tauri";
@@ -82,6 +83,18 @@ export function History() {
       addToast(t("common.error"), "error");
     }
   };
+
+  // Screenshot demo: open a seeded session detail view.
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    listen<{ sessionId?: string }>("demo:open-history-detail", (ev) => {
+      const id = ev.payload?.sessionId;
+      if (id) {
+        void handleOpenDetail(id);
+      }
+    }).then((fn) => { unlisten = fn; });
+    return () => { unlisten?.(); };
+  }, [handleOpenDetail]);
 
   const handleDelete = async (id: string) => {
     try {

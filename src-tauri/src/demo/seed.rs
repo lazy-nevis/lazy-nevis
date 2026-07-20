@@ -199,7 +199,12 @@ fn apply_seed_file(state: &AppState, seed: &SeedFile) -> Result<()> {
             .lock()
             .map_err(|_| AppError::Internal("db lock".into()))?;
         for (index, session) in seed.sessions.iter().enumerate() {
-            insert_seeded_session(&db, session, &snapshot, now, index as i64, day_ms)?;
+            let fixed_id = if index == 0 {
+                Some("demo-hero-session")
+            } else {
+                None
+            };
+            insert_seeded_session(&db, session, &snapshot, now, index as i64, day_ms, fixed_id)?;
         }
     }
 
@@ -226,8 +231,11 @@ fn insert_seeded_session(
     now: i64,
     index: i64,
     day_ms: i64,
+    fixed_id: Option<&str>,
 ) -> Result<()> {
-    let id = Uuid::new_v4().to_string();
+    let id = fixed_id
+        .map(str::to_string)
+        .unwrap_or_else(|| Uuid::new_v4().to_string());
     let duration_ms = session.duration_minutes.saturating_mul(60_000);
     let ended_at = now - (index + 1) * day_ms / 3;
     let started_at = ended_at - duration_ms;
@@ -246,7 +254,7 @@ fn insert_seeded_session(
                 focus_ms,
                 distracted_ms,
                 idle_ms,
-                1_i64,
+                2_i64,
                 Option::<String>::None,
                 snapshot
             ],
@@ -263,6 +271,26 @@ fn insert_seeded_session(
         let slice = (distracted_ms / session.distraction_app_names.len().max(1) as i64).max(30_000);
         insert_event(db, &id, cursor, cursor + slice, app, true)?;
         cursor += slice;
+    }
+
+    if fixed_id.is_some() {
+        for (offset, app) in ["Terminal", "Notes", "Code"].iter().enumerate() {
+            let start = started_at + (offset as i64 + 1) * 12 * 60_000;
+            let end = start + 8 * 60_000;
+            if end < ended_at {
+                insert_event(db, &id, start, end, app, false)?;
+            }
+        }
+        for (i, label) in ["Outline done", "Tests green", "PR opened"]
+            .iter()
+            .enumerate()
+        {
+            let cp_id = Uuid::new_v4().to_string();
+            let at = started_at + (i as i64 + 1) * 25 * 60_000;
+            db.conn()
+                .execute(queries::INSERT_CHECKPOINT, params![cp_id, id, at, *label])
+                .map_err(AppError::Database)?;
+        }
     }
 
     Ok(())

@@ -79,6 +79,7 @@
         "sessionPose": { "$ref": "#/$defs/sessionPose" },
         "overlayPose": { "$ref": "#/$defs/overlayPose" },
         "settingsTab": { "type": "string" },
+        "historyDetail": { "type": "boolean" },
         "settleMs": { "type": "integer", "minimum": 0 },
         "required": { "type": "boolean" },
         "title": { "type": "string", "minLength": 1 },
