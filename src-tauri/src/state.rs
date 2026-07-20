@@ -137,6 +137,8 @@ pub struct AppState {
     pub checklist: Arc<crate::services::checklist::ChecklistService>,
     /// Owner of tray presentation state (icon, tooltip, localized menu).
     pub app_status: Arc<crate::services::app_status::AppStatusManager>,
+    /// Screenshot demo gate — pose/seed commands refuse work when false.
+    pub demo_active: bool,
 }
 
 pub fn now_ms() -> i64 {

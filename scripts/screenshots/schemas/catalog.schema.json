@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lazynevis.local/schemas/screenshot-catalog.json",
+  "title": "LazyNevisScreenshotCatalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "defaults", "shots"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "locale": { "type": "string", "enum": ["en-US", "pt-BR"] },
+        "settleMs": { "type": "integer", "minimum": 0 },
+        "window": { "$ref": "#/$defs/windowLabel" },
+        "mode": { "$ref": "#/$defs/appMode" },
+        "required": { "type": "boolean" }
+      }
+    },
+    "shots": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/shot" }
+    }
+  },
+  "$defs": {
+    "windowLabel": {
+      "type": "string",
+      "enum": ["main", "overlay", "tray", "secondary"]
+    },
+    "appMode": {
+      "type": "string",
+      "enum": ["full", "compact"]
+    },
+    "theme": {
+      "type": "string",
+      "enum": ["light", "dark"]
+    },
+    "sessionPose": {
+      "type": "string",
+      "enum": ["idle", "running_focused", "running_distracted", "paused"]
+    },
+    "overlayPose": {
+      "type": "string",
+      "enum": ["none", "fullscreen", "notification"]
+    },
+    "shot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "file", "feature", "state", "theme", "title", "tags"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "file": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.png$"
+        },
+        "legacyFilenames": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "window": { "$ref": "#/$defs/windowLabel" },
+        "route": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "pane": {
+          "type": "string",
+          "enum": ["settings", "history", "checklist-history"]
+        },
+        "feature": { "type": "string", "minLength": 1 },
+        "state": { "type": "string", "minLength": 1 },
+        "theme": { "$ref": "#/$defs/theme" },
+        "locale": { "type": "string", "enum": ["en-US", "pt-BR"] },
+        "mode": { "$ref": "#/$defs/appMode" },
+        "sessionPose": { "$ref": "#/$defs/sessionPose" },
+        "overlayPose": { "$ref": "#/$defs/overlayPose" },
+        "settingsTab": { "type": "string" },
+        "settleMs": { "type": "integer", "minimum": 0 },
+        "required": { "type": "boolean" },
+        "title": { "type": "string", "minLength": 1 },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,5 +1,6 @@
 mod commands;
 pub mod db;
+pub mod demo;
 pub mod error;
 pub mod models;
 mod monitor;
@@ -43,11 +44,27 @@ pub fn run() {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            let app_data_dir = app
-                .path()
-                .app_data_dir()
-                .map_err(|error| std::io::Error::other(error.to_string()))?;
-            migrate_legacy_app_data_dir(&app_data_dir)?;
+            let demo_launch = demo::parse_demo_launch();
+            if let Err(message) = demo_launch.validate() {
+                return Err(std::io::Error::other(message).into());
+            }
+            let demo_active = demo_launch.active;
+
+            let app_data_dir = if demo_active {
+                let dir = demo_launch
+                    .data_dir
+                    .clone()
+                    .ok_or_else(|| std::io::Error::other("demo data dir missing after validate"))?;
+                info!(path = %dir.display(), "screenshot demo using isolated data dir");
+                dir
+            } else {
+                app.path()
+                    .app_data_dir()
+                    .map_err(|error| std::io::Error::other(error.to_string()))?
+            };
+            if !demo_active {
+                migrate_legacy_app_data_dir(&app_data_dir)?;
+            }
             std::fs::create_dir_all(&app_data_dir)?;
             set_private_directory_permissions(&app_data_dir)?;
 
@@ -67,7 +84,11 @@ pub fn run() {
             };
 
             let launched_from_autostart = std::env::args().any(|arg| arg == "--autostart");
-            let start_minimized = settings.general.start_minimized || launched_from_autostart;
+            let start_minimized = if demo_active {
+                false
+            } else {
+                settings.general.start_minimized || launched_from_autostart
+            };
             let language = settings.general.language.clone();
             let logger = Arc::new(Mutex::new(SessionLogger::new(Arc::clone(&db))));
             let checklist = Arc::new(services::checklist::ChecklistService::new(Arc::clone(&db)));
@@ -82,14 +103,26 @@ pub fn run() {
                 shortcut_registration_status: Mutex::new(std::collections::HashMap::new()),
                 checklist,
                 app_status: Arc::new(services::app_status::AppStatusManager::new()),
+                demo_active,
             });
 
-            let session_was_recovered = recover_active_session(app).unwrap_or_else(|error| {
-                // Session recovery is best-effort — a failure here must not prevent startup.
-                // The user loses the in-progress session but the app remains functional.
-                tracing::error!(?error, "session recovery failed; starting without recovery");
+            if demo_active {
+                let state = app.state::<AppState>();
+                demo::apply_demo_seed(&state)
+                    .map_err(|error| std::io::Error::other(error.to_string()))?;
+                info!("screenshot demo seed applied");
+            }
+
+            let session_was_recovered = if demo_active {
                 false
-            });
+            } else {
+                recover_active_session(app).unwrap_or_else(|error| {
+                    // Session recovery is best-effort — a failure here must not prevent startup.
+                    // The user loses the in-progress session but the app remains functional.
+                    tracing::error!(?error, "session recovery failed; starting without recovery");
+                    false
+                })
+            };
 
             if session_was_recovered {
                 let app_handle = app.handle().clone();
@@ -204,6 +237,37 @@ pub fn run() {
                     let _ = window.show();
                     let _ = window.set_focus();
                 }
+            }
+
+            if demo_launch.wants_catalog_run() {
+                let catalog_path = demo_launch.catalog_path.clone().expect("validated");
+                let out_dir = demo_launch.out_dir.clone().expect("validated");
+                let data_dir = demo_launch.data_dir.clone();
+                let app_handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    // Wait for the frontend shell to hydrate before posing.
+                    tokio::time::sleep(std::time::Duration::from_millis(2500)).await;
+                    let state = app_handle.state::<AppState>();
+                    let result = demo::run_catalog(
+                        &app_handle,
+                        &state,
+                        &catalog_path,
+                        &out_dir,
+                        data_dir.as_deref(),
+                    )
+                    .await;
+                    match result {
+                        Ok(()) => {
+                            info!(out = %out_dir.display(), "screenshot catalog completed");
+                            app_handle.exit(0);
+                        }
+                        Err(error) => {
+                            tracing::error!(?error, "screenshot catalog failed");
+                            eprintln!("LazyNevis screenshot catalog failed: {error}");
+                            app_handle.exit(1);
+                        }
+                    }
+                });
             }
 
             Ok(())
@@ -337,6 +401,14 @@ pub fn run() {
             commands::permissions::check_permissions,
             commands::permissions::request_notification_permission,
             commands::permissions::open_accessibility_settings,
+            commands::demo::demo_is_active,
+            commands::demo::demo_apply_seed,
+            commands::demo::demo_set_appearance,
+            commands::demo::demo_set_mode,
+            commands::demo::demo_navigate,
+            commands::demo::demo_set_session_pose,
+            commands::demo::demo_show_window,
+            commands::demo::demo_settle,
         ])
         .run(tauri::generate_context!())
         .unwrap_or_else(|error| eprintln!("LazyNevis could not start: {error}"));

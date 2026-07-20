@@ -5,6 +5,25 @@ pub const INSERT_SESSION: &str = "
     VALUES (?1, ?2, ?3, 0, 0, 0, ?4)
 ";
 
+/// Finished session row for screenshot demo seed (fictional history only).
+pub const INSERT_SEEDED_SESSION: &str = "
+    INSERT INTO sessions (
+        id, label, started_at, ended_at,
+        total_focus_ms, total_distracted_ms, total_idle_ms, total_alerts,
+        notes, settings_snapshot
+    )
+    VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
+";
+
+pub const INSERT_SEEDED_TIMELINE_EVENT: &str = "
+    INSERT INTO timeline_events (
+        id, session_id, started_at, ended_at, duration_ms,
+        event_type, app_name, app_exe, window_title,
+        is_browser, is_distraction, alert_type
+    )
+    VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)
+";
+
 pub const UPDATE_SESSION_END: &str = "
     UPDATE sessions
     SET ended_at = ?1, total_focus_ms = ?2, total_distracted_ms = ?3,

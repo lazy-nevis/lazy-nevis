@@ -7,6 +7,7 @@ import {
   Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, ListPlus, LogIn, ListChecks,
 } from "lucide-react";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
+import { listen } from "@tauri-apps/api/event";
 import { HotkeyInput } from "@/components/ui/HotkeyInput";
 import { isPermissionGranted, requestPermission } from "@tauri-apps/plugin-notification";
 import { useSettings } from "@/hooks/useSettings";
@@ -45,6 +46,17 @@ export function Settings() {
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [clearConfirm, setClearConfirm] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
+
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    listen<{ tab: string }>("demo:settings-tab", (ev) => {
+      const tab = ev.payload?.tab;
+      if (tab && tab in TAB_META) {
+        setActiveTab(tab as Tab);
+      }
+    }).then((fn) => { unlisten = fn; });
+    return () => { unlisten?.(); };
+  }, []);
 
   const update = (patch: Partial<AppSettings>) => {
     saveSettings({ ...settings, ...patch });

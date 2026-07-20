@@ -29,6 +29,9 @@ pub enum AppError {
 
     #[error("Internal error: {0}")]
     Internal(String),
+
+    #[error("Screenshot demo mode is inactive")]
+    DemoInactive,
 }
 
 impl Serialize for AppError {

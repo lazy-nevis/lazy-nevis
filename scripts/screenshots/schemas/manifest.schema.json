@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lazynevis.local/schemas/screenshot-manifest.json",
+  "title": "LazyNevisScreenshotManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "appVersion", "platform", "capturedAt", "shots"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "appVersion": { "type": "string", "minLength": 1 },
+    "platform": {
+      "type": "string",
+      "enum": ["macos", "linux", "windows"]
+    },
+    "locale": { "type": "string", "enum": ["en-US", "pt-BR"] },
+    "capturedAt": { "type": "string", "format": "date-time" },
+    "scaleFactor": { "type": "number", "exclusiveMinimum": 0 },
+    "catalogVersion": { "type": "integer" },
+    "binaryPath": { "type": "string" },
+    "dataDir": { "type": "string" },
+    "shots": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/shot" }
+    }
+  },
+  "$defs": {
+    "shot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "file",
+        "feature",
+        "state",
+        "theme",
+        "title",
+        "tags",
+        "status"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "file": { "type": "string" },
+        "window": {
+          "type": "string",
+          "enum": ["main", "overlay", "tray", "secondary"]
+        },
+        "route": { "type": "string" },
+        "pane": { "type": "string" },
+        "feature": { "type": "string" },
+        "state": { "type": "string" },
+        "theme": { "type": "string", "enum": ["light", "dark"] },
+        "locale": { "type": "string", "enum": ["en-US", "pt-BR"] },
+        "mode": { "type": "string", "enum": ["full", "compact"] },
+        "sessionPose": { "type": "string" },
+        "title": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["captured", "skipped", "failed"]
+        },
+        "skipReason": { "type": "string" },
+        "error": { "type": "string" },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

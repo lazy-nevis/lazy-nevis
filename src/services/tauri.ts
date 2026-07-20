@@ -199,3 +199,8 @@ export const permissionsService = {
   openAccessibilitySettings: (): Promise<void> =>
     invoke("open_accessibility_settings"),
 };
+
+// Screenshot demo (gated; returns DemoInactive when gate is off)
+export const demoService = {
+  isActive: (): Promise<boolean> => invoke("demo_is_active"),
+};

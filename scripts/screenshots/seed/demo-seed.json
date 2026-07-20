@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "description": "Fictional demo fixture for screenshot runs. Applied only under the demo gate into an isolated data dir.",
+  "settings": {
+    "general": {
+      "language": "en-US",
+      "theme": "light",
+      "start_minimized": false,
+      "launch_at_login": false
+    }
+  },
+  "sessions": [
+    {
+      "name": "Deep work block",
+      "durationMinutes": 95,
+      "focusAppNames": ["Code", "Terminal", "Notes"],
+      "distractionAppNames": ["Safari", "Music"]
+    },
+    {
+      "name": "Morning planning",
+      "durationMinutes": 40,
+      "focusAppNames": ["Notes", "Calendar"],
+      "distractionAppNames": ["Mail"]
+    },
+    {
+      "name": "Review pass",
+      "durationMinutes": 70,
+      "focusAppNames": ["Code", "Browser Docs"],
+      "distractionAppNames": ["Messages"]
+    }
+  ],
+  "checklist": [
+    { "title": "Outline today’s priorities", "done": true, "tag": "planning" },
+    { "title": "Ship screenshot pipeline notes", "done": false, "tag": "dev" },
+    { "title": "Review focus rules", "done": false, "tag": "focus" }
+  ],
+  "poseDefaults": {
+    "running_focused": {
+      "currentApp": "Code",
+      "elapsedFocusSeconds": 1520,
+      "elapsedDistractionSeconds": 45,
+      "elapsedIdleSeconds": 20
+    },
+    "running_distracted": {
+      "currentApp": "Safari",
+      "elapsedFocusSeconds": 900,
+      "elapsedDistractionSeconds": 180,
+      "elapsedIdleSeconds": 10
+    },
+    "paused": {
+      "currentApp": "Code",
+      "elapsedFocusSeconds": 600,
+      "elapsedDistractionSeconds": 30,
+      "elapsedIdleSeconds": 0
+    }
+  },
+  "forbidden": [
+    "Never copy real user DB paths or window titles into this file.",
+    "Never include personal emails, file paths, or chat previews."
+  ]
+}

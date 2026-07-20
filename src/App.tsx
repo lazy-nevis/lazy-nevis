@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { HashRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { isPermissionGranted } from "@tauri-apps/plugin-notification";
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { CompactShell } from "@/components/layout/CompactShell";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -128,10 +129,36 @@ function AppShell() {
     return () => { unlisten?.(); };
   }, [navigate]);
 
-  // Permission check on startup
+  // Screenshot demo: Rust poses navigate the HashRouter without WebDriver.
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    listen<{ path: string }>("demo:navigate", (ev) => {
+      if (typeof ev.payload?.path === "string") {
+        navigate(ev.payload.path);
+      }
+    }).then((fn) => { unlisten = fn; });
+    return () => { unlisten?.(); };
+  }, [navigate]);
+
+  // Screenshot demo: re-hydrate session store after synthetic poses.
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    listen("demo:refresh-session", () => {
+      void sessionService.getRuntime().then((runtime) => {
+        useSessionStore.getState().hydrateRuntime(runtime);
+      }).catch(() => {
+        useSessionStore.getState().hydrateRuntime(null);
+      });
+    }).then((fn) => { unlisten = fn; });
+    return () => { unlisten?.(); };
+  }, []);
+
+  // Permission check on startup (skipped in screenshot demo mode)
   useEffect(() => {
     const check = async () => {
       try {
+        const demoActive = await invoke<boolean>("demo_is_active").catch(() => false);
+        if (demoActive) return;
         const [notifOk, status] = await Promise.all([
           isPermissionGranted(),
           permissionsService.check(),
