@@ -1,0 +1,14 @@
+# cargo-audit configuration (used by CI dependency-policy job).
+# Docs: https://docs.rs/cargo-audit
+
+[advisories]
+ignore = [
+  # Transitive only via build-time protocol XML parsers (xcb build script,
+  # wayland-scanner proc-macro) and Windows toast XML in
+  # tauri-winrt-notification 0.7 (notify-rust pin). Those crates still require
+  # quick-xml < 0.41; inputs are trusted schemas / app-controlled toast XML,
+  # not untrusted network XML. Revisit when xcb, wayland-scanner, and
+  # notify-rust publish releases on quick-xml >= 0.41.
+  "RUSTSEC-2026-0194",
+  "RUSTSEC-2026-0195",
+]

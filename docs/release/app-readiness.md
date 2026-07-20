@@ -2,7 +2,7 @@
 
 ## Reproducible Baseline
 
-Validated locally on macOS 26.5 (25F71) with Bun 1.3.13, Rust 1.95.0, Cargo 1.95.0, and Tauri CLI 2.11.2. Pinned versions live in `.bun-version` and `rust-toolchain.toml`. Run the complete local gate with `bun run quality`; production packaging remains `bun run tauri build`.
+Validated locally on macOS 26.5 (25F71) with Bun 1.3.13, Rust 1.97.1, Cargo 1.97.1, and Tauri CLI 2.11.2. Pinned versions live in `.bun-version` and `rust-toolchain.toml`. Run the complete local gate with `bun run quality`; production packaging remains `bun run tauri build`.
 
 ## Feature Evidence Matrix
 

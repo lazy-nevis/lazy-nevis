@@ -8,8 +8,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 
 ## [Unreleased]
 
-### Added
-- No unreleased changes yet.
+### Fixed
+- CI Rust quality and dependency audit: pin Rust toolchain to 1.97.1, install PipeWire/Clang Linux build deps required by `xcap`, run `cargo-audit`/`cargo-deny` via prebuilt binaries (drop Node-20 `rustsec/audit-check`), bump `xcap`/`plist` for current crates, and document temporary RustSec ignores for transitive `quick-xml` build/toast parsers awaiting upstream.
 
 ---
 

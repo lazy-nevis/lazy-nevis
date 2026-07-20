@@ -66,7 +66,9 @@ Rust/Tauri:
 - Tauri `2` with tray icon, PNG/ICO image support, and macOS private API.
 - Tauri plugins: notification, store, dialog, global-shortcut, opener, autostart.
 - rusqlite `0.31` with bundled SQLite.
-- rodio `0.17` with MP3/WAV/Vorbis support.
+- rodio `0.22` with MP3/WAV/Vorbis support.
+- xcap `0.9` for screenshot demo capture (Linux needs PipeWire + Clang for bindgen).
+- Rust toolchain pinned to `1.97.1` via `rust-toolchain.toml`.
 - serde, serde_json, uuid, tokio, tracing, tracing-subscriber, chrono, thiserror, sysinfo.
 - macOS native APIs: core-graphics, core-foundation, objc2-app-kit, mac-notification-sys.
 - Windows native APIs: `windows` crate with window/threading features.
