@@ -62,7 +62,7 @@ jobs:
       - run: bun run quality:repository
       - run: sh scripts/audit-repository.sh
       - name: actionlint
-        uses: raven-actions/actionlint@205b530c5d9fa8f44ae9ed59f341a0db994aa6f8 # v2.1.2
+        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
       - name: ShellCheck
         uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # 2.0.0
         with: { scandir: scripts }
@@ -93,7 +93,7 @@ jobs:
       - name: Bun audit (high severity blocks)
         run: bun audit --audit-level=high
       - name: Install cargo-audit and cargo-deny
-        uses: taiki-e/install-action@9e1e5806d4a4822de933115878265be9aaa786d9 # v2.82.2
+        uses: taiki-e/install-action@a6b2e2dcd845ddd7f509ce4f3ed3d922b80cc5d9 # v2.84.0
         with:
           tool: cargo-audit@0.22.2,cargo-deny@0.20.2
       - name: RustSec audit
