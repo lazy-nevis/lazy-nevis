@@ -1,7 +1,7 @@
 ---
 type: concept
 title: Pomodoro capability
-description: Opt-in Pomodoro timer with session integration, delivery, and reports.
+description: Always-available Pomodoro timer with session integration, delivery, and reports.
 tags: [product, capability, pomodoro]
 ---
 
@@ -9,9 +9,11 @@ tags: [product, capability, pomodoro]
 
 ## Purpose
 
-Optional structured focus/break cycles with persistence, tray status, and calendar-friendly phase history.
+Structured focus/break cycles with persistence, tray status, and calendar-friendly phase history.
 
 ## Requirements
+
+- Pomodoro SHALL always be available (navigation, tray, compact strip); `settings.pomodoro.enabled` is a legacy field that defaults to `true` and is no longer read.
 
 - Settings live in `settings.pomodoro`; delivery channels in `settings.delivery.pomodoro`.
 - One active run; phases: focus → short/long break; skip/pause/stop with recorded outcomes.

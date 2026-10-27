@@ -8,7 +8,6 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { useHabits } from "@/hooks/useHabits";
 import { useSidebarCollapsed } from "@/hooks/useSidebarCollapsed";
 import { useChecklistStore } from "@/stores/checklistStore";
-import { useSettingsStore } from "@/stores/settingsStore";
 import { useUiStore } from "@/stores/uiStore";
 import { IS_MAC } from "@/utils/platform";
 import { cn } from "@/utils/cn";
@@ -30,7 +29,6 @@ export function Sidebar() {
   const { effectiveCollapsed } = useSidebarCollapsed();
   const openCount = useChecklistStore((s) => s.openItems.length);
   const { pendingTodayCount } = useHabits();
-  const pomodoroEnabled = useSettingsStore((s) => s.settings.pomodoro.enabled);
   const updateAvailable = useUiStore((s) => s.updateAvailable);
   const setCommandPaletteOpen = useUiStore((s) => s.setCommandPaletteOpen);
   const modLabel = IS_MAC ? "⌘" : "Ctrl";
@@ -45,7 +43,7 @@ export function Sidebar() {
     <aside
       className={cn(
         "flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground motion-safe:transition-[width] motion-reduce:transition-none",
-        effectiveCollapsed ? "w-[60px]" : "w-[248px]",
+        effectiveCollapsed ? "w-[64px]" : "w-[248px]",
       )}
     >
       {IS_MAC && <div className="h-9 shrink-0" data-tauri-drag-region aria-hidden />}
@@ -58,11 +56,11 @@ export function Sidebar() {
           onClick={() => setCommandPaletteOpen(true)}
           className={cn(
             "flex items-center gap-2 rounded-lg border border-sidebar-border bg-background/50 px-2.5 py-2 text-left text-xs text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground",
-            effectiveCollapsed && "justify-center px-2",
+            effectiveCollapsed && "mx-auto h-10 w-10 justify-center p-0",
           )}
           aria-label={t("command_palette.open")}
         >
-          <Search className="h-4 w-4 shrink-0" />
+          <Search className={cn("shrink-0", effectiveCollapsed ? "h-5 w-5" : "h-4 w-4")} />
           {!effectiveCollapsed && (
             <>
               <span className="flex-1 truncate">{t("command_palette.search_placeholder")}</span>
@@ -72,7 +70,12 @@ export function Sidebar() {
         </button>
       </div>
 
-      <nav className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 pb-2">
+      <nav
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden px-2 pb-2",
+          effectiveCollapsed && "scrollbar-none items-center gap-3",
+        )}
+      >
         {NAV_GROUPS.map((group) => (
           <div key={group.headingKey ?? group.items[0]?.id ?? "group"}>
             {group.headingKey && !effectiveCollapsed && (
@@ -80,10 +83,9 @@ export function Sidebar() {
                 {t(group.headingKey)}
               </p>
             )}
-            <ul className="flex flex-col gap-0.5">
+            <ul className={cn("flex flex-col gap-0.5", effectiveCollapsed && "items-center gap-1")}>
               {group.items
                 .filter((item) => !item.hidden)
-                .filter((item) => item.id !== "pomodoro" || pomodoroEnabled)
                 .map((item) => {
                   const badgeCount = resolveBadge(item.badge);
                   const label = t(item.labelKey);
@@ -95,13 +97,13 @@ export function Sidebar() {
                       title={label}
                       className={({ isActive }) =>
                         cn(
-                          "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground",
-                          effectiveCollapsed && "justify-center px-2",
+                          "relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground",
+                          effectiveCollapsed && "h-10 w-10 justify-center p-0",
                           isActive && "bg-sidebar-accent font-medium text-foreground",
                         )
                       }
                     >
-                      <item.icon className="h-4 w-4 shrink-0" aria-hidden />
+                      <item.icon className={cn("shrink-0", effectiveCollapsed ? "h-5 w-5" : "h-4 w-4")} aria-hidden />
                       {!effectiveCollapsed && (
                         <>
                           <span className="truncate">{label}</span>
@@ -109,7 +111,7 @@ export function Sidebar() {
                         </>
                       )}
                       {effectiveCollapsed && badgeCount > 0 && (
-                        <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-brand" />
+                        <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-brand" />
                       )}
                     </NavLink>
                   );
@@ -129,7 +131,7 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-auto border-t border-sidebar-border px-2 py-2">
-        <ul className="flex flex-col gap-0.5">
+        <ul className={cn("flex flex-col gap-0.5", effectiveCollapsed && "items-center gap-1")}>
           {NAV_BOTTOM.filter((item) => !item.hidden).map((item) => {
             const label = t(item.labelKey);
             const link = (
@@ -141,12 +143,12 @@ export function Sidebar() {
                 className={({ isActive }) =>
                   cn(
                     "relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground",
-                    effectiveCollapsed && "justify-center px-2",
+                    effectiveCollapsed && "h-10 w-10 justify-center p-0",
                     isActive && "bg-sidebar-accent font-medium text-foreground",
                   )
                 }
               >
-                <item.icon className="h-4 w-4 shrink-0" aria-hidden />
+                <item.icon className={cn("shrink-0", effectiveCollapsed ? "h-5 w-5" : "h-4 w-4")} aria-hidden />
                 {!effectiveCollapsed && (
                   <>
                     <span className="truncate">{label}</span>

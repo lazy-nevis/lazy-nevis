@@ -40,15 +40,21 @@ export function KindFilter({ visible, onChange }: KindFilterProps) {
           <button
             key={kind}
             type="button"
+            aria-pressed={active}
             onClick={() => toggle(kind)}
             style={active ? toneStyle(tone) : undefined}
             className={cn(
-              "rounded-full border px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               active
                 ? "tone-soft tone-border border-transparent text-foreground"
                 : "border-border text-muted-foreground hover:bg-muted/50",
             )}
           >
+            <span
+              className={cn("h-2 w-2 rounded-full", active ? "tone-dot" : "bg-muted-foreground/40")}
+              style={active ? toneStyle(tone) : undefined}
+              aria-hidden
+            />
             {t(kind)}
           </button>
         );

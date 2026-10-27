@@ -6,6 +6,7 @@ import {
   Info,
   LayoutDashboard,
   ListChecks,
+  Play,
   Settings,
   Target,
   Timer,
@@ -38,6 +39,7 @@ export const NAV_GROUPS: NavGroupConfig[] = [
   {
     headingKey: "shell.group_plan",
     items: [
+      { id: "sessions", to: "/sessions", icon: Play, labelKey: "nav.sessions" },
       {
         id: "checklist",
         to: "/checklist",
@@ -72,6 +74,7 @@ export const NAV_BOTTOM: NavItemConfig[] = [
 
 export const ROUTE_TITLE_KEYS: Record<string, string> = {
   "/": "nav.dashboard",
+  "/sessions": "nav.sessions",
   "/history": "nav.history",
   "/checklist": "nav.checklist",
   "/reminders": "nav.reminders",
@@ -82,12 +85,10 @@ export const ROUTE_TITLE_KEYS: Record<string, string> = {
   "/about": "nav.about",
 };
 
-export function flattenNavItems(options?: { pomodoroEnabled?: boolean }): NavItemConfig[] {
-  const pomodoroEnabled = options?.pomodoroEnabled ?? true;
+export function flattenNavItems(): NavItemConfig[] {
   const items: NavItemConfig[] = [];
   for (const group of NAV_GROUPS) {
     for (const item of group.items) {
-      if (item.id === "pomodoro" && !pomodoroEnabled) continue;
       if (!item.hidden) items.push(item);
     }
   }

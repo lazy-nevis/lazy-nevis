@@ -4,7 +4,7 @@ import type { TFunction } from "i18next";
 import {
   Plus, X, Volume2, Play, Square, FolderOpen, RefreshCw,
   Globe, Target, Bell, Music, Coffee, Keyboard, Database, Info, Cpu, Check, Clock,
-  Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, ListPlus, LogIn, ListChecks, BellRing,
+  Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, ListPlus, LogIn, ListChecks,
   Timer,
 } from "lucide-react";
 import { PomodoroSettingsTab } from "@/components/features/pomodoro/PomodoroSettingsTab";
@@ -27,16 +27,15 @@ import { Dialog, DialogHeader, DialogTitle, DialogClose, DialogFooter } from "@/
 import { SectionTitle, SettingRow } from "@/components/settings/setting-primitives";
 import { cn } from "@/utils/cn";
 import { CategoryManager } from "@/components/features/checklist/CategoryManager";
-import { DeliverySettingsTab } from "@/components/features/delivery/DeliverySettingsTab";
+import { DeliverySettingsSection, WeekStartSetting } from "@/components/features/delivery/DeliverySettingsTab";
 import type { AppSettings, PermissionState, PermissionsStatus, ShortcutStatus } from "@/types";
 
-type Tab = "general" | "focus_rules" | "alerts" | "delivery" | "audio" | "breaks" | "pomodoro" | "checklist" | "shortcuts" | "permissions" | "data";
+type Tab = "general" | "focus_rules" | "alerts" | "audio" | "breaks" | "pomodoro" | "checklist" | "shortcuts" | "permissions" | "data";
 
 const TAB_META: Record<Tab, { icon: React.ReactNode; labelKey: string }> = {
   general:     { icon: <Globe className="h-4 w-4" />,    labelKey: "settings.tabs.general" },
   focus_rules: { icon: <Target className="h-4 w-4" />,   labelKey: "settings.tabs.focus_rules" },
   alerts:      { icon: <Bell className="h-4 w-4" />,     labelKey: "settings.tabs.alerts" },
-  delivery:    { icon: <BellRing className="h-4 w-4" />, labelKey: "settings.tabs.delivery" },
   audio:       { icon: <Music className="h-4 w-4" />,    labelKey: "settings.tabs.audio" },
   breaks:      { icon: <Coffee className="h-4 w-4" />,   labelKey: "settings.tabs.breaks" },
   pomodoro:    { icon: <Timer className="h-4 w-4" />,    labelKey: "settings.tabs.pomodoro" },
@@ -58,8 +57,9 @@ export function Settings() {
     let unlisten: (() => void) | null = null;
     listen<{ tab: string }>("demo:settings-tab", (ev) => {
       const tab = ev.payload?.tab;
-      if (tab && tab in TAB_META) {
-        setActiveTab(tab as Tab);
+      const resolved = tab === "delivery" ? "alerts" : tab;
+      if (resolved && resolved in TAB_META) {
+        setActiveTab(resolved as Tab);
       }
     }).then((fn) => { unlisten = fn; });
     return () => { unlisten?.(); };
@@ -70,15 +70,22 @@ export function Settings() {
   };
 
   return (
-    <div className="flex h-full">
-      {/* Tab sidebar */}
-      <nav className="w-48 shrink-0 border-r border-sidebar-border bg-sidebar py-4 flex flex-col gap-0.5 px-2">
+    <div className="flex h-full flex-col md:flex-row">
+      {/* Tab sidebar: horizontal scrolling tab bar on narrow windows */}
+      <nav
+        role="tablist"
+        aria-orientation="vertical"
+        className="scrollbar-none flex shrink-0 gap-0.5 overflow-x-auto border-b border-sidebar-border bg-sidebar px-2 py-2 md:w-48 md:flex-col md:overflow-x-visible md:border-b-0 md:border-r md:py-4"
+      >
         {(Object.entries(TAB_META) as [Tab, typeof TAB_META[Tab]][]).map(([tab, meta]) => (
           <button
             key={tab}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab}
             onClick={() => setActiveTab(tab)}
             className={cn(
-              "flex items-center gap-2.5 text-left text-sm px-3 py-2 rounded-lg transition-colors",
+              "flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm transition-colors",
               activeTab === tab
                 ? "bg-sidebar-accent text-foreground font-medium"
                 : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-foreground"
@@ -91,11 +98,22 @@ export function Settings() {
       </nav>
 
       {/* Tab content */}
-      <div className="flex-1 overflow-y-auto p-6">
-        {activeTab === "general" && <GeneralTab settings={settings} update={update} t={t} />}
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
+        {activeTab === "general" && (
+          <>
+            <GeneralTab settings={settings} update={update} t={t} />
+            <div className="mt-4 max-w-2xl">
+              <WeekStartSetting />
+            </div>
+          </>
+        )}
         {activeTab === "focus_rules" && <FocusRulesTab settings={settings} update={update} t={t} addToast={addToast} />}
-        {activeTab === "alerts" && <AlertsTab settings={settings} update={update} t={t} />}
-        {activeTab === "delivery" && <DeliverySettingsTab />}
+        {activeTab === "alerts" && (
+          <>
+            <AlertsTab settings={settings} update={update} t={t} />
+            <DeliverySettingsSection />
+          </>
+        )}
         {activeTab === "audio" && <AudioTab settings={settings} update={update} t={t} addToast={addToast} />}
         {activeTab === "breaks" && <BreaksTab settings={settings} update={update} t={t} />}
         {activeTab === "pomodoro" && <PomodoroSettingsTab />}

@@ -30,6 +30,22 @@ active mode persisted and re-applied before the window is shown on startup.
 - **WHEN** switching between modes or restarting
 - **THEN** each mode restores its own last size and position
 
+#### Scenario: Geometry captured without a mode switch
+- **GIVEN** the window in either mode
+- **WHEN** the user resizes or moves it and quits (or waits ~700 ms)
+- **THEN** the geometry is stored for the *current* mode and restored on the next launch; changes
+  made while fullscreen or minimized, or while a mode switch is being applied, are ignored
+
+#### Scenario: Geometry survives restart in both modes
+- **GIVEN** a saved geometry for the persisted mode (Full or Compact)
+- **WHEN** the app starts
+- **THEN** the window opens at that saved size and position, not at the default centered frame
+
+#### Scenario: Saved geometry on a detached monitor
+- **GIVEN** a saved geometry whose title strip no longer intersects any connected monitor
+- **WHEN** the mode is applied (startup or switch)
+- **THEN** the saved position is ignored and the window falls back to the default placement
+
 ### Requirement: Pin on top
 
 Compact Mode SHALL offer a pin toggle that keeps the window above other windows; the pin state

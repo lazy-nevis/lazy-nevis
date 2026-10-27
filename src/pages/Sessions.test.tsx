@@ -5,7 +5,7 @@ import { useFocusSession } from "@/hooks/useFocusSession";
 import { sessionService } from "@/services/tauri";
 import { useSessionStore } from "@/stores/sessionStore";
 import type { LiveStats, Session } from "@/types";
-import { Dashboard } from "./Dashboard";
+import { Sessions } from "./Sessions";
 
 vi.mock("@/hooks/useFocusSession", () => ({ useFocusSession: vi.fn() }));
 
@@ -36,7 +36,7 @@ const liveStats: LiveStats = {
   current_app: "Code",
 };
 
-describe("Dashboard break lifecycle", () => {
+describe("Sessions break lifecycle", () => {
   beforeEach(async () => {
     vi.restoreAllMocks();
     await i18n.changeLanguage("en-US");
@@ -66,7 +66,7 @@ describe("Dashboard break lifecycle", () => {
   it("starts and manually ends a reminded break", async () => {
     const startBreak = vi.spyOn(sessionService, "startBreak").mockResolvedValue();
     const endBreak = vi.spyOn(sessionService, "endBreak").mockResolvedValue();
-    render(<Dashboard />);
+    render(<Sessions />);
 
     fireEvent.click(screen.getByRole("button", { name: "Start break" }));
     await waitFor(() => expect(startBreak).toHaveBeenCalledOnce());
@@ -79,7 +79,7 @@ describe("Dashboard break lifecycle", () => {
 
   it("skips a reminder without starting a break", () => {
     const startBreak = vi.spyOn(sessionService, "startBreak").mockResolvedValue();
-    render(<Dashboard />);
+    render(<Sessions />);
 
     fireEvent.click(screen.getByRole("button", { name: "Skip" }));
     expect(startBreak).not.toHaveBeenCalled();
@@ -93,7 +93,7 @@ describe("Dashboard break lifecycle", () => {
       breakStartedAt: Date.now() - 601_000,
       breakReminderPending: false,
     });
-    render(<Dashboard />);
+    render(<Sessions />);
 
     await waitFor(() => expect(endBreak).toHaveBeenCalledOnce());
     expect(useSessionStore.getState().isOnBreak).toBe(false);

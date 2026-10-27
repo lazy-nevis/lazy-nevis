@@ -7,7 +7,33 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useSettings } from "@/hooks/useSettings";
 import { audioService } from "@/services/tauri";
 
-export function DeliverySettingsTab() {
+/** Week start lives in Settings → General (calendar/habit week math). */
+export function WeekStartSetting() {
+  const { t } = useTranslation(undefined, { keyPrefix: "delivery" });
+  const { settings, saveSettings } = useSettings();
+  const weekValue = String(settings.general.week_start ?? 1);
+  return (
+    <SettingRow icon={<CalendarDays className="h-4 w-4" />} label={t("week_start")}>
+      <SegmentedControl
+        aria-label={t("week_start")}
+        value={weekValue}
+        onChange={(value) =>
+          void saveSettings({
+            ...settings,
+            general: { ...settings.general, week_start: Number(value) as 0 | 1 },
+          })
+        }
+        options={[
+          { value: "0", label: t("week_start_sunday") },
+          { value: "1", label: t("week_start_monday") },
+        ]}
+      />
+    </SettingRow>
+  );
+}
+
+/** Per-type delivery channels, rendered inside Settings → Alerts (spec: alert-delivery). */
+export function DeliverySettingsSection() {
   const { t } = useTranslation(undefined, { keyPrefix: "delivery" });
   const { settings, saveSettings } = useSettings();
   const [builtinSounds, setBuiltinSounds] = useState<string[]>([]);
@@ -23,32 +49,13 @@ export function DeliverySettingsTab() {
     });
   };
 
-  const weekValue = String(settings.general.week_start ?? 1);
-
   return (
-    <div>
+    <div className="mt-8">
       <SectionTitle
         icon={<BellRing className="h-4 w-4" />}
         title={t("tab_title")}
         description={t("tab_description")}
       />
-
-      <SettingRow icon={<CalendarDays className="h-4 w-4" />} label={t("week_start")}>
-        <SegmentedControl
-          aria-label={t("week_start")}
-          value={weekValue}
-          onChange={(value) =>
-            void saveSettings({
-              ...settings,
-              general: { ...settings.general, week_start: Number(value) as 0 | 1 },
-            })
-          }
-          options={[
-            { value: "0", label: t("week_start_sunday") },
-            { value: "1", label: t("week_start_monday") },
-          ]}
-        />
-      </SettingRow>
 
       <div className="mt-4">
         <ChannelPicker

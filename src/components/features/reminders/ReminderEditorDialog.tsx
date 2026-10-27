@@ -3,14 +3,15 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { ChannelPicker } from "@/components/features/delivery/ChannelPicker";
-import { MarkdownView } from "@/components/features/reminders/MarkdownView";
+import { Plus } from "lucide-react";
+import { DeliveryOverrideSection } from "@/components/features/delivery/DeliveryOverrideSection";
+import { MarkdownEditor } from "@/components/features/reminders/MarkdownEditor";
 import { ScheduleEditor } from "@/components/features/reminders/ScheduleEditor";
 import { reminderService } from "@/services/tauri";
 import type { AlertChannels, Reminder, ReminderInput, ScheduleInput } from "@/types";
 import { TONES, toTone } from "@/utils/tones";
 import { emptyRule } from "@/utils/schedule";
+import { cn } from "@/utils/cn";
 
 export interface ReminderEditorDialogProps {
   open: boolean;
@@ -47,7 +48,6 @@ export function ReminderEditorDialog({
   const [schedules, setSchedules] = useState<ScheduleInput[]>([
     { rule: emptyRule("daily"), active: true, starts_on: null, ends_on: null },
   ]);
-  const [preview, setPreview] = useState(false);
   const [nextPreview, setNextPreview] = useState<number[]>([]);
 
   useEffect(() => {
@@ -122,40 +122,51 @@ export function ReminderEditorDialog({
       </DialogHeader>
       <div className="max-h-[70vh] space-y-5 overflow-y-auto px-1">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">{t("editor.title_label")}</label>
-          <Input value={title} onChange={(event) => setTitle(event.target.value)} />
+          <label htmlFor="reminder-title" className="text-sm font-medium">{t("editor.title_label")}</label>
+          <Input id="reminder-title" value={title} onChange={(event) => setTitle(event.target.value)} />
         </div>
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <label className="text-sm font-medium">{t("editor.body_label")}</label>
-            <Button type="button" size="sm" variant="ghost" onClick={() => setPreview((p) => !p)}>
-              {t("editor.preview")}
+        <div className="space-y-1.5">
+          <span className="text-sm font-medium">{t("editor.body_label")}</span>
+          <MarkdownEditor value={body} onChange={setBody} label={t("editor.body_label")} />
+        </div>
+        <div className="space-y-1.5">
+          <span className="text-sm font-medium">{t("editor.tone")}</span>
+          <div className="flex flex-wrap gap-2">
+            {TONES.map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={cn(
+                  "h-7 w-7 rounded-full border-2 transition-transform",
+                  toTone(tone) === item ? "scale-110 border-foreground" : "border-transparent",
+                )}
+                style={{ background: `hsl(var(--tone-${item}))` }}
+                onClick={() => setTone(item)}
+                aria-label={item}
+                aria-pressed={toTone(tone) === item}
+              />
+            ))}
+          </div>
+        </div>
+        <section className="space-y-3 rounded-xl border border-border bg-muted/20 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-semibold">{t("editor.schedules")}</p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-1"
+              onClick={() =>
+                setSchedules((current) => [
+                  ...current,
+                  { rule: emptyRule("daily"), active: true, starts_on: null, ends_on: null },
+                ])
+              }
+            >
+              <Plus className="h-3.5 w-3.5" aria-hidden />
+              {t("editor.add_schedule")}
             </Button>
           </div>
-          {preview ? (
-            <MarkdownView content={body} className="prose prose-sm dark:prose-invert" />
-          ) : (
-            <textarea
-              className="min-h-28 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-              value={body}
-              onChange={(event) => setBody(event.target.value)}
-            />
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {TONES.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={`h-8 w-8 rounded-full border-2 ${toTone(tone) === item ? "border-foreground" : "border-transparent"}`}
-              style={{ background: `hsl(var(--tone-${item}))` }}
-              onClick={() => setTone(item)}
-              aria-label={item}
-            />
-          ))}
-        </div>
-        <div className="space-y-2 rounded-xl border border-border bg-muted/20 p-3">
-          <p className="text-sm font-medium">{t("editor.schedules")}</p>
           {schedules.map((schedule, index) => (
             <ScheduleEditor
               key={schedule.id ?? index}
@@ -174,50 +185,34 @@ export function ReminderEditorDialog({
               }
             />
           ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setSchedules((current) => [
-                ...current,
-                { rule: emptyRule("daily"), active: true, starts_on: null, ends_on: null },
-              ])
-            }
-          >
-            {t("editor.add_schedule")}
-          </Button>
-          <p className="text-xs text-muted-foreground">{t("editor.next_preview")}</p>
-          <ul className="text-xs text-muted-foreground">
-            {nextPreview.map((ms) => (
-              <li key={ms}>
-                {new Intl.DateTimeFormat(locale, { dateStyle: "short", timeStyle: "short" }).format(
-                  new Date(ms),
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="space-y-2 rounded-xl border border-border bg-muted/20 p-3">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium">{t("editor.delivery")}</p>
-            <Switch checked={useCustomDelivery} onCheckedChange={setUseCustomDelivery} />
-            <span className="text-xs text-muted-foreground">
-              {useCustomDelivery ? t("editor.custom") : t("editor.inherit")}
-            </span>
-          </div>
-          {useCustomDelivery && (
-            <ChannelPicker
-              label={t("editor.delivery")}
-              channels={channels}
-              sound={sound}
-              onChannelsChange={setChannels}
-              onSoundChange={setSound}
-              testKind="reminder"
-              builtinSounds={builtinSounds}
-            />
+          {nextPreview.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground">{t("editor.next_preview")}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {nextPreview.map((ms) => (
+                  <span
+                    key={ms}
+                    className="rounded-md bg-background px-2 py-0.5 text-xs tabular-nums text-muted-foreground ring-1 ring-border"
+                  >
+                    {new Intl.DateTimeFormat(locale, { dateStyle: "short", timeStyle: "short" }).format(
+                      new Date(ms),
+                    )}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
-        </div>
+        </section>
+        <DeliveryOverrideSection
+          custom={useCustomDelivery}
+          onCustomChange={setUseCustomDelivery}
+          channels={channels}
+          sound={sound}
+          onChannelsChange={setChannels}
+          onSoundChange={setSound}
+          testKind="reminder"
+          builtinSounds={builtinSounds}
+        />
       </div>
       <DialogFooter>
         <Button type="button" variant="ghost" onClick={onClose}>{t("editor.cancel")}</Button>

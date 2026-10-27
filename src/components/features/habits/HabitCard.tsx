@@ -7,6 +7,7 @@ import { formatProgressLine, isCheckOnly, periodLabel } from "@/components/featu
 import type { HabitTodayCard } from "@/types";
 import { toneColor, toneStyle, toTone } from "@/utils/tones";
 import { cn } from "@/utils/cn";
+import { habitIcon } from "@/components/features/habits/habitIcons";
 
 export function HabitCard({
   card,
@@ -29,6 +30,7 @@ export function HabitCard({
   const checkOnly = isCheckOnly(habit);
   const tone = toTone(habit.tone);
   const percent = Math.min(100, Math.round(progress.percent));
+  const Icon = habitIcon(habit.icon);
 
   return (
     <GlowCard
@@ -82,11 +84,15 @@ export function HabitCard({
     >
       <div className="tone-soft space-y-3 rounded-lg border border-transparent p-3" style={toneStyle(tone)}>
         <div className="flex items-start gap-3">
-          {met && (
-            <span className="rounded-full bg-success/15 p-1 text-success" aria-hidden>
-              <Check className="h-4 w-4" />
-            </span>
-          )}
+          <span
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+              met ? "bg-success/15 text-success" : "bg-background/60",
+            )}
+            aria-hidden
+          >
+            {met ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+          </span>
           <div className="min-w-0 flex-1 space-y-1">
             <p className="text-base font-semibold leading-snug">{habit.name}</p>
             <p className="text-sm text-muted-foreground">

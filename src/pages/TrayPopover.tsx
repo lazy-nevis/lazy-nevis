@@ -42,7 +42,6 @@ export function TrayPopover() {
     refresh: refreshChecklist,
   } = useChecklist();
   const checklistSettings = useSettingsStore((s) => s.settings.checklist);
-  const pomodoroEnabled = useSettingsStore((s) => s.settings.pomodoro.enabled);
   usePomodoro();
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -180,7 +179,7 @@ export function TrayPopover() {
                 {liveStats.current_app}
               </p>
             )}
-            {pomodoroEnabled && <PomodoroTrayBlock />}
+            <PomodoroTrayBlock />
             <div className="flex gap-2">
               <Button
                 size="sm"

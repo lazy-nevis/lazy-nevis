@@ -22,6 +22,11 @@ The frontend SHALL apply edits immediately, SHALL debounce durable saves, and SH
 - **WHEN** the user changes a value
 - **THEN** UI state changes immediately and the final value persists after the debounce interval
 
+#### Scenario: Save before load
+- **GIVEN** settings have not finished loading from the backend
+- **WHEN** any screen requests a save
+- **THEN** the save is ignored so store defaults never overwrite the persisted configuration
+
 #### Scenario: Save failure
 - **GIVEN** local storage is unavailable
 - **WHEN** a save is attempted

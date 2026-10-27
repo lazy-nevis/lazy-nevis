@@ -102,7 +102,8 @@ export function HabitSkyline({
         data={data}
         palette={palette}
         weekStart={weekStart}
-        unit={unit}
+        unit={unit === t("units.times") ? t("units.time") : unit}
+        unitPlural={unit}
         labels={labels}
         reducedMotion={reducedMotion}
         showStats={Boolean(habitId)}

@@ -64,7 +64,7 @@ export function Habits() {
         title={t("title")}
         description={t("subtitle")}
         actions={
-          <Button type="button" onClick={() => { setEditing(null); setEditorOpen(true); }}>
+          <Button type="button" variant="brand" onClick={() => { setEditing(null); setEditorOpen(true); }}>
             {t("new_habit")}
           </Button>
         }

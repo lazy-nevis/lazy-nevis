@@ -5,14 +5,12 @@ import {
 } from "@/components/features/pomodoro/pomodoroFormat";
 import { GlowCard } from "@/components/ui/glow-card";
 import { usePomodoro } from "@/hooks/usePomodoro";
-import { useSettings } from "@/hooks/useSettings";
 
 export function PomodoroWidget() {
   const { t } = useTranslation(undefined, { keyPrefix: "pomodoro" });
-  const { settings } = useSettings();
   const { state } = usePomodoro();
 
-  if (!settings.pomodoro.enabled || !state?.run) {
+  if (!state?.run) {
     return null;
   }
 

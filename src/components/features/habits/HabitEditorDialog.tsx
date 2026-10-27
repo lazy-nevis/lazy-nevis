@@ -5,18 +5,16 @@ import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ChannelPicker } from "@/components/features/delivery/ChannelPicker";
+import { Tooltip } from "@/components/ui/tooltip";
+import { Info, Plus, Trash2 } from "lucide-react";
+import { DeliveryOverrideSection } from "@/components/features/delivery/DeliveryOverrideSection";
+import { HabitIconPicker } from "@/components/features/habits/HabitIconPicker";
 import { ScheduleEditor } from "@/components/features/reminders/ScheduleEditor";
 import type { AlertChannels, Habit, HabitInput, HabitTargetInput, ScheduleInput } from "@/types";
 import { TONES, toTone } from "@/utils/tones";
 import { emptyRule } from "@/utils/schedule";
 import { cn } from "@/utils/cn";
 import { defaultUnitForMetric, metricLabel } from "@/components/features/habits/habitFormat";
-
-const ICONS = [
-  "droplet", "dumbbell", "book", "footprints", "bed", "apple", "brain", "pill",
-  "heart", "timer", "pencil", "music", "sun", "leaf", "bike", "target",
-];
 
 const METRICS = ["check", "count", "volume", "mass", "distance", "duration"] as const;
 
@@ -176,30 +174,30 @@ export function HabitEditorDialog({
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium">{t("field_icon")}</label>
-            <Select
-              className="mt-1 w-full"
-              value={icon}
-              onChange={(e) => setIcon(e.target.value)}
-            >
-              {ICONS.map((value) => (
-                <option key={value} value={value}>{value}</option>
-              ))}
-            </Select>
+            <span className="text-sm font-medium">{t("field_icon")}</span>
+            <div className="mt-1">
+              <HabitIconPicker value={icon} tone={tone} onChange={setIcon} />
+            </div>
           </div>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm">{t("field_skip_when_met")}</span>
           <Switch checked={skipWhenMet} onCheckedChange={setSkipWhenMet} />
         </div>
-        <p className="text-xs text-muted-foreground">{t("targets_change_note")}</p>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">{t("targets_title")}</h3>
+        <section className="space-y-3 rounded-xl border border-border bg-muted/20 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-sm font-semibold">{t("targets_title")}</h3>
+              <Tooltip label={t("targets_help")} side="right">
+                <Info className="h-3.5 w-3.5 text-muted-foreground" aria-label={t("targets_help")} />
+              </Tooltip>
+              <span className="text-xs tabular-nums text-muted-foreground">{targets.length}/5</span>
+            </div>
             <Button
               type="button"
-              size="xs"
+              size="sm"
               variant="outline"
+              className="gap-1"
               disabled={targets.length >= 5}
               onClick={() =>
                 setTargets((prev) => [
@@ -208,13 +206,24 @@ export function HabitEditorDialog({
                 ])
               }
             >
+              <Plus className="h-3.5 w-3.5" aria-hidden />
               {t("add_target")}
             </Button>
           </div>
+          <div className="hidden grid-cols-[1.2fr_1fr_0.8fr_auto] gap-2 px-1 text-xs font-medium text-muted-foreground sm:grid">
+            <Tooltip label={t("target_metric_help")}><span>{t("target_metric")}</span></Tooltip>
+            <Tooltip label={t("target_unit_help")}><span>{t("target_unit")}</span></Tooltip>
+            <Tooltip label={t("target_value_help")}><span>{t("target_value")}</span></Tooltip>
+            <span className="w-8" />
+          </div>
           {targets.map((target, index) => (
-            <div key={index} className="grid gap-2 rounded-md border border-border p-2 sm:grid-cols-4">
-              <select
-                className="rounded-md border border-input bg-background px-2 py-1 text-sm"
+            <div
+              key={index}
+              className="grid items-center gap-2 rounded-lg border border-border bg-background p-2 sm:grid-cols-[1.2fr_1fr_0.8fr_auto]"
+            >
+              <Select
+                aria-label={t("target_metric")}
+                className="w-full"
                 value={target.metric}
                 onChange={(e) => {
                   const metric = e.target.value;
@@ -235,44 +244,53 @@ export function HabitEditorDialog({
                 {METRICS.map((metric) => (
                   <option key={metric} value={metric}>{metricLabel(metric, t)}</option>
                 ))}
-              </select>
-              <Input
-                value={target.unit}
-                disabled={target.metric === "check"}
-                onChange={(e) =>
-                  setTargets((prev) =>
-                    prev.map((row, i) => (i === index ? { ...row, unit: e.target.value } : row)),
-                  )
-                }
-                placeholder={t("target_unit")}
-              />
-              <Input
-                type="number"
-                min={0}
-                step="any"
-                value={target.target_value}
-                disabled={target.metric === "check"}
-                onChange={(e) =>
-                  setTargets((prev) =>
-                    prev.map((row, i) =>
-                      i === index ? { ...row, target_value: Number(e.target.value) } : row,
-                    ),
-                  )
-                }
-              />
-              <Button
-                type="button"
-                size="xs"
-                variant="ghost"
-                disabled={targets.length <= 1}
-                onClick={() => setTargets((prev) => prev.filter((_, i) => i !== index))}
-              >
-                ×
-              </Button>
+              </Select>
+              {target.metric === "check" ? (
+                <p className="text-xs text-muted-foreground sm:col-span-2">{t("target_check_hint")}</p>
+              ) : (
+                <>
+                  <Input
+                    aria-label={t("target_unit")}
+                    value={target.unit}
+                    onChange={(e) =>
+                      setTargets((prev) =>
+                        prev.map((row, i) => (i === index ? { ...row, unit: e.target.value } : row)),
+                      )
+                    }
+                    placeholder={t("target_unit")}
+                  />
+                  <Input
+                    aria-label={t("target_value")}
+                    type="number"
+                    min={0}
+                    step="any"
+                    value={target.target_value}
+                    onChange={(e) =>
+                      setTargets((prev) =>
+                        prev.map((row, i) =>
+                          i === index ? { ...row, target_value: Number(e.target.value) } : row,
+                        ),
+                      )
+                    }
+                  />
+                </>
+              )}
+              <Tooltip label={t("remove_target")}>
+                <button
+                  type="button"
+                  aria-label={t("remove_target")}
+                  disabled={targets.length <= 1}
+                  onClick={() => setTargets((prev) => prev.filter((_, i) => i !== index))}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:pointer-events-none disabled:opacity-30"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden />
+                </button>
+              </Tooltip>
             </div>
           ))}
-        </div>
-        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">{t("targets_change_note")}</p>
+        </section>
+        <section className="space-y-3 rounded-xl border border-border bg-muted/20 p-3">
           <h3 className="text-sm font-semibold">{t("reminders_title")}</h3>
           {(schedules.length
             ? schedules
@@ -299,35 +317,30 @@ export function HabitEditorDialog({
           ))}
           <Button
             type="button"
-            size="xs"
+            size="sm"
             variant="outline"
+            className="gap-1"
             onClick={() =>
               setSchedules((prev) => [
-                ...prev,
+                ...(prev.length ? prev : [{ rule: emptyRule("daily"), active: true, starts_on: null, ends_on: null }]),
                 { rule: emptyRule("daily"), active: true, starts_on: null, ends_on: null },
               ])
             }
           >
-            +
+            <Plus className="h-3.5 w-3.5" aria-hidden />
+            {t("add_schedule")}
           </Button>
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">{t("delivery_title")}</h3>
-            <Switch checked={useCustomDelivery} onCheckedChange={setUseCustomDelivery} />
-          </div>
-          {useCustomDelivery && (
-            <ChannelPicker
-              label={t("delivery_title")}
-              channels={channels}
-              sound={sound}
-              onChannelsChange={setChannels}
-              onSoundChange={setSound}
-              testKind="habit"
-              builtinSounds={builtinSounds}
-            />
-          )}
-        </div>
+        </section>
+        <DeliveryOverrideSection
+          custom={useCustomDelivery}
+          onCustomChange={setUseCustomDelivery}
+          channels={channels}
+          sound={sound}
+          onChannelsChange={setChannels}
+          onSoundChange={setSound}
+          testKind="habit"
+          builtinSounds={builtinSounds}
+        />
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
       <DialogFooter>

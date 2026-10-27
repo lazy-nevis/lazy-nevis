@@ -10,7 +10,7 @@ tags: [product, capability, delivery, alerts]
 ## SHALL
 
 - Delivery SHALL support combinable channels: native notification, fullscreen overlay, and sound (Rust `AudioPlayer`).
-- Global defaults SHALL live in `AppSettings.delivery` per alert type; reminders/habits MAY override channels and sound.
+- Global defaults SHALL live in `AppSettings.delivery` per alert type and SHALL be edited in **Settings → Alerts** (no separate delivery tab); reminders/habits MAY override channels and sound through the shared "Delivery: Default / Custom" section.
 - Fullscreen non-distraction overlays SHALL queue up to five items; a full queue SHALL fall back to notification (+ one-shot sound).
 - Distraction fullscreen alerts SHALL preempt reminder overlays and re-queue the interrupted reminder at the front.
 

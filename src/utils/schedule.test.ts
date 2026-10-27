@@ -27,4 +27,12 @@ describe("describeSchedule", () => {
     );
     expect(text).toMatch(/60|hora/i);
   });
+
+  it("formats once rules with the locale instead of the raw ISO value", async () => {
+    await i18n.changeLanguage("en-US");
+    const t = i18n.getFixedT("en-US");
+    const text = describeSchedule({ kind: "once", at: "2026-10-27T11:00" }, t, "en-US", 1);
+    expect(text).not.toContain("2026-10-27T11:00");
+    expect(text).toContain("Oct 27, 2026");
+  });
 });

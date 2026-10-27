@@ -73,7 +73,7 @@ export function SegmentedControl<T extends string>(props: SegmentedControlProps<
       role={props.multiple ? "group" : "radiogroup"}
       aria-label={props["aria-label"]}
       className={cn(
-        "inline-flex rounded-lg border border-border bg-muted/50 p-0.5",
+        "scrollbar-none inline-flex max-w-full overflow-x-auto rounded-lg border border-border bg-muted/50 p-0.5",
         props.className,
       )}
     >
@@ -96,7 +96,7 @@ export function SegmentedControl<T extends string>(props: SegmentedControlProps<
             onClick={() => select(opt.value)}
             onKeyDown={(e) => onKeyDown(index, e)}
             className={cn(
-              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               selected
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",

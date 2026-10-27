@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useAppStatus } from "@/hooks/useAppStatus";
 import { useSettings } from "@/hooks/useSettings";
 import { useFocusSession } from "@/hooks/useFocusSession";
+import { StartSessionModal } from "@/components/features/StartSessionModal";
 import { usePomodoro } from "@/hooks/usePomodoro";
 import { useThemeSync } from "@/hooks/useThemeSync";
 import { useWindowTitle } from "@/hooks/useWindowTitle";
@@ -29,6 +30,7 @@ import type { AppSettings } from "@/types";
 import i18n from "@/i18n";
 
 const Dashboard  = lazy(() => import("@/pages/Dashboard").then((m) => ({ default: m.Dashboard })));
+const Sessions   = lazy(() => import("@/pages/Sessions").then((m) => ({ default: m.Sessions })));
 const History    = lazy(() => import("@/pages/History").then((m) => ({ default: m.History })));
 const ChecklistPage = lazy(() => import("@/pages/Checklist").then((m) => ({ default: m.Checklist })));
 const SettingsPage = lazy(() => import("@/pages/Settings").then((m) => ({ default: m.Settings })));
@@ -224,6 +226,7 @@ function AppShell() {
             }>
               <Routes>
                 <Route path="/"          element={<Dashboard />} />
+                <Route path="/sessions"  element={<Sessions />} />
                 <Route path="/history"   element={<History />} />
                 <Route path="/checklist" element={<ChecklistPage />} />
                 <Route path="/reminders" element={<RemindersPage />} />
@@ -238,6 +241,7 @@ function AppShell() {
           </main>
         </div>
       </div>
+      <StartSessionModal />
       <CommandPalette />
       <ToastContainer />
       <CloseWarningDialog />

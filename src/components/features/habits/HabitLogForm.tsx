@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { DateTimePicker } from "@/components/ui/date-picker";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -170,12 +171,8 @@ export function HabitLogForm({
         <Input value={note} onChange={(e) => setNote(e.target.value)} />
       </div>
       <div className="space-y-1">
-        <label className="text-sm font-medium">{t("log_when")}</label>
-        <Input
-          type="datetime-local"
-          value={loggedAt}
-          onChange={(e) => setLoggedAt(e.target.value)}
-        />
+        <span className="text-sm font-medium">{t("log_when")}</span>
+        <DateTimePicker value={loggedAt} onChange={setLoggedAt} />
       </div>
       <div className="flex justify-end gap-2">
         {onCancel && (

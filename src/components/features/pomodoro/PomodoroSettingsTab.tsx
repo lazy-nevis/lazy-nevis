@@ -29,12 +29,6 @@ export function PomodoroSettingsTab() {
       />
       <SectionCard>
         <div className="space-y-0 -mx-1">
-          <SettingRow label={t("settings.enabled")}>
-            <Switch
-              checked={settings.pomodoro.enabled}
-              onCheckedChange={(checked) => update({ enabled: checked })}
-            />
-          </SettingRow>
           <SettingRow label={t("settings.focus_minutes")}>
             <Input
               type="number"

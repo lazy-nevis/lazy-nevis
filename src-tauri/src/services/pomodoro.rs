@@ -99,9 +99,6 @@ impl PomodoroEngine {
         session_id: Option<String>,
         session_owned: bool,
     ) -> Result<(PomodoroState, Vec<PomodoroEffect>)> {
-        if !settings.enabled {
-            return Err(AppError::InvalidArgument("Pomodoro is disabled".into()));
-        }
         if self.is_running() {
             return Err(AppError::InvalidArgument(
                 "A pomodoro run is already active".into(),

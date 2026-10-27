@@ -5,18 +5,16 @@ import {
 } from "@/components/features/pomodoro/pomodoroFormat";
 import { Button } from "@/components/ui/button";
 import { usePomodoro } from "@/hooks/usePomodoro";
-import { useSettings } from "@/hooks/useSettings";
 import { pomodoroService } from "@/services/tauri";
 import { usePomodoroStore } from "@/stores/pomodoroStore";
 import { cn } from "@/utils/cn";
 
 export function PomodoroTrayBlock() {
   const { t } = useTranslation(undefined, { keyPrefix: "pomodoro" });
-  const { settings } = useSettings();
   const { state } = usePomodoro();
   const setState = usePomodoroStore((s) => s.setState);
 
-  if (!settings.pomodoro.enabled || !state?.run) {
+  if (!state?.run) {
     return null;
   }
 

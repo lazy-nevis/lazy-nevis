@@ -14,6 +14,7 @@ tags: [product, capability, habits]
 - Logging SHALL accept values per active target, optional note, backdated `logged_at` (not in the future), and a `source` tag; overlay-triggered logs SHALL link `trigger_event_id` and mark the event `logged`.
 - Habit reminders SHALL use delivery type `habits`; when `skip_reminders_when_met` is enabled and the current period is met, the scheduler SHALL record a `skipped` trigger event instead of alerting.
 - The quick-log window (`quicklog` label, `#/quick-log`) SHALL be pre-created hidden and reused; `open_quick_log` SHALL emit `quicklog:open` and focus the window.
+- Habit icons SHALL come from the shared registry (`habitIcons.ts`) and be chosen from a dropdown grid (4 per row); targets SHALL show metric/unit/goal labels with help tooltips, and `check` targets hide unit/goal.
 - Mutations SHALL broadcast `habits:changed` and mark the shared scheduler dirty when schedules or active state change.
 
 ## Scenarios

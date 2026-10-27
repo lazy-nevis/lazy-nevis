@@ -53,6 +53,7 @@ pub enum PomodoroRunState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct PomodoroSettings {
+    /// Legacy flag kept for settings-file compatibility; Pomodoro is always on.
     pub enabled: bool,
     pub focus_ms: u64,
     pub short_break_ms: u64,
@@ -68,7 +69,7 @@ pub struct PomodoroSettings {
 impl Default for PomodoroSettings {
     fn default() -> Self {
         Self {
-            enabled: false,
+            enabled: true,
             focus_ms: 25 * 60_000,
             short_break_ms: 5 * 60_000,
             long_break_ms: 15 * 60_000,

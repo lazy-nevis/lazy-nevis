@@ -30,7 +30,8 @@
     "reminders": "Reminders",
     "calendar": "Calendar",
     "habits": "Habits",
-    "pomodoro": "Pomodoro"
+    "pomodoro": "Pomodoro",
+    "sessions": "Sessions"
   },
   "dashboard": {
     "session": {
@@ -154,7 +155,6 @@
       "data": "Data",
       "permissions": "Permissions",
       "checklist": "Checklist",
-      "delivery": "Notifications & reminders",
       "pomodoro": "Pomodoro"
     },
     "section_desc": {
@@ -620,7 +620,14 @@
       "cancel": "Cancel",
       "delete": "Delete reminder",
       "delete_confirm": "Delete this reminder and its activity?",
-      "next_preview": "Next 5 occurrences"
+      "next_preview": "Next 5 occurrences",
+      "write": "Write",
+      "format": {
+        "bold": "Bold (⌘B)",
+        "italic": "Italic (⌘I)",
+        "bullet": "Bulleted list",
+        "numbered": "Numbered list"
+      }
     },
     "activity": {
       "title": "Recent activity",
@@ -674,12 +681,19 @@
       "window_end": "Window end",
       "month_days": "Month days",
       "starts_on": "Starts on",
-      "ends_on": "Ends on"
+      "ends_on": "Ends on",
+      "no_start": "Starts now",
+      "no_end": "No end date"
+    },
+    "actions": {
+      "remove": "Remove schedule",
+      "remove_time": "Remove time",
+      "add_time": "Add time"
     }
   },
   "delivery": {
-    "tab_title": "Notifications & reminders",
-    "tab_description": "Default delivery channels and sounds per alert type.",
+    "tab_title": "Reminders, habits & Pomodoro delivery",
+    "tab_description": "How reminders, habits and Pomodoro reach you: channels and sounds per type.",
     "week_start": "Week starts on",
     "week_start_sunday": "Sunday",
     "week_start_monday": "Monday",
@@ -695,7 +709,14 @@
     },
     "sound": "Sound",
     "test": "Test delivery",
-    "inherit_default": "Inherit default"
+    "inherit_default": "Inherit default",
+    "override": {
+      "title": "Delivery",
+      "default": "Default",
+      "custom": "Custom",
+      "default_hint": "Uses the channels set in Settings → Alerts.",
+      "custom_hint": "Only this item uses these channels."
+    }
   },
   "tray": {
     "show": "Open LazyNevis",
@@ -820,6 +841,7 @@
       "duration": "Duration"
     },
     "units": {
+      "time": "time",
       "times": "times",
       "ml": "ml",
       "l": "L",
@@ -829,6 +851,33 @@
       "km": "km",
       "min": "min",
       "h": "h"
+    },
+    "targets_help": "A target is what counts as done for the period. Add up to 5 (e.g. 2 L of water and 8 glasses).",
+    "target_metric_help": "What you measure: a simple check, a count, volume, mass, distance or duration.",
+    "target_unit_help": "Label shown next to the value, e.g. glasses, km, min.",
+    "target_value_help": "Amount to reach in each period.",
+    "target_check_hint": "Done when marked once per period.",
+    "remove_target": "Remove target",
+    "add_schedule": "Add reminder",
+    "icons": {
+      "droplet": "Water",
+      "dumbbell": "Workout",
+      "book": "Reading",
+      "footprints": "Walk",
+      "bed": "Sleep",
+      "apple": "Nutrition",
+      "brain": "Mind",
+      "pill": "Medication",
+      "heart": "Health",
+      "timer": "Timer",
+      "pencil": "Writing",
+      "music": "Music",
+      "sun": "Morning",
+      "leaf": "Nature",
+      "bike": "Cycling",
+      "target": "Goal",
+      "coffee": "Break",
+      "smile": "Mood"
     }
   },
   "tray_panel": {
@@ -925,5 +974,81 @@
     "unpin": "Unpin",
     "view_reports": "View reports",
     "view_previous_activities": "View previous activities"
+  },
+  "overview": {
+    "title": "Overview",
+    "description": "Today across sessions, Pomodoro, checklist, reminders and habits.",
+    "hero": {
+      "sessions_title": "Focus sessions",
+      "sessions_desc": "Track focus, distractions and checkpoints.",
+      "sessions_start": "Start a session",
+      "sessions_open": "Open session",
+      "idle": "Not running",
+      "pomodoro_title": "Pomodoro",
+      "pomodoro_desc": "Timed focus blocks with breaks.",
+      "pomodoro_today": "{{done}} of {{goal}} today",
+      "pomodoro_start": "Start a Pomodoro",
+      "pomodoro_open": "Open timer",
+      "checklist_title": "Checklist",
+      "checklist_desc": "Your open tasks and due dates.",
+      "checklist_open_one": "{{count}} open item",
+      "checklist_open_other": "{{count}} open items",
+      "checklist_open_cta": "Open checklist"
+    },
+    "stats": {
+      "sessions_today": "Sessions today",
+      "sessions_week_one": "{{count}} in the last 7 days",
+      "sessions_week_other": "{{count}} in the last 7 days",
+      "focus_today": "Focus today",
+      "session_active": "Session running now",
+      "session_none": "No active session",
+      "checklist_today": "Due today",
+      "reminders_today": "Reminders today",
+      "upcoming_one": "{{count}} upcoming",
+      "upcoming_other": "{{count}} upcoming",
+      "habits_met": "Habits met",
+      "pomodoros": "Pomodoros"
+    },
+    "habits": {
+      "title": "Today's habits",
+      "see_all_one": "See all ({{count}})",
+      "see_all_other": "See all ({{count}})",
+      "streak_one": "{{count}}-day streak",
+      "streak_other": "{{count}}-day streak"
+    },
+    "calendar": {
+      "open": "Calendar"
+    },
+    "checklist": {
+      "title": "Due today",
+      "open": "Checklist",
+      "empty": "Nothing due today."
+    },
+    "reminders": {
+      "title": "Reminders",
+      "open": "Reminders",
+      "empty": "No reminders scheduled.",
+      "upcoming": "Upcoming"
+    },
+    "layout": {
+      "reset": "Reset layout",
+      "resize": "Change widget size",
+      "drag": "Drag to reorder"
+    }
+  },
+  "pickers": {
+    "prev_month": "Previous month",
+    "next_month": "Next month",
+    "hour": "Hour",
+    "minute": "Min",
+    "clear": "Clear",
+    "pick_date": "Pick a date",
+    "pick_time": "Pick a time",
+    "pick_datetime": "Pick date & time",
+    "today": "Today"
+  },
+  "runtime": {
+    "browser_title": "Open LazyNevis in the desktop app",
+    "browser_body": "This page is the development server for the LazyNevis window. It needs the Tauri runtime, so it does nothing in a regular browser tab."
   }
 }

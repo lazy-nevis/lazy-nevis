@@ -24,10 +24,23 @@ export function emptyRule(kind: ScheduleRule["kind"]): ScheduleRule {
 
 type Translate = (key: string, options?: Record<string, unknown>) => string;
 
+/** Locale-formatted `YYYY-MM-DDTHH:MM`; falls back to the raw value when unparsable. */
+function formatOnceAt(at: string, locale: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(at);
+  if (!match) return at;
+  const [, y, mo, d, h, mi] = match.map(Number);
+  const date = new Date(y, mo - 1, d, h, mi);
+  try {
+    return new Intl.DateTimeFormat(locale || undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
+  } catch {
+    return at;
+  }
+}
+
 export function describeSchedule(
   rule: ScheduleRule,
   t: Translate,
-  _locale: string,
+  locale: string,
   weekStart: 0 | 1 = 1,
 ): string {
   const formatWeekdays = (days: number[]) => {
@@ -42,7 +55,7 @@ export function describeSchedule(
 
   switch (rule.kind) {
     case "once":
-      return t("schedule.summary.once", { at: rule.at || t("schedule.summary.unset") });
+      return t("schedule.summary.once", { at: formatOnceAt(rule.at, locale) || t("schedule.summary.unset") });
     case "daily":
       return t("schedule.summary.daily", {
         times: rule.times.join(", "),

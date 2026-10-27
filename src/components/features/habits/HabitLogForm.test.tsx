@@ -64,18 +64,16 @@ describe("HabitLogForm", () => {
 
   it("allows backdated timestamps", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-    const past = new Date(Date.now() - 86_400_000);
-    const value = past.toISOString().slice(0, 16);
     render(
       <I18nextProvider i18n={i18n}>
         <HabitLogForm habit={habit} source="dialog" onSubmit={onSubmit} />
       </I18nextProvider>,
     );
     const user = userEvent.setup();
-    const when = document.querySelector('input[type="datetime-local"]');
-    expect(when).toBeTruthy();
-    await user.clear(when as HTMLInputElement);
-    await user.type(when as HTMLInputElement, value);
+    await user.click(screen.getByRole("button", { name: /pick date & time/i }));
+    await user.click(screen.getByRole("button", { name: /previous month/i }));
+    await user.click(screen.getByRole("button", { name: "1" }));
+    await user.keyboard("{Escape}");
     await user.click(screen.getByRole("button", { name: "+500" }));
     await user.click(screen.getByRole("button", { name: /save/i }));
     expect(onSubmit).toHaveBeenCalled();

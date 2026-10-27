@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Settings2 } from "lucide-react";
 import { ReminderEditorDialog } from "@/components/features/reminders/ReminderEditorDialog";
 import { Button } from "@/components/ui/button";
 import { PageContainer, PageHeader } from "@/components/ui/page";
-import { SectionCard } from "@/components/ui/section-card";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useSettings } from "@/hooks/useSettings";
 import { audioService, calendarService } from "@/services/tauri";
@@ -103,25 +102,42 @@ export function Calendar() {
     setReminderOpen(true);
   };
 
+  const locale = settings.general.language;
   const headerLabel = useMemo(() => {
     if (view === "month") {
-      return anchor.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+      return anchor.toLocaleDateString(locale, { month: "long", year: "numeric" });
     }
     if (view === "week") {
-      return t("week_of", { date: toDateKey(anchor) });
+      const start = new Date(fromMs);
+      const end = new Date(toMs);
+      const fmt = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" });
+      return `${fmt.format(start)} – ${fmt.format(end)}, ${end.getFullYear()}`;
     }
-    return selectedDate ?? toDateKey(anchor);
-  }, [anchor, selectedDate, t, view]);
+    const [y, m, d] = (selectedDate ?? toDateKey(anchor)).split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(locale, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+  }, [anchor, fromMs, toMs, locale, selectedDate, view]);
 
   return (
-    <PageContainer className="!max-w-none">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-6 lg:flex-row">
+    <PageContainer innerClassName="max-w-6xl">
+      <div className="flex w-full flex-col gap-4 lg:flex-row">
         <div className="min-w-0 flex-1 space-y-4">
           <PageHeader
             title={t("title")}
             description={t("description")}
             actions={
-              <Button type="button" variant="outline" size="sm" onClick={() => setShowSettings((v) => !v)}>
+              <Button
+                type="button"
+                variant={showSettings ? "secondary" : "outline"}
+                size="sm"
+                className="gap-1.5"
+                aria-pressed={showSettings}
+                onClick={() => setShowSettings((v) => !v)}
+              >
+                <Settings2 className="h-3.5 w-3.5" aria-hidden />
                 {t("settings_toggle")}
               </Button>
             }
@@ -134,9 +150,46 @@ export function Calendar() {
               }
             />
           )}
-          <SectionCard
-            title={headerLabel}
-            actions={
+          <div className="space-y-3 rounded-xl border border-border bg-card p-3 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="inline-flex items-center rounded-lg border border-border">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-r-none"
+                    onClick={() => setAnchor((a) => shiftAnchor(a, view, -1))}
+                    aria-label={t("prev")}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 rounded-none border-x border-border px-3"
+                    onClick={() => {
+                      setAnchor(new Date());
+                      setSelectedDate(toDateKey(new Date()));
+                    }}
+                  >
+                    {t("today")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-l-none"
+                    onClick={() => setAnchor((a) => shiftAnchor(a, view, 1))}
+                    aria-label={t("next")}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                <h2 className="truncate text-lg font-semibold capitalize tracking-tight">{headerLabel}</h2>
+                {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-label={t("loading")} />}
+              </div>
               <SegmentedControl
                 aria-label={t("view_label")}
                 value={view}
@@ -147,34 +200,9 @@ export function Calendar() {
                   { value: "day", label: t("views.day") },
                 ]}
               />
-            }
-          >
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => setAnchor((a) => shiftAnchor(a, view, -1))}
-                aria-label={t("prev")}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button type="button" variant="outline" size="sm" onClick={() => setAnchor(new Date())}>
-                {t("today")}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => setAnchor((a) => shiftAnchor(a, view, 1))}
-                aria-label={t("next")}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
             </div>
             <KindFilter visible={visibleKinds} onChange={persistKinds} />
-          </SectionCard>
-          {loading && <p className="text-sm text-muted-foreground">{t("loading")}</p>}
+          </div>
           {view === "month" && (
             <MonthGrid
               grid={grid}

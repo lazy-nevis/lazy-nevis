@@ -13,6 +13,7 @@ tags: [product, capability, reminders]
 - The app SHALL compute next occurrences from the shared schedule model (`once`, `daily`, `interval`, `monthly`) using local wall-clock time.
 - The app SHALL record trigger activity (delivered, done, snoozed, dismissed, missed, late) in `trigger_events`.
 - Snoozing SHALL replace any pending snooze for the same owner with a new fire time.
+- The editor SHALL use picker popovers, never free text, for dates and times: date-time for `once`, one time picker per time with add/remove, weekday chips (empty = every day), a 1–31 grid for `monthly`, and optional start/end dates. The description SHALL use a small toolbar (bold, italic, bulleted, numbered; `⌘B`/`⌘I`) that writes Markdown, with a Write/Preview toggle.
 
 ## Scenarios
 

@@ -75,7 +75,6 @@ export function CompactShell({
   const [deleteTarget, setDeleteTarget] = useState<ChecklistItem | null>(null);
   const { settings } = useSettings();
   usePomodoro();
-  const pomodoroEnabled = settings.pomodoro.enabled;
 
   const startSession = async () => {
     try {
@@ -242,11 +241,9 @@ export function CompactShell({
           <HistoryIcon className="h-3.5 w-3.5" />
           {t("app_modes.view_reports")}
         </button>
-        {pomodoroEnabled && (
-          <div className="session-extra mt-2">
-            <PomodoroCompactStrip />
-          </div>
-        )}
+        <div className="session-extra mt-2">
+          <PomodoroCompactStrip />
+        </div>
       </section>
 
       {COMPACT_SEGMENTS.length > 1 && (

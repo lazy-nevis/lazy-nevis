@@ -28,14 +28,6 @@ export function Pomodoro() {
     setState(await fn());
   };
 
-  if (!settings.pomodoro.enabled) {
-    return (
-      <PageContainer>
-        <PageHeader title={t("page.title")} description={t("page.disabled")} />
-      </PageContainer>
-    );
-  }
-
   const phase = state?.phase ?? null;
   const phaseLabel = phase
     ? t(`phase.${phase.kind}`)

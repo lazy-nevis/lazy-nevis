@@ -30,7 +30,8 @@
     "reminders": "Lembretes",
     "calendar": "Calendário",
     "habits": "Hábitos",
-    "pomodoro": "Pomodoro"
+    "pomodoro": "Pomodoro",
+    "sessions": "Sessões"
   },
   "dashboard": {
     "session": {
@@ -154,7 +155,6 @@
       "data": "Dados",
       "permissions": "Permissões",
       "checklist": "Checklist",
-      "delivery": "Notificações e lembretes",
       "pomodoro": "Pomodoro"
     },
     "section_desc": {
@@ -620,7 +620,14 @@
       "cancel": "Cancelar",
       "delete": "Excluir lembrete",
       "delete_confirm": "Excluir este lembrete e a atividade?",
-      "next_preview": "Próximas 5 ocorrências"
+      "next_preview": "Próximas 5 ocorrências",
+      "write": "Escrever",
+      "format": {
+        "bold": "Negrito (⌘B)",
+        "italic": "Itálico (⌘I)",
+        "bullet": "Lista com marcadores",
+        "numbered": "Lista numerada"
+      }
     },
     "activity": {
       "title": "Atividade recente",
@@ -674,12 +681,19 @@
       "window_end": "Fim da janela",
       "month_days": "Dias do mês",
       "starts_on": "Começa em",
-      "ends_on": "Termina em"
+      "ends_on": "Termina em",
+      "no_start": "Começa agora",
+      "no_end": "Sem data final"
+    },
+    "actions": {
+      "remove": "Remover agendamento",
+      "remove_time": "Remover horário",
+      "add_time": "Adicionar horário"
     }
   },
   "delivery": {
-    "tab_title": "Notificações e lembretes",
-    "tab_description": "Canais e sons padrão por tipo de alerta.",
+    "tab_title": "Entrega de lembretes, hábitos e Pomodoro",
+    "tab_description": "Como lembretes, hábitos e Pomodoro chegam até você: canais e sons por tipo.",
     "week_start": "Semana começa em",
     "week_start_sunday": "Domingo",
     "week_start_monday": "Segunda-feira",
@@ -695,7 +709,14 @@
     },
     "sound": "Som",
     "test": "Testar entrega",
-    "inherit_default": "Usar padrão"
+    "inherit_default": "Usar padrão",
+    "override": {
+      "title": "Entrega",
+      "default": "Padrão",
+      "custom": "Personalizada",
+      "default_hint": "Usa os canais definidos em Configurações → Alertas.",
+      "custom_hint": "Somente este item usa estes canais."
+    }
   },
   "tray": {
     "show": "Abrir o LazyNevis",
@@ -820,6 +841,7 @@
       "duration": "Duração"
     },
     "units": {
+      "time": "vez",
       "times": "vezes",
       "ml": "ml",
       "l": "L",
@@ -829,6 +851,33 @@
       "km": "km",
       "min": "min",
       "h": "h"
+    },
+    "targets_help": "Uma meta define o que conta como concluído no período. Adicione até 5 (ex.: 2 L de água e 8 copos).",
+    "target_metric_help": "O que você mede: check simples, contagem, volume, massa, distância ou duração.",
+    "target_unit_help": "Rótulo exibido ao lado do valor, ex.: copos, km, min.",
+    "target_value_help": "Quantidade a atingir em cada período.",
+    "target_check_hint": "Concluído ao marcar uma vez por período.",
+    "remove_target": "Remover meta",
+    "add_schedule": "Adicionar lembrete",
+    "icons": {
+      "droplet": "Água",
+      "dumbbell": "Treino",
+      "book": "Leitura",
+      "footprints": "Caminhada",
+      "bed": "Sono",
+      "apple": "Alimentação",
+      "brain": "Mente",
+      "pill": "Medicação",
+      "heart": "Saúde",
+      "timer": "Timer",
+      "pencil": "Escrita",
+      "music": "Música",
+      "sun": "Manhã",
+      "leaf": "Natureza",
+      "bike": "Ciclismo",
+      "target": "Meta",
+      "coffee": "Pausa",
+      "smile": "Humor"
     }
   },
   "tray_panel": {
@@ -925,5 +974,81 @@
     "unpin": "Desafixar",
     "view_reports": "Ver relatórios",
     "view_previous_activities": "Ver atividades anteriores"
+  },
+  "overview": {
+    "title": "Visão geral",
+    "description": "Seu dia em sessões, Pomodoro, checklist, lembretes e hábitos.",
+    "hero": {
+      "sessions_title": "Sessões de foco",
+      "sessions_desc": "Acompanhe foco, distrações e checkpoints.",
+      "sessions_start": "Iniciar sessão",
+      "sessions_open": "Abrir sessão",
+      "idle": "Parado",
+      "pomodoro_title": "Pomodoro",
+      "pomodoro_desc": "Blocos de foco cronometrados com pausas.",
+      "pomodoro_today": "{{done}} de {{goal}} hoje",
+      "pomodoro_start": "Iniciar Pomodoro",
+      "pomodoro_open": "Abrir timer",
+      "checklist_title": "Checklist",
+      "checklist_desc": "Suas tarefas abertas e prazos.",
+      "checklist_open_one": "{{count}} item aberto",
+      "checklist_open_other": "{{count}} itens abertos",
+      "checklist_open_cta": "Abrir checklist"
+    },
+    "stats": {
+      "sessions_today": "Sessões hoje",
+      "sessions_week_one": "{{count}} nos últimos 7 dias",
+      "sessions_week_other": "{{count}} nos últimos 7 dias",
+      "focus_today": "Foco hoje",
+      "session_active": "Sessão em andamento",
+      "session_none": "Nenhuma sessão ativa",
+      "checklist_today": "Para hoje",
+      "reminders_today": "Lembretes hoje",
+      "upcoming_one": "{{count}} próximo",
+      "upcoming_other": "{{count}} próximos",
+      "habits_met": "Hábitos cumpridos",
+      "pomodoros": "Pomodoros"
+    },
+    "habits": {
+      "title": "Hábitos de hoje",
+      "see_all_one": "Ver todos ({{count}})",
+      "see_all_other": "Ver outros hábitos ({{count}})",
+      "streak_one": "{{count}} dia seguido",
+      "streak_other": "{{count}} dias seguidos"
+    },
+    "calendar": {
+      "open": "Calendário"
+    },
+    "checklist": {
+      "title": "Para hoje",
+      "open": "Checklist",
+      "empty": "Nada para hoje."
+    },
+    "reminders": {
+      "title": "Lembretes",
+      "open": "Lembretes",
+      "empty": "Nenhum lembrete agendado.",
+      "upcoming": "Próximos"
+    },
+    "layout": {
+      "reset": "Restaurar layout",
+      "resize": "Alterar tamanho do widget",
+      "drag": "Arraste para reordenar"
+    }
+  },
+  "pickers": {
+    "prev_month": "Mês anterior",
+    "next_month": "Próximo mês",
+    "hour": "Hora",
+    "minute": "Min",
+    "clear": "Limpar",
+    "pick_date": "Escolha uma data",
+    "pick_time": "Escolha um horário",
+    "pick_datetime": "Escolha data e hora",
+    "today": "Hoje"
+  },
+  "runtime": {
+    "browser_title": "Abra o LazyNevis no app desktop",
+    "browser_body": "Esta página é o servidor de desenvolvimento da janela do LazyNevis. Ela precisa do runtime do Tauri e não funciona em uma aba comum do navegador."
   }
 }

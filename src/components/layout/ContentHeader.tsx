@@ -40,7 +40,12 @@ export function ContentHeader({
     <header
       data-tauri-drag-region
       onDoubleClick={onDoubleClick}
-      className="flex h-12 shrink-0 select-none items-center gap-2 border-b border-border bg-background px-3"
+      className={cn(
+        "flex h-12 shrink-0 select-none items-center gap-2 border-b border-border bg-background px-3",
+        // Collapsed sidebar is narrower than the macOS traffic lights; keep the
+        // toggle to their right instead of underneath them.
+        IS_MAC && collapsed && "pl-6",
+      )}
     >
       <button
         type="button"
@@ -57,12 +62,21 @@ export function ContentHeader({
       </button>
 
       <nav
+        data-tauri-drag-region
         aria-label={t("shell.breadcrumb")}
         className="flex min-w-0 flex-1 items-center gap-1.5 text-sm text-muted-foreground"
       >
-        <span className="shrink-0 font-medium text-foreground/80">LazyNevis</span>
-        <span aria-hidden>/</span>
-        <span className="truncate font-medium text-foreground" title={screenTitle}>
+        <span data-tauri-drag-region className="shrink-0 font-medium text-foreground/80">
+          LazyNevis
+        </span>
+        <span data-tauri-drag-region aria-hidden>
+          /
+        </span>
+        <span
+          data-tauri-drag-region
+          className="truncate font-medium text-foreground"
+          title={screenTitle}
+        >
           {screenTitle}
         </span>
       </nav>
@@ -71,7 +85,7 @@ export function ContentHeader({
         {activeSession && (
           <button
             type="button"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/sessions")}
             className={cn(
               "flex items-center gap-2 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium transition-colors hover:bg-accent",
             )}

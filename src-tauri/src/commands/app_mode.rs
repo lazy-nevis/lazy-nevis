@@ -4,6 +4,8 @@ use crate::error::{AppError, Result};
 use crate::models::settings::{AppModeSettings, WindowGeometry};
 use crate::services::app_status::{AppMode, AppStatusPayload};
 use crate::state::AppState;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::time::Duration;
 use tauri::{
     AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition, PhysicalSize, State, WebviewUrl,
     WebviewWindowBuilder,
@@ -30,6 +32,108 @@ pub fn stored_geometry(settings: &AppModeSettings, mode: AppMode) -> Option<Wind
         AppMode::Full => settings.full_geometry,
         AppMode::Compact => settings.compact_geometry,
     }
+}
+
+/// Bumped on every main-window move/resize; a delayed check only persists when
+/// no newer event arrived (debounce without an async runtime dependency).
+static GEOMETRY_GENERATION: AtomicU64 = AtomicU64::new(0);
+/// Set while `apply_mode` resizes the window so its own events are not
+/// captured against the outgoing mode.
+static APPLYING_MODE: AtomicBool = AtomicBool::new(false);
+const GEOMETRY_DEBOUNCE: Duration = Duration::from_millis(700);
+
+/// Remember the main window's size/position for the current mode after the user
+/// stops moving or resizing it (spec: app-modes/geometry-survives-restart).
+pub fn schedule_geometry_capture(app: &AppHandle) {
+    if APPLYING_MODE.load(Ordering::SeqCst) {
+        return;
+    }
+    let generation = GEOMETRY_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
+    let app = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(GEOMETRY_DEBOUNCE);
+        if GEOMETRY_GENERATION.load(Ordering::SeqCst) != generation
+            || APPLYING_MODE.load(Ordering::SeqCst)
+        {
+            return;
+        }
+        if let Err(error) = capture_current_geometry(&app) {
+            tracing::warn!(?error, "failed to persist window geometry");
+        }
+    });
+}
+
+/// Store and persist the main window geometry for the active mode. Skipped while
+/// fullscreen or minimized so restoring never reopens at a transient size.
+pub fn capture_current_geometry(app: &AppHandle) -> Result<()> {
+    let Some(main) = app.get_webview_window("main") else {
+        return Ok(());
+    };
+    if main.is_fullscreen().unwrap_or(false) || main.is_minimized().unwrap_or(false) {
+        return Ok(());
+    }
+    if !main.is_visible().unwrap_or(false) {
+        return Ok(());
+    }
+    let Some(geometry) = current_geometry(&main) else {
+        return Ok(());
+    };
+    let Some(state) = app.try_state::<AppState>() else {
+        return Ok(());
+    };
+    let mode = state.app_status.mode();
+    {
+        let mut settings = state
+            .settings
+            .lock()
+            .map_err(|_| AppError::Internal("lock".into()))?;
+        if stored_geometry(&settings.app_mode, mode) == Some(geometry) {
+            return Ok(());
+        }
+        store_geometry(&mut settings.app_mode, mode, geometry);
+    }
+    persist_and_broadcast(app, &state)
+}
+
+/// True when the geometry's title-bar area still lands on a connected monitor,
+/// so a window saved on a detached display is recentered instead of lost.
+fn geometry_is_on_screen(window: &tauri::WebviewWindow, geometry: WindowGeometry) -> bool {
+    let Ok(monitors) = window.available_monitors() else {
+        return true;
+    };
+    if monitors.is_empty() {
+        return true;
+    }
+    let bounds: Vec<MonitorBounds> = monitors
+        .iter()
+        .map(|monitor| MonitorBounds {
+            x: monitor.position().x,
+            y: monitor.position().y,
+            width: monitor.size().width,
+            height: monitor.size().height,
+        })
+        .collect();
+    geometry_visible_on(&bounds, geometry)
+}
+
+#[derive(Debug, Clone, Copy)]
+struct MonitorBounds {
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+}
+
+/// Pure check: a 100×40 strip at the window's top-left must intersect a monitor.
+fn geometry_visible_on(monitors: &[MonitorBounds], geometry: WindowGeometry) -> bool {
+    const GRAB_W: i64 = 100;
+    const GRAB_H: i64 = 40;
+    let (gx, gy) = (i64::from(geometry.x), i64::from(geometry.y));
+    monitors.iter().any(|m| {
+        let (mx, my) = (i64::from(m.x), i64::from(m.y));
+        let (mw, mh) = (i64::from(m.width), i64::from(m.height));
+        gx < mx + mw && gx + GRAB_W > mx && gy < my + mh && gy + GRAB_H > my
+    })
 }
 
 fn current_geometry(window: &tauri::WebviewWindow) -> Option<WindowGeometry> {
@@ -86,6 +190,22 @@ pub fn apply_mode(
     mode: AppMode,
     capture_previous: bool,
 ) -> Result<()> {
+    APPLYING_MODE.store(true, Ordering::SeqCst);
+    let result = apply_mode_inner(app, state, mode, capture_previous);
+    // Let the resize events triggered above drain before captures resume.
+    std::thread::spawn(|| {
+        std::thread::sleep(GEOMETRY_DEBOUNCE);
+        APPLYING_MODE.store(false, Ordering::SeqCst);
+    });
+    result
+}
+
+fn apply_mode_inner(
+    app: &AppHandle,
+    state: &AppState,
+    mode: AppMode,
+    capture_previous: bool,
+) -> Result<()> {
     let previous_mode = state.app_status.mode();
     let main = app
         .get_webview_window("main")
@@ -114,6 +234,8 @@ pub fn apply_mode(
     };
     let _ = main.set_min_size(Some(LogicalSize::new(min_w, min_h)));
 
+    let target_geometry =
+        target_geometry.filter(|geometry| geometry_is_on_screen(&main, *geometry));
     match target_geometry {
         Some(geometry) => {
             let _ = main.set_size(PhysicalSize::new(geometry.width, geometry.height));
@@ -205,6 +327,35 @@ pub async fn open_secondary_window(pane: String, app: AppHandle) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_geometry_on_detached_monitor_is_not_restored() {
+        let monitors = [
+            MonitorBounds {
+                x: 0,
+                y: 0,
+                width: 1512,
+                height: 982,
+            },
+            MonitorBounds {
+                x: 1512,
+                y: -200,
+                width: 2560,
+                height: 1440,
+            },
+        ];
+        let geometry = |x, y| WindowGeometry {
+            x,
+            y,
+            width: 900,
+            height: 680,
+        };
+        assert!(geometry_visible_on(&monitors, geometry(100, 100)));
+        assert!(geometry_visible_on(&monitors, geometry(2000, -100)));
+        assert!(geometry_visible_on(&monitors, geometry(-50, 10)));
+        assert!(!geometry_visible_on(&monitors, geometry(-3000, 100)));
+        assert!(!geometry_visible_on(&monitors, geometry(5000, 2000)));
+    }
 
     // Spec scenario: app-modes/geometry-round-trip
     #[test]

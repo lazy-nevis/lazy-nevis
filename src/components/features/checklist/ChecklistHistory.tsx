@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { DatePicker } from "@/components/ui/date-picker";
 import { useNow } from "@/hooks/useNow";
 import { rollHistoryFilterToToday, useChecklistStore } from "@/stores/checklistStore";
 import { listen } from "@tauri-apps/api/event";
@@ -121,26 +122,24 @@ export function ChecklistHistory({ onSortPersist, onRestore }: Props) {
           aria-label={t("checklist.prev_day")} title={t("checklist.prev_day")}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <input
-          type="date"
-          value={historyFilter.from !== null ? toDateInputValue(historyFilter.from) : ""}
-          onChange={(e) => {
-            const parsed = fromDateInputValue(e.target.value);
+        <DatePicker
+          className="h-8 w-40 text-xs"
+          placeholder={t("checklist.filter_from")}
+          value={historyFilter.from !== null ? toDateInputValue(historyFilter.from) : null}
+          onChange={(value) => {
+            const parsed = value ? fromDateInputValue(value) : null;
             setHistoryFilter({ from: parsed !== null ? startOfLocalDay(parsed) : null });
           }}
-          aria-label={t("checklist.filter_from")}
-          className="h-8 rounded-md border bg-transparent px-2 text-xs"
         />
         <span className="text-xs text-muted-foreground">–</span>
-        <input
-          type="date"
-          value={historyFilter.to !== null ? toDateInputValue(historyFilter.to) : ""}
-          onChange={(e) => {
-            const parsed = fromDateInputValue(e.target.value);
+        <DatePicker
+          className="h-8 w-40 text-xs"
+          placeholder={t("checklist.filter_to")}
+          value={historyFilter.to !== null ? toDateInputValue(historyFilter.to) : null}
+          onChange={(value) => {
+            const parsed = value ? fromDateInputValue(value) : null;
             setHistoryFilter({ to: parsed !== null ? endOfLocalDay(parsed) : null });
           }}
-          aria-label={t("checklist.filter_to")}
-          className="h-8 rounded-md border bg-transparent px-2 text-xs"
         />
         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => stepDays(1)}
           aria-label={t("checklist.next_day")} title={t("checklist.next_day")}>

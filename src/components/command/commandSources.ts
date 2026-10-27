@@ -30,18 +30,17 @@ export type CommandSourceHook = () => CommandItem[];
 export function useNavigationCommandSource(): CommandItem[] {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { settings } = useSettings();
 
   return useMemo(
     () =>
-      flattenNavItems({ pomodoroEnabled: settings.pomodoro.enabled }).map((item) => ({
+      flattenNavItems().map((item) => ({
         id: `nav-${item.id}`,
         groupKey: "command_palette.group_navigation",
         label: t(item.labelKey),
         keywords: item.labelKey,
         onRun: () => navigate(item.to),
       })),
-    [navigate, settings.pomodoro.enabled, t],
+    [navigate, t],
   );
 }
 
@@ -158,12 +157,10 @@ export function useChecklistCommandSource(): CommandItem[] {
 export function usePomodoroCommandSource(): CommandItem[] {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { settings } = useSettings();
   const pomodoroState = usePomodoroStore((s) => s.state);
   const setState = usePomodoroStore((s) => s.setState);
 
   return useMemo(() => {
-    if (!settings.pomodoro.enabled) return [];
 
     const items: CommandItem[] = [
       {
@@ -226,7 +223,7 @@ export function usePomodoroCommandSource(): CommandItem[] {
     });
 
     return items;
-  }, [navigate, pomodoroState, setState, settings.pomodoro.enabled, t]);
+  }, [navigate, pomodoroState, setState, t]);
 }
 
 export function useHabitCommandSource(): CommandItem[] {

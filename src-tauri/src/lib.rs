@@ -254,12 +254,12 @@ pub fn run() {
                     })
                     .unwrap_or((services::app_status::AppMode::Full, false));
                 state.app_status.init_mode_pin(mode, pinned);
-                if mode == services::app_status::AppMode::Compact {
-                    if let Err(error) =
-                        commands::app_mode::apply_mode(app.handle(), &state, mode, false)
-                    {
-                        tracing::warn!(?error, "could not apply persisted compact mode");
-                    }
+                // Restore the persisted mode and its window geometry in both modes
+                // (spec: app-modes/geometry-survives-restart).
+                if let Err(error) =
+                    commands::app_mode::apply_mode(app.handle(), &state, mode, false)
+                {
+                    tracing::warn!(?error, "could not apply persisted app mode");
                 }
             }
 
@@ -357,6 +357,15 @@ pub fn run() {
                         let is_fullscreen = window.is_fullscreen().unwrap_or(false);
                         state.app_status.sync_native_fullscreen(app, is_fullscreen);
                     }
+                }
+                if matches!(
+                    event,
+                    tauri::WindowEvent::Resized(_) | tauri::WindowEvent::Moved(_)
+                ) {
+                    commands::app_mode::schedule_geometry_capture(window.app_handle());
+                }
+                if let tauri::WindowEvent::CloseRequested { .. } = event {
+                    let _ = commands::app_mode::capture_current_geometry(window.app_handle());
                 }
             }
 
