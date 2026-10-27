@@ -98,11 +98,11 @@ export function Settings() {
       </nav>
 
       {/* Tab content */}
-      <div className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
+      <div className="min-h-0 flex-1 overflow-y-auto p-6">
         {activeTab === "general" && (
           <>
             <GeneralTab settings={settings} update={update} t={t} />
-            <div className="mt-4 max-w-2xl">
+            <div className="mt-4">
               <WeekStartSetting />
             </div>
           </>

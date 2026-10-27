@@ -73,7 +73,7 @@ export function SegmentedControl<T extends string>(props: SegmentedControlProps<
       role={props.multiple ? "group" : "radiogroup"}
       aria-label={props["aria-label"]}
       className={cn(
-        "scrollbar-none inline-flex max-w-full overflow-x-auto rounded-lg border border-border bg-muted/50 p-0.5",
+        "scrollbar-none inline-flex w-fit max-w-full overflow-x-auto rounded-lg border border-border bg-muted/50 p-0.5",
         props.className,
       )}
     >

@@ -150,7 +150,7 @@ export function Dashboard() {
 
   return (
     <>
-      <PageContainer innerClassName="max-w-6xl">
+      <PageContainer>
         <PageHeader
           title={t("title")}
           description={t("description")}

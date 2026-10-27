@@ -21,7 +21,7 @@ export function PomodoroSettingsTab() {
   const minutes = (ms: number) => Math.round(ms / 60_000);
 
   return (
-    <div className="max-w-2xl space-y-4">
+    <div className="space-y-4">
       <SectionTitle
         icon={<Timer className="h-4 w-4" />}
         title={t("settings.title")}

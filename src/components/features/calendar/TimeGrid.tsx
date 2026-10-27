@@ -23,7 +23,7 @@ export interface TimeGridProps {
   visibleKinds: CalendarKind[];
   selectedDate: string | null;
   locale: string;
-  onSelectDate: (dateKey: string) => void;
+  onSelectDate: (dateKey: string, anchor: HTMLElement) => void;
   onSessionClick?: (sessionId: string) => void;
 }
 
@@ -75,7 +75,7 @@ export function TimeGrid({
           <button
             key={`allday-${col.dateKey}`}
             type="button"
-            onClick={() => onSelectDate(col.dateKey)}
+            onClick={(event) => onSelectDate(col.dateKey, event.currentTarget)}
             className={cn(
               "min-h-8 border-l border-border px-1 py-1 text-left",
               selectedDate === col.dateKey && "bg-primary/5",
@@ -130,7 +130,7 @@ export function TimeGrid({
                 <button
                   type="button"
                   className="absolute right-1 top-1 z-10 rounded bg-card/80 px-1 text-[10px] text-muted-foreground"
-                  onClick={() => onSelectDate(col.dateKey)}
+                  onClick={(event) => onSelectDate(col.dateKey, event.currentTarget)}
                 >
                   {col.dateKey.slice(5)}
                 </button>

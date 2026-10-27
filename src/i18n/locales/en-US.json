@@ -339,7 +339,12 @@
     "fullscreen_dismiss": "Got it, back to work!",
     "break_notification_title": "LazyNevis — Time for a break!",
     "break_notification_body": "You've been focused for {{time}}. Take a short break.",
-    "break_app": "Break time!"
+    "break_app": "Break time!",
+    "overlay_kind_reminder": "Reminder",
+    "overlay_kind_habit": "Habit",
+    "overlay_kind_pomodoro": "Pomodoro",
+    "overlay_log": "Log now",
+    "overlay_escape_hint": "Press Esc to dismiss"
   },
   "app": {
     "recovery_notification_title": "LazyNevis — Session recovered",
@@ -418,10 +423,8 @@
     "next": "Next",
     "view_label": "Calendar view",
     "week_of": "Week of {{date}}",
-    "settings_toggle": "Calendar settings",
     "close_panel": "Close day panel",
     "day_empty": "Nothing on this day for the selected types.",
-    "section_empty": "Nothing here.",
     "session_unnamed": "Unnamed session",
     "completed": "Completed",
     "due": "Due",
@@ -487,23 +490,19 @@
       "missed": "Missed",
       "not_delivered": "Not delivered"
     },
-    "settings": {
-      "title": "Calendar preferences",
-      "description": "Default view and which entry types appear on the grid.",
-      "default_view": "Default view",
-      "visible_kinds": "Visible types",
-      "views": {
-        "month": "Month",
-        "week": "Week",
-        "day": "Day"
-      }
-    },
     "pomodoro_entry": "{{start}}–{{end}} · {{cycles}} focus cycles · {{focus}} focus · {{status}}",
     "pomodoro_status": {
       "active": "In progress",
       "completed": "Completed",
       "cancelled": "Stopped"
-    }
+    },
+    "new_reminder": "New reminder",
+    "search_placeholder": "Search events…",
+    "search_clear": "Clear search",
+    "filter_button": "Filters",
+    "filter_show_all": "Show all kinds",
+    "day_count_one": "{{count}} item",
+    "day_count_other": "{{count}} items"
   },
   "notifications": {
     "unnamed_session": "Unnamed session",

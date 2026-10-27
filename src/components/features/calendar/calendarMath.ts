@@ -1,4 +1,4 @@
-import type { CalendarView } from "@/types";
+import type { CalendarEntry, CalendarKind, CalendarView } from "@/types";
 
 const MS_DAY = 24 * 60 * 60 * 1000;
 
@@ -119,4 +119,35 @@ export function defaultReminderOnceAt(dateKey: string): string {
 
 export function isTodayKey(dateKey: string): boolean {
   return toDateKey(new Date()) === dateKey;
+}
+
+/** Free-text fields of an entry (labels, titles, habit names). */
+export function entryText(entry: CalendarEntry): string {
+  switch (entry.kind) {
+    case "session":
+    case "pomodoro_run":
+      return entry.label ?? "";
+    case "habit_log":
+    case "habit_day":
+      return entry.habit_name;
+    case "checklist_completed":
+    case "checklist_due":
+    case "reminder_occurrence":
+      return entry.title;
+    default:
+      return "";
+  }
+}
+
+/** Case- and accent-insensitive match on the entry text or its localized kind label. */
+export function entryMatchesQuery(
+  entry: CalendarEntry,
+  query: string,
+  kindLabel: (kind: CalendarKind) => string,
+): boolean {
+  const normalize = (value: string) =>
+    value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const needle = normalize(query.trim());
+  if (!needle) return true;
+  return normalize(`${entryText(entry)} ${kindLabel(entry.kind)}`).includes(needle);
 }

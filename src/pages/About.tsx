@@ -74,7 +74,7 @@ export function About() {
   };
 
   return (
-    <PageContainer innerClassName="max-w-3xl">
+    <PageContainer>
       <PageHeader title={t("about.title")} description={t("about.description")} />
 
       <div className="flex flex-col items-center gap-3 text-center">

@@ -13,6 +13,7 @@ tags: [product, capability, delivery, alerts]
 - Global defaults SHALL live in `AppSettings.delivery` per alert type and SHALL be edited in **Settings → Alerts** (no separate delivery tab); reminders/habits MAY override channels and sound through the shared "Delivery: Default / Custom" section.
 - Fullscreen non-distraction overlays SHALL queue up to five items; a full queue SHALL fall back to notification (+ one-shot sound).
 - Distraction fullscreen alerts SHALL preempt reminder overlays and re-queue the interrupted reminder at the front.
+- Reminder, habit, and pomodoro fullscreen overlays SHALL share the distraction overlay's frame (dimmed backdrop, alternating glow, clock, icon badge, large title, primary orange action) with an owner-specific icon, label, and glow (reminder/habit glow uses the item tone; pomodoro uses orange); they SHALL NOT show session metrics. Snooze options render inline; Escape dismisses through the owner's action handler.
 
 ## Scenarios
 

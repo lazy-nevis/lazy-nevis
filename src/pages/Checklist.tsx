@@ -84,7 +84,7 @@ export function Checklist() {
   };
 
   return (
-    <PageContainer innerClassName="max-w-3xl">
+    <PageContainer>
       <PageHeader
         title={t("nav.checklist")}
         description={t("checklist.open_title")}

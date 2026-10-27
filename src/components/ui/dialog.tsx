@@ -72,7 +72,7 @@ function Dialog({ open, onClose, children, className }: DialogProps) {
         aria-labelledby={titleId}
         tabIndex={-1}
         className={cn(
-          "relative z-10 w-full max-w-md rounded-xl border bg-background p-6 shadow-xl",
+          "relative z-10 mx-4 w-full max-w-md rounded-xl border bg-background p-5 shadow-xl",
           className
         )}
       >
@@ -110,7 +110,7 @@ function DialogClose({ onClose }: { onClose: () => void }) {
 
 function DialogFooter({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("mt-6 flex justify-end gap-3", className)}>{children}</div>
+    <div className={cn("mt-5 flex justify-end gap-3", className)}>{children}</div>
   );
 }
 

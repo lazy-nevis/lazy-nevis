@@ -12,6 +12,50 @@ import { cn } from "@/utils/cn";
 const GAP = 6;
 const VIEWPORT_MARGIN = 8;
 
+type Rect = Pick<DOMRect, "top" | "bottom" | "left" | "right">;
+
+/** Fixed position for a panel anchored to a rect: below when it fits, else above; clamped to the viewport. */
+function useAnchoredPosition(
+  open: boolean,
+  getAnchor: () => Rect | null,
+  panelRef: React.RefObject<HTMLDivElement | null>,
+  align: "start" | "end",
+) {
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const anchorRef = useRef(getAnchor);
+  anchorRef.current = getAnchor;
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPosition(null);
+      return;
+    }
+    const place = () => {
+      const anchor = anchorRef.current();
+      const panel = panelRef.current;
+      if (!anchor || !panel) return;
+      const { width, height } = panel.getBoundingClientRect();
+      const fitsBelow = anchor.bottom + GAP + height <= window.innerHeight - VIEWPORT_MARGIN;
+      const top = fitsBelow ? anchor.bottom + GAP : Math.max(VIEWPORT_MARGIN, anchor.top - GAP - height);
+      const rawLeft = align === "end" ? anchor.right - width : anchor.left;
+      const left = Math.min(
+        Math.max(VIEWPORT_MARGIN, rawLeft),
+        window.innerWidth - width - VIEWPORT_MARGIN,
+      );
+      setPosition({ top, left });
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open, align, panelRef]);
+
+  return position;
+}
+
 /**
  * Click-to-open popover rendered in a portal with fixed positioning, so it works
  * inside scrolling dialogs. Flips above the trigger when there is no room below.
@@ -34,7 +78,6 @@ export function Popover({
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -43,33 +86,12 @@ export function Popover({
     triggerRef.current?.focus();
   }, []);
 
-  useLayoutEffect(() => {
-    if (!open) {
-      setPosition(null);
-      return;
-    }
-    const place = () => {
-      const anchor = triggerRef.current?.getBoundingClientRect();
-      const panel = panelRef.current;
-      if (!anchor || !panel) return;
-      const { width, height } = panel.getBoundingClientRect();
-      const fitsBelow = anchor.bottom + GAP + height <= window.innerHeight - VIEWPORT_MARGIN;
-      const top = fitsBelow ? anchor.bottom + GAP : Math.max(VIEWPORT_MARGIN, anchor.top - GAP - height);
-      const rawLeft = align === "end" ? anchor.right - width : anchor.left;
-      const left = Math.min(
-        Math.max(VIEWPORT_MARGIN, rawLeft),
-        window.innerWidth - width - VIEWPORT_MARGIN,
-      );
-      setPosition({ top, left });
-    };
-    place();
-    window.addEventListener("resize", place);
-    window.addEventListener("scroll", place, true);
-    return () => {
-      window.removeEventListener("resize", place);
-      window.removeEventListener("scroll", place, true);
-    };
-  }, [open, align]);
+  const position = useAnchoredPosition(
+    open,
+    () => triggerRef.current?.getBoundingClientRect() ?? null,
+    panelRef,
+    align,
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -130,5 +152,68 @@ export function Popover({
           document.body,
         )}
     </>
+  );
+}
+
+/**
+ * Floating panel anchored to an arbitrary element (e.g. a clicked calendar cell). Closes on outside
+ * click or Escape; Escape is captured so an enclosing dialog stays open.
+ */
+export function AnchoredPanel({
+  anchor,
+  onClose,
+  children,
+  className,
+  ariaLabel,
+}: {
+  anchor: HTMLElement;
+  onClose: () => void;
+  children: ReactNode;
+  className?: string;
+  ariaLabel?: string;
+}) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const position = useAnchoredPosition(true, () => anchor.getBoundingClientRect(), panelRef, "start");
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    const onPointer = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (panelRef.current?.contains(target) || anchor.contains(target)) return;
+      onCloseRef.current();
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      onCloseRef.current();
+    };
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey, true);
+    };
+  }, [anchor]);
+
+  return createPortal(
+    <div
+      ref={panelRef}
+      role="dialog"
+      aria-label={ariaLabel}
+      style={{
+        top: position?.top ?? 0,
+        left: position?.left ?? 0,
+        visibility: position ? "visible" : "hidden",
+      }}
+      className={cn(
+        "fixed z-[80] rounded-xl border border-border bg-popover text-popover-foreground shadow-xl",
+        className,
+      )}
+    >
+      {children}
+    </div>,
+    document.body,
   );
 }

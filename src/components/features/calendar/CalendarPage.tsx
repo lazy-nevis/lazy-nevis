@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight, Loader2, Settings2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Plus, Search, X } from "lucide-react";
 import { ReminderEditorDialog } from "@/components/features/reminders/ReminderEditorDialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PageContainer, PageHeader } from "@/components/ui/page";
+import { AnchoredPanel } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useSettings } from "@/hooks/useSettings";
 import { audioService, calendarService } from "@/services/tauri";
 import type { CalendarKind, CalendarRange, CalendarView, ScheduleInput } from "@/types";
-import { CalendarSettingsPanel } from "./CalendarSettings";
 import { DayPanel } from "./DayPanel";
 import { DayTimeGrid } from "./DayTimeGrid";
 import { KindFilter } from "./KindFilter";
@@ -17,6 +18,7 @@ import { MonthGrid } from "./MonthGrid";
 import { WeekGrid } from "./WeekGrid";
 import {
   defaultReminderOnceAt,
+  entryMatchesQuery,
   monthGrid,
   rangeForView,
   shiftAnchor,
@@ -26,6 +28,7 @@ import {
 export function Calendar() {
   const navigate = useNavigate();
   const { t } = useTranslation(undefined, { keyPrefix: "calendar" });
+  const { t: tKind } = useTranslation(undefined, { keyPrefix: "calendar.kinds" });
   const { settings, saveSettings } = useSettings();
   const weekStart = settings.general.week_start as 0 | 1;
   const [view, setView] = useState<CalendarView>(settings.calendar.default_view);
@@ -33,11 +36,11 @@ export function Calendar() {
   const [range, setRange] = useState<CalendarRange | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(toDateKey(new Date()));
-  const [panelOpen, setPanelOpen] = useState(true);
+  const [dayPopover, setDayPopover] = useState<{ date: string; anchor: HTMLElement } | null>(null);
+  const [query, setQuery] = useState("");
   const [reminderOpen, setReminderOpen] = useState(false);
   const [initialSchedules, setInitialSchedules] = useState<ScheduleInput[] | null>(null);
   const [builtinSounds, setBuiltinSounds] = useState<string[]>([]);
-  const [showSettings, setShowSettings] = useState(false);
 
   const visibleKinds = settings.calendar.visible_kinds;
 
@@ -71,7 +74,10 @@ export function Calendar() {
   }, []);
 
   const grid = useMemo(() => monthGrid(anchor, weekStart), [anchor, weekStart]);
-  const entries = range?.entries ?? [];
+  const entries = useMemo(
+    () => (range?.entries ?? []).filter((entry) => entryMatchesQuery(entry, query, (kind) => tKind(kind))),
+    [range, query, tKind],
+  );
   const days = range?.days ?? [];
 
   const persistKinds = (kinds: CalendarKind[]) => {
@@ -99,7 +105,13 @@ export function Calendar() {
     setInitialSchedules([
       { rule: { kind: "once", at }, active: true, starts_on: null, ends_on: null },
     ]);
+    setDayPopover(null);
     setReminderOpen(true);
+  };
+
+  const selectDate = (date: string, anchor: HTMLElement) => {
+    setSelectedDate(date);
+    setDayPopover((current) => (current?.date === date ? null : { date, anchor }));
   };
 
   const locale = settings.general.language;
@@ -122,138 +134,145 @@ export function Calendar() {
   }, [anchor, fromMs, toMs, locale, selectedDate, view]);
 
   return (
-    <PageContainer innerClassName="max-w-6xl">
-      <div className="flex w-full flex-col gap-4 lg:flex-row">
-        <div className="min-w-0 flex-1 space-y-4">
-          <PageHeader
-            title={t("title")}
-            description={t("description")}
-            actions={
+    <PageContainer>
+      <PageHeader
+        title={t("title")}
+        description={t("description")}
+        actions={
+          <Button type="button" variant="brand" className="gap-2" onClick={openNewReminder}>
+            <Plus className="h-4 w-4" aria-hidden />
+            {t("new_reminder")}
+          </Button>
+        }
+      />
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="inline-flex items-center rounded-lg border border-border">
               <Button
                 type="button"
-                variant={showSettings ? "secondary" : "outline"}
-                size="sm"
-                className="gap-1.5"
-                aria-pressed={showSettings}
-                onClick={() => setShowSettings((v) => !v)}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-r-none"
+                onClick={() => setAnchor((a) => shiftAnchor(a, view, -1))}
+                aria-label={t("prev")}
               >
-                <Settings2 className="h-3.5 w-3.5" aria-hidden />
-                {t("settings_toggle")}
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-            }
-          />
-          {showSettings && (
-            <CalendarSettingsPanel
-              settings={settings.calendar}
-              onChange={(calendar) =>
-                saveSettings({ ...settings, calendar }, { silent: true })
-              }
-            />
-          )}
-          <div className="space-y-3 rounded-xl border border-border bg-card p-3 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-2">
-                <div className="inline-flex items-center rounded-lg border border-border">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-r-none"
-                    onClick={() => setAnchor((a) => shiftAnchor(a, view, -1))}
-                    aria-label={t("prev")}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 rounded-none border-x border-border px-3"
-                    onClick={() => {
-                      setAnchor(new Date());
-                      setSelectedDate(toDateKey(new Date()));
-                    }}
-                  >
-                    {t("today")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-l-none"
-                    onClick={() => setAnchor((a) => shiftAnchor(a, view, 1))}
-                    aria-label={t("next")}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-                <h2 className="truncate text-lg font-semibold capitalize tracking-tight">{headerLabel}</h2>
-                {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-label={t("loading")} />}
-              </div>
-              <SegmentedControl
-                aria-label={t("view_label")}
-                value={view}
-                onChange={(v) => persistView(v as CalendarView)}
-                options={[
-                  { value: "month", label: t("views.month") },
-                  { value: "week", label: t("views.week") },
-                  { value: "day", label: t("views.day") },
-                ]}
-              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 rounded-none border-x border-border px-3"
+                onClick={() => {
+                  setAnchor(new Date());
+                  setSelectedDate(toDateKey(new Date()));
+                }}
+              >
+                {t("today")}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-l-none"
+                onClick={() => setAnchor((a) => shiftAnchor(a, view, 1))}
+                aria-label={t("next")}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-            <KindFilter visible={visibleKinds} onChange={persistKinds} />
+            <h2 className="truncate text-lg font-semibold capitalize tracking-tight">{headerLabel}</h2>
+            {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-label={t("loading")} />}
           </div>
-          {view === "month" && (
-            <MonthGrid
-              grid={grid}
-              days={days}
-              entries={entries}
-              visibleKinds={visibleKinds}
-              weekStart={weekStart}
-              selectedDate={selectedDate}
-              onSelectDate={(date) => {
-                setSelectedDate(date);
-                setPanelOpen(true);
-              }}
-            />
-          )}
-          {view === "week" && (
-            <WeekGrid
-              anchor={anchor}
-              weekStart={weekStart}
-              entries={entries}
-              visibleKinds={visibleKinds}
-              selectedDate={selectedDate}
-              locale={settings.general.language}
-              onSelectDate={(date) => {
-                setSelectedDate(date);
-                setPanelOpen(true);
-              }}
-              onSessionClick={openHistorySession}
-            />
-          )}
-          {view === "day" && selectedDate && (
-            <DayTimeGrid
-              dateKey={selectedDate}
-              entries={entries}
-              visibleKinds={visibleKinds}
-              locale={settings.general.language}
-              onSessionClick={openHistorySession}
-            />
-          )}
+          <SegmentedControl
+            aria-label={t("view_label")}
+            value={view}
+            onChange={(v) => persistView(v as CalendarView)}
+            options={[
+              { value: "month", label: t("views.month") },
+              { value: "week", label: t("views.week") },
+              { value: "day", label: t("views.day") },
+            ]}
+          />
         </div>
-        {panelOpen && selectedDate && (
+        <div className="flex items-center gap-2">
+          <div className="relative min-w-0 flex-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t("search_placeholder")}
+              aria-label={t("search_placeholder")}
+              className="pl-9 pr-8"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label={t("search_clear")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <KindFilter visible={visibleKinds} onChange={persistKinds} />
+        </div>
+      </div>
+      {view === "month" && (
+        <MonthGrid
+          grid={grid}
+          days={days}
+          entries={entries}
+          visibleKinds={visibleKinds}
+          weekStart={weekStart}
+          selectedDate={selectedDate}
+          onSelectDate={selectDate}
+        />
+      )}
+      {view === "week" && (
+        <WeekGrid
+          anchor={anchor}
+          weekStart={weekStart}
+          entries={entries}
+          visibleKinds={visibleKinds}
+          selectedDate={selectedDate}
+          locale={settings.general.language}
+          onSelectDate={selectDate}
+          onSessionClick={openHistorySession}
+        />
+      )}
+      {view === "day" && selectedDate && (
+        <DayTimeGrid
+          dateKey={selectedDate}
+          entries={entries}
+          visibleKinds={visibleKinds}
+          locale={settings.general.language}
+          onSessionClick={openHistorySession}
+        />
+      )}
+      {dayPopover && (
+        <AnchoredPanel
+          key={dayPopover.date}
+          anchor={dayPopover.anchor}
+          onClose={() => setDayPopover(null)}
+          ariaLabel={dayPopover.date}
+        >
           <DayPanel
-            dateKey={selectedDate}
+            dateKey={dayPopover.date}
             entries={entries}
             visibleKinds={visibleKinds}
             locale={settings.general.language}
-            onClose={() => setPanelOpen(false)}
+            onClose={() => setDayPopover(null)}
             onSessionClick={openHistorySession}
             onNewReminder={openNewReminder}
           />
-        )}
-      </div>
+        </AnchoredPanel>
+      )}
       <ReminderEditorDialog
         open={reminderOpen}
         reminder={null}

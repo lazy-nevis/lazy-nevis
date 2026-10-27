@@ -1,8 +1,8 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SectionCard } from "@/components/ui/section-card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CalendarEntry, CalendarKind } from "@/types";
 import { formatDurationHuman, formatPercent, formatTime } from "@/utils/formatters";
 import { calendarKindTone } from "@/components/features/calendar/calendarKindTone";
@@ -19,6 +19,7 @@ export interface DayPanelProps {
   onNewReminder: () => void;
 }
 
+/** Content of the floating day popover: only non-empty sections, plus a "new reminder" action. */
 export function DayPanel({
   dateKey,
   entries,
@@ -35,94 +36,88 @@ export function DayPanel({
     if (Number.isNaN(parsed.getTime())) return dateKey;
     return parsed.toLocaleDateString(i18n.language, {
       weekday: "long",
-      month: "short",
+      month: "long",
       day: "numeric",
     });
   }, [dateKey, i18n.language]);
 
   const sections = useMemo(() => {
     const filtered = entries.filter((e) => visibleKinds.includes(e.kind) && onDate(e, dateKey));
-    return {
-      sessions: filtered.filter((e) => e.kind === "session"),
-      pomodoro: filtered.filter((e) => e.kind === "pomodoro_run"),
-      habits: filtered.filter((e) => e.kind === "habit_day" || e.kind === "habit_log"),
-      checklist: filtered.filter(
-        (e) => e.kind === "checklist_completed" || e.kind === "checklist_due",
-      ),
-      reminders: filtered.filter((e) => e.kind === "reminder_occurrence"),
-    };
+    return [
+      { key: "sessions", items: filtered.filter((e) => e.kind === "session") },
+      { key: "pomodoro", items: filtered.filter((e) => e.kind === "pomodoro_run") },
+      {
+        key: "habits",
+        items: filtered.filter((e) => e.kind === "habit_day" || e.kind === "habit_log"),
+      },
+      {
+        key: "checklist",
+        items: filtered.filter(
+          (e) => e.kind === "checklist_completed" || e.kind === "checklist_due",
+        ),
+      },
+      { key: "reminders", items: filtered.filter((e) => e.kind === "reminder_occurrence") },
+    ].filter((section) => section.items.length > 0);
   }, [dateKey, entries, visibleKinds]);
 
-  return (
-    <aside className="w-full max-w-md shrink-0 lg:sticky lg:top-6 lg:self-start">
-      <SectionCard
-        title={title}
-        description={dateKey}
-        className="flex max-h-[min(32rem,calc(100vh-6rem))] flex-col overflow-hidden shadow-md"
-        actions={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            aria-label={t("close_panel")}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        }
-      >
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-          <PanelSection title={t("sections.sessions")} empty={sections.sessions.length === 0}>
-            {sections.sessions.map((e) => (
-              <SessionRow key={e.id} entry={e} locale={locale} onSessionClick={onSessionClick} />
-            ))}
-          </PanelSection>
-          <PanelSection title={t("sections.pomodoro")} empty={sections.pomodoro.length === 0}>
-            {sections.pomodoro.map((e) => (
-              <PomodoroRow key={e.id} entry={e} locale={locale} />
-            ))}
-          </PanelSection>
-          <PanelSection title={t("sections.habits")} empty={sections.habits.length === 0}>
-            {sections.habits.map((e) => (
-              <HabitRow key={e.id} entry={e} locale={locale} />
-            ))}
-          </PanelSection>
-          <PanelSection title={t("sections.checklist")} empty={sections.checklist.length === 0}>
-            {sections.checklist.map((e) => (
-              <ChecklistRow key={e.id} entry={e} />
-            ))}
-          </PanelSection>
-          <PanelSection title={t("sections.reminders")} empty={sections.reminders.length === 0}>
-            {sections.reminders.map((e) => (
-              <ReminderRow key={e.id} entry={e} locale={locale} />
-            ))}
-          </PanelSection>
-        </div>
-        <div className="mt-4 shrink-0 border-t border-border/60 pt-4">
-          <Button type="button" variant="brand" className="w-full" onClick={onNewReminder}>
-            {t("new_reminder_on_day")}
-          </Button>
-        </div>
-      </SectionCard>
-    </aside>
-  );
-}
+  const renderRow = (entry: CalendarEntry) => {
+    switch (entry.kind) {
+      case "session":
+        return <SessionRow key={entry.id} entry={entry} locale={locale} onSessionClick={onSessionClick} />;
+      case "pomodoro_run":
+        return <PomodoroRow key={entry.id} entry={entry} locale={locale} />;
+      case "habit_day":
+      case "habit_log":
+        return <HabitRow key={entry.id} entry={entry} locale={locale} />;
+      case "checklist_completed":
+      case "checklist_due":
+        return <ChecklistRow key={entry.id} entry={entry} />;
+      case "reminder_occurrence":
+        return <ReminderRow key={entry.id} entry={entry} locale={locale} />;
+      default:
+        return null;
+    }
+  };
 
-function PanelSection({
-  title,
-  empty,
-  children,
-}: {
-  title: string;
-  empty: boolean;
-  children: ReactNode;
-}) {
-  const { t } = useTranslation(undefined, { keyPrefix: "calendar" });
   return (
-    <div>
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
-      <div className="mt-2 space-y-2">
-        {empty ? <p className="text-sm text-muted-foreground">{t("section_empty")}</p> : children}
+    <div className="flex w-[22rem] max-w-[calc(100vw-1rem)] flex-col">
+      <div className="flex items-start justify-between gap-2 border-b border-border px-4 py-3">
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-semibold capitalize">{title}</h3>
+          <p className="text-xs text-muted-foreground">
+            {t("day_count", { count: sections.reduce((n, s) => n + s.items.length, 0) })}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="-mr-2 -mt-1 h-7 w-7"
+          onClick={onClose}
+          aria-label={t("close_panel")}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+      <ScrollArea viewportClassName="max-h-[min(22rem,60vh)]" contentClassName="space-y-4 px-4 py-3">
+        {sections.length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted-foreground">{t("day_empty")}</p>
+        ) : (
+          sections.map((section) => (
+            <div key={section.key}>
+              <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {t(`sections.${section.key}`)}
+              </h4>
+              <div className="mt-1.5 space-y-1.5">{section.items.map(renderRow)}</div>
+            </div>
+          ))
+        )}
+      </ScrollArea>
+      <div className="border-t border-border p-3">
+        <Button type="button" variant="brand" size="sm" className="w-full gap-1.5" onClick={onNewReminder}>
+          <Plus className="h-3.5 w-3.5" aria-hidden />
+          {t("new_reminder_on_day")}
+        </Button>
       </div>
     </div>
   );

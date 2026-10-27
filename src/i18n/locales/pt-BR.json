@@ -339,7 +339,12 @@
     "fullscreen_dismiss": "Entendido, vou me focar agora!",
     "break_notification_title": "LazyNevis — Hora de fazer uma pausa!",
     "break_notification_body": "Você está focado há {{time}}. Faça uma pausa rápida.",
-    "break_app": "Hora da pausa!"
+    "break_app": "Hora da pausa!",
+    "overlay_kind_reminder": "Lembrete",
+    "overlay_kind_habit": "Hábito",
+    "overlay_kind_pomodoro": "Pomodoro",
+    "overlay_log": "Registrar agora",
+    "overlay_escape_hint": "Pressione Esc para dispensar"
   },
   "app": {
     "recovery_notification_title": "LazyNevis — Sessão recuperada",
@@ -418,10 +423,8 @@
     "next": "Próximo",
     "view_label": "Visualização do calendário",
     "week_of": "Semana de {{date}}",
-    "settings_toggle": "Configurações do calendário",
     "close_panel": "Fechar painel do dia",
     "day_empty": "Nada neste dia para os tipos selecionados.",
-    "section_empty": "Nada aqui.",
     "session_unnamed": "Sessão sem nome",
     "completed": "Concluído",
     "due": "Vence",
@@ -487,23 +490,19 @@
       "missed": "Perdido",
       "not_delivered": "Não entregue"
     },
-    "settings": {
-      "title": "Preferências do calendário",
-      "description": "Visualização padrão e quais tipos aparecem na grade.",
-      "default_view": "Visualização padrão",
-      "visible_kinds": "Tipos visíveis",
-      "views": {
-        "month": "Mês",
-        "week": "Semana",
-        "day": "Dia"
-      }
-    },
     "pomodoro_entry": "{{start}}–{{end}} · {{cycles}} ciclos de foco · {{focus}} de foco · {{status}}",
     "pomodoro_status": {
       "active": "Em andamento",
       "completed": "Concluído",
       "cancelled": "Interrompido"
-    }
+    },
+    "new_reminder": "Novo lembrete",
+    "search_placeholder": "Buscar eventos…",
+    "search_clear": "Limpar busca",
+    "filter_button": "Filtros",
+    "filter_show_all": "Mostrar todos os tipos",
+    "day_count_one": "{{count}} item",
+    "day_count_other": "{{count}} itens"
   },
   "notifications": {
     "unnamed_session": "Sessão sem nome",

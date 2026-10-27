@@ -58,7 +58,6 @@ export function HabitReportsPanel() {
         value={range}
         onChange={setRange}
         options={rangeOptions}
-        className="max-w-xl"
       />
       <SectionCard title={t("reports_title")} description={rangeLabel}>
         {!data?.rows.length ? (

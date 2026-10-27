@@ -9,7 +9,7 @@ export interface WeekGridProps {
   visibleKinds: CalendarKind[];
   selectedDate: string | null;
   locale: string;
-  onSelectDate: (date: string) => void;
+  onSelectDate: (date: string, anchor: HTMLElement) => void;
   onSessionClick?: (sessionId: string) => void;
 }
 

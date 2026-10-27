@@ -63,7 +63,7 @@ export function Reminders() {
   }));
 
   return (
-    <PageContainer innerClassName="max-w-3xl">
+    <PageContainer>
       <PageHeader
         title={t("title")}
         description={t("subtitle")}
@@ -79,7 +79,6 @@ export function Reminders() {
         value={filter}
         onChange={setFilter}
         options={filterOptions}
-        className="w-full max-w-md"
       />
 
       <ReminderList

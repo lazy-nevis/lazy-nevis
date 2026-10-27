@@ -92,4 +92,20 @@ describe("Overlay", () => {
     fireEvent.click(screen.getByText("Done"));
     await waitFor(() => expect(resolveAction).toHaveBeenCalledWith("event-1", "done", undefined));
   });
+
+  it("renders habit alerts in the shared frame without session metrics", async () => {
+    vi.spyOn(overlayService, "getActive").mockResolvedValue({
+      ...reminderPayload,
+      kind: "habit",
+      reminder: { ...reminderPayload.reminder!, owner_kind: "habit", title: "Stretch", actions: ["log", "snooze", "dismiss"] },
+    });
+    const resolveAction = vi.spyOn(overlayService, "resolveAction").mockResolvedValue();
+
+    render(<Overlay />);
+    expect(await screen.findByText("Stretch")).toBeInTheDocument();
+    expect(screen.queryByText(/Distracted/i)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("10 minutes"));
+    await waitFor(() => expect(resolveAction).toHaveBeenCalledWith("event-1", "snooze", 10));
+  });
 });
+

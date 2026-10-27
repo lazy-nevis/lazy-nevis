@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { monthGrid, weekDateKeys } from "./calendarMath";
+import type { CalendarEntry } from "@/types";
+import { entryMatchesQuery, monthGrid, weekDateKeys } from "./calendarMath";
 
 describe("calendarMath", () => {
   it("builds a 6-week month grid with Monday week start", () => {
@@ -22,3 +23,15 @@ function parseDateKey(key: string): Date {
   const [y, m, d] = key.split("-").map((part) => Number.parseInt(part, 10));
   return new Date(y, m - 1, d);
 }
+
+describe("entryMatchesQuery", () => {
+  const entry = { kind: "reminder_occurrence", title: "Beber água" } as unknown as CalendarEntry;
+  const label = () => "Lembretes";
+
+  it("matches entries by title or kind label, ignoring case and accents", () => {
+    expect(entryMatchesQuery(entry, "AGUA", label)).toBe(true);
+    expect(entryMatchesQuery(entry, "lembre", label)).toBe(true);
+    expect(entryMatchesQuery(entry, "pomodoro", label)).toBe(false);
+    expect(entryMatchesQuery(entry, "  ", label)).toBe(true);
+  });
+});

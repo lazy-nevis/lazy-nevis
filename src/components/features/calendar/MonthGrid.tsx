@@ -22,7 +22,7 @@ export interface MonthGridProps {
   visibleKinds: CalendarKind[];
   weekStart: 0 | 1;
   selectedDate: string | null;
-  onSelectDate: (date: string) => void;
+  onSelectDate: (date: string, anchor: HTMLElement) => void;
 }
 
 function daySummary(
@@ -106,7 +106,7 @@ export function MonthGrid({
               type="button"
               aria-pressed={selected}
               aria-label={cell.date}
-              onClick={() => onSelectDate(cell.date)}
+              onClick={(event) => onSelectDate(cell.date, event.currentTarget)}
               className={cn(
                 "group relative flex min-h-[6.25rem] flex-col gap-1 border-border p-1.5 text-left transition-colors focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                 index % 7 !== 6 && "border-r",

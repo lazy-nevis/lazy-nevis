@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -132,7 +133,7 @@ export function HabitEditorDialog({
       <DialogHeader>
         <DialogTitle>{habit ? t("editor_title_edit") : t("editor_title_create")}</DialogTitle>
       </DialogHeader>
-      <div className="max-h-[70vh] space-y-4 overflow-y-auto px-1">
+      <ScrollArea viewportClassName="max-h-[72vh]" contentClassName="space-y-4 px-0.5">
         <div className="space-y-1">
           <label className="text-sm font-medium">{t("field_name")}</label>
           <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
@@ -342,7 +343,7 @@ export function HabitEditorDialog({
           builtinSounds={builtinSounds}
         />
         {error && <p className="text-sm text-destructive">{error}</p>}
-      </div>
+      </ScrollArea>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
         <Button type="button" onClick={() => void handleSave()}>{t("save")}</Button>

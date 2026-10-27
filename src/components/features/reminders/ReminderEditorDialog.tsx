@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus } from "lucide-react";
 import { DeliveryOverrideSection } from "@/components/features/delivery/DeliveryOverrideSection";
 import { MarkdownEditor } from "@/components/features/reminders/MarkdownEditor";
@@ -114,13 +115,13 @@ export function ReminderEditorDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={onClose} className="max-w-xl">
       <DialogHeader>
         <DialogTitle>
           {reminder ? t("editor.title_edit") : t("editor.title_new")}
         </DialogTitle>
       </DialogHeader>
-      <div className="max-h-[70vh] space-y-5 overflow-y-auto px-1">
+      <ScrollArea viewportClassName="max-h-[72vh]" contentClassName="space-y-4 px-0.5">
         <div className="space-y-1.5">
           <label htmlFor="reminder-title" className="text-sm font-medium">{t("editor.title_label")}</label>
           <Input id="reminder-title" value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -213,7 +214,7 @@ export function ReminderEditorDialog({
           testKind="reminder"
           builtinSounds={builtinSounds}
         />
-      </div>
+      </ScrollArea>
       <DialogFooter>
         <Button type="button" variant="ghost" onClick={onClose}>{t("editor.cancel")}</Button>
         <Button type="button" onClick={() => void save()} disabled={!title.trim()}>

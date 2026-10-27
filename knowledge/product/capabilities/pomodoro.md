@@ -20,7 +20,7 @@ Structured focus/break cycles with persistence, tray status, and calendar-friend
 - Linked focus sessions use `break_source = pomodoro` so manual break auto-end does not apply.
 - Break reminders are suppressed while a run is active.
 - Recovery restores runs **paused** after restart.
-- Fullscreen phase alerts use the calm overlay with `start_next` / `skip` actions.
+- Fullscreen phase alerts use the shared overlay frame (orange glow, alarm icon) with `start_next` / `skip` / `dismiss` actions.
 
 ## Reports
 

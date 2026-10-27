@@ -257,7 +257,6 @@ export function History() {
         value={filter}
         onChange={setFilter}
         options={filterOptions}
-        className="max-w-lg"
       />
 
       {/* Search by label */}

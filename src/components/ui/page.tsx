@@ -14,7 +14,7 @@ export function PageContainer({
     <div className={cn("h-full overflow-y-auto", className)}>
       <div
         className={cn(
-          "mx-auto flex w-full max-w-5xl flex-col gap-6 p-6",
+          "flex w-full flex-col gap-6 p-6",
           innerClassName,
         )}
       >
