@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { CalendarEntry } from "@/types";
-import { entryMatchesQuery, monthGrid, weekDateKeys } from "./calendarMath";
+import {
+  entryMatchesQuery,
+  entryOnDate,
+  groupEntriesByDate,
+  monthGrid,
+  weekDateKeys,
+} from "./calendarMath";
 
 describe("calendarMath", () => {
   it("builds a 6-week month grid with Monday week start", () => {
@@ -33,5 +39,29 @@ describe("entryMatchesQuery", () => {
     expect(entryMatchesQuery(entry, "lembre", label)).toBe(true);
     expect(entryMatchesQuery(entry, "pomodoro", label)).toBe(false);
     expect(entryMatchesQuery(entry, "  ", label)).toBe(true);
+  });
+});
+
+describe("entry date helpers", () => {
+  const at = (d: number, h: number) => new Date(2026, 9, d, h).getTime();
+  const session = {
+    kind: "session",
+    id: "s1",
+    segment_start_ms: at(14, 23),
+    segment_end_ms: at(15, 1),
+  } as unknown as CalendarEntry;
+  const reminder = { kind: "reminder_occurrence", id: "r1", scheduled_for: at(14, 9) } as unknown as CalendarEntry;
+  const habitDay = { kind: "habit_day", id: "h1", date: "2026-10-16" } as unknown as CalendarEntry;
+
+  it("groups entries by their local start date in order", () => {
+    const grouped = groupEntriesByDate([session, habitDay, reminder]);
+    expect(grouped.get("2026-10-14")).toEqual([session, reminder]);
+    expect(grouped.get("2026-10-16")).toEqual([habitDay]);
+  });
+
+  it("matches timed entries on the day they start and the day they end", () => {
+    expect(entryOnDate(session, "2026-10-14")).toBe(true);
+    expect(entryOnDate(session, "2026-10-15")).toBe(true);
+    expect(entryOnDate(reminder, "2026-10-15")).toBe(false);
   });
 });

@@ -13,26 +13,55 @@
     {
       "name": "Deep work block",
       "durationMinutes": 95,
-      "focusAppNames": ["Code", "Terminal", "Notes"],
-      "distractionAppNames": ["Safari", "Music"]
+      "focusAppNames": [
+        "Code",
+        "Terminal",
+        "Notes"
+      ],
+      "distractionAppNames": [
+        "Safari",
+        "Music"
+      ]
     },
     {
       "name": "Morning planning",
       "durationMinutes": 40,
-      "focusAppNames": ["Notes", "Calendar"],
-      "distractionAppNames": ["Mail"]
+      "focusAppNames": [
+        "Notes",
+        "Calendar"
+      ],
+      "distractionAppNames": [
+        "Mail"
+      ]
     },
     {
       "name": "Review pass",
       "durationMinutes": 70,
-      "focusAppNames": ["Code", "Browser Docs"],
-      "distractionAppNames": ["Messages"]
+      "focusAppNames": [
+        "Code",
+        "Browser Docs"
+      ],
+      "distractionAppNames": [
+        "Messages"
+      ]
     }
   ],
   "checklist": [
-    { "title": "Outline today’s priorities", "done": true, "tag": "planning" },
-    { "title": "Ship screenshot pipeline notes", "done": false, "tag": "dev" },
-    { "title": "Review focus rules", "done": false, "tag": "focus" }
+    {
+      "title": "Outline today’s priorities",
+      "done": true,
+      "tag": "planning"
+    },
+    {
+      "title": "Ship screenshot pipeline notes",
+      "done": false,
+      "tag": "dev"
+    },
+    {
+      "title": "Review focus rules",
+      "done": false,
+      "tag": "focus"
+    }
   ],
   "poseDefaults": {
     "running_focused": {
@@ -57,5 +86,940 @@
   "forbidden": [
     "Never copy real user DB paths or window titles into this file.",
     "Never include personal emails, file paths, or chat previews."
-  ]
+  ],
+  "dataset": {
+    "days": 120,
+    "sessionTemplates": [
+      {
+        "label": "Deep work block",
+        "minutes": [
+          70,
+          120
+        ],
+        "focusApps": [
+          "Code",
+          "Terminal",
+          "Notes"
+        ],
+        "distractionApps": [
+          "Safari",
+          "Music"
+        ],
+        "checkpoints": [
+          "Outline done",
+          "Tests green",
+          "PR opened"
+        ]
+      },
+      {
+        "label": "Morning planning",
+        "minutes": [
+          25,
+          45
+        ],
+        "focusApps": [
+          "Notes",
+          "Calendar",
+          "Mail"
+        ],
+        "distractionApps": [
+          "Messages"
+        ],
+        "checkpoints": [
+          "Inbox zero",
+          "Top 3 picked"
+        ]
+      },
+      {
+        "label": "Code review pass",
+        "minutes": [
+          40,
+          80
+        ],
+        "focusApps": [
+          "Browser Docs",
+          "Code",
+          "Terminal"
+        ],
+        "distractionApps": [
+          "Slack",
+          "Safari"
+        ],
+        "checkpoints": [
+          "First PR reviewed",
+          "Comments resolved"
+        ]
+      },
+      {
+        "label": "Feature build: export flow",
+        "minutes": [
+          60,
+          140
+        ],
+        "focusApps": [
+          "Code",
+          "Terminal",
+          "Figma"
+        ],
+        "distractionApps": [
+          "Safari",
+          "YouTube"
+        ],
+        "checkpoints": [
+          "API wired",
+          "UI states done",
+          "Edge cases covered"
+        ]
+      },
+      {
+        "label": "Bug triage",
+        "minutes": [
+          30,
+          60
+        ],
+        "focusApps": [
+          "Browser Docs",
+          "Terminal",
+          "Code"
+        ],
+        "distractionApps": [
+          "Slack"
+        ],
+        "checkpoints": [
+          "Repro found",
+          "Fix pushed"
+        ]
+      },
+      {
+        "label": "Writing: release notes",
+        "minutes": [
+          35,
+          70
+        ],
+        "focusApps": [
+          "Notes",
+          "Pages",
+          "Browser Docs"
+        ],
+        "distractionApps": [
+          "Messages",
+          "Music"
+        ],
+        "checkpoints": [
+          "Draft done",
+          "Proofread"
+        ]
+      },
+      {
+        "label": "Design exploration",
+        "minutes": [
+          45,
+          90
+        ],
+        "focusApps": [
+          "Figma",
+          "Preview",
+          "Notes"
+        ],
+        "distractionApps": [
+          "Safari",
+          "Pinterest"
+        ],
+        "checkpoints": [
+          "Three directions",
+          "Picked one"
+        ]
+      },
+      {
+        "label": "Study: Rust async",
+        "minutes": [
+          40,
+          90
+        ],
+        "focusApps": [
+          "Books",
+          "Code",
+          "Terminal"
+        ],
+        "distractionApps": [
+          "YouTube",
+          "Safari"
+        ],
+        "checkpoints": [
+          "Chapter read",
+          "Exercises done"
+        ]
+      },
+      {
+        "label": "Admin & email",
+        "minutes": [
+          20,
+          40
+        ],
+        "focusApps": [
+          "Mail",
+          "Calendar",
+          "Numbers"
+        ],
+        "distractionApps": [
+          "Messages",
+          "News"
+        ],
+        "checkpoints": [
+          "Invoices sent"
+        ]
+      },
+      {
+        "label": "Side project: garden app",
+        "minutes": [
+          45,
+          110
+        ],
+        "focusApps": [
+          "Code",
+          "Simulator",
+          "Terminal"
+        ],
+        "distractionApps": [
+          "YouTube",
+          "Safari"
+        ],
+        "checkpoints": [
+          "Build passes",
+          "Screen polished"
+        ]
+      }
+    ],
+    "weekendTemplates": [
+      "Side project: garden app",
+      "Study: Rust async",
+      "Design exploration"
+    ],
+    "categories": [
+      {
+        "name": "Work",
+        "tone": "sky"
+      },
+      {
+        "name": "Personal",
+        "tone": "emerald"
+      },
+      {
+        "name": "Learning",
+        "tone": "violet"
+      },
+      {
+        "name": "Home",
+        "tone": "amber"
+      },
+      {
+        "name": "Health",
+        "tone": "rose"
+      }
+    ],
+    "openItems": [
+      {
+        "title": "Ship export flow to beta testers",
+        "category": "Work",
+        "tags": [
+          "dev",
+          "release"
+        ],
+        "priority": "urgent",
+        "dueDays": 0,
+        "dueTime": "17:00",
+        "subtasks": [
+          "Write migration notes",
+          "Record demo GIF",
+          "Update changelog"
+        ],
+        "subtasksDone": 1
+      },
+      {
+        "title": "Review onboarding copy",
+        "category": "Work",
+        "tags": [
+          "writing"
+        ],
+        "priority": "high",
+        "dueDays": 1
+      },
+      {
+        "title": "Fix flaky calendar test",
+        "category": "Work",
+        "tags": [
+          "dev",
+          "bug"
+        ],
+        "priority": "high",
+        "dueDays": -1
+      },
+      {
+        "title": "Prepare sprint demo",
+        "category": "Work",
+        "tags": [
+          "planning"
+        ],
+        "priority": "medium",
+        "dueDays": 3,
+        "dueTime": "10:30",
+        "subtasks": [
+          "Collect screenshots",
+          "Draft agenda"
+        ],
+        "subtasksDone": 0
+      },
+      {
+        "title": "Refactor settings sections",
+        "category": "Work",
+        "tags": [
+          "dev"
+        ],
+        "priority": "low",
+        "dueDays": 9
+      },
+      {
+        "title": "Reply to design feedback thread",
+        "category": "Work",
+        "tags": [
+          "design"
+        ],
+        "priority": "medium"
+      },
+      {
+        "title": "Finish chapter 7 of async book",
+        "category": "Learning",
+        "tags": [
+          "reading"
+        ],
+        "priority": "medium",
+        "dueDays": 4
+      },
+      {
+        "title": "Try the new keyboard layout drills",
+        "category": "Learning",
+        "tags": [
+          "practice"
+        ],
+        "priority": "low"
+      },
+      {
+        "title": "Book dentist appointment",
+        "category": "Health",
+        "tags": [
+          "errand"
+        ],
+        "priority": "high",
+        "dueDays": 2
+      },
+      {
+        "title": "Plan weekly meals",
+        "category": "Home",
+        "tags": [
+          "planning"
+        ],
+        "priority": "medium",
+        "dueDays": 5,
+        "subtasks": [
+          "Check pantry",
+          "Shopping list",
+          "Prep Sunday batch"
+        ],
+        "subtasksDone": 1
+      },
+      {
+        "title": "Water the balcony plants",
+        "category": "Home",
+        "tags": [
+          "routine"
+        ],
+        "priority": "low",
+        "dueDays": 0,
+        "dueTime": "19:00"
+      },
+      {
+        "title": "Renew library card",
+        "category": "Personal",
+        "tags": [
+          "errand"
+        ],
+        "priority": "low",
+        "dueDays": 12
+      },
+      {
+        "title": "Call grandma",
+        "category": "Personal",
+        "tags": [
+          "family"
+        ],
+        "priority": "medium",
+        "dueDays": -2
+      },
+      {
+        "title": "Sketch logo ideas for garden app",
+        "category": "Personal",
+        "tags": [
+          "design"
+        ],
+        "priority": "none"
+      },
+      {
+        "title": "Back up photo library",
+        "category": "Personal",
+        "tags": [
+          "routine"
+        ],
+        "priority": "medium",
+        "dueDays": 6
+      }
+    ],
+    "completedItems": [
+      {
+        "title": "Answer support inbox",
+        "category": "Work",
+        "tags": [
+          "support"
+        ]
+      },
+      {
+        "title": "Merge dependency updates",
+        "category": "Work",
+        "tags": [
+          "dev"
+        ]
+      },
+      {
+        "title": "Write unit tests for parser",
+        "category": "Work",
+        "tags": [
+          "dev"
+        ]
+      },
+      {
+        "title": "Update API docs",
+        "category": "Work",
+        "tags": [
+          "writing"
+        ]
+      },
+      {
+        "title": "Sync with product on roadmap",
+        "category": "Work",
+        "tags": [
+          "planning"
+        ]
+      },
+      {
+        "title": "Clean up feature flags",
+        "category": "Work",
+        "tags": [
+          "dev"
+        ]
+      },
+      {
+        "title": "Review pull request queue",
+        "category": "Work",
+        "tags": [
+          "review"
+        ]
+      },
+      {
+        "title": "Draft weekly status update",
+        "category": "Work",
+        "tags": [
+          "writing"
+        ]
+      },
+      {
+        "title": "Profile slow dashboard query",
+        "category": "Work",
+        "tags": [
+          "dev",
+          "perf"
+        ]
+      },
+      {
+        "title": "Polish empty states",
+        "category": "Work",
+        "tags": [
+          "design"
+        ]
+      },
+      {
+        "title": "Read one research paper",
+        "category": "Learning",
+        "tags": [
+          "reading"
+        ]
+      },
+      {
+        "title": "Finish course module",
+        "category": "Learning",
+        "tags": [
+          "practice"
+        ]
+      },
+      {
+        "title": "Laundry",
+        "category": "Home",
+        "tags": [
+          "routine"
+        ]
+      },
+      {
+        "title": "Grocery run",
+        "category": "Home",
+        "tags": [
+          "errand"
+        ]
+      },
+      {
+        "title": "Clean the desk",
+        "category": "Home",
+        "tags": [
+          "routine"
+        ]
+      },
+      {
+        "title": "Pay utility bills",
+        "category": "Personal",
+        "tags": [
+          "admin"
+        ]
+      },
+      {
+        "title": "Stretching session",
+        "category": "Health",
+        "tags": [
+          "routine"
+        ]
+      },
+      {
+        "title": "Plan the weekend trip",
+        "category": "Personal",
+        "tags": [
+          "planning"
+        ]
+      }
+    ],
+    "reminders": [
+      {
+        "title": "Stand up and stretch",
+        "body": "Roll your shoulders, look **20 m away** for 20 seconds.",
+        "tone": "teal",
+        "createdDaysAgo": 110,
+        "rule": {
+          "kind": "interval",
+          "every_minutes": 60,
+          "window_start": "09:00",
+          "window_end": "18:00",
+          "weekdays": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      },
+      {
+        "title": "Daily standup",
+        "body": "- Yesterday\n- Today\n- Blockers",
+        "tone": "sky",
+        "createdDaysAgo": 118,
+        "rule": {
+          "kind": "daily",
+          "times": [
+            "09:45"
+          ],
+          "weekdays": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      },
+      {
+        "title": "Plan tomorrow",
+        "body": "Pick the **top 3** for tomorrow before closing the laptop.",
+        "tone": "violet",
+        "createdDaysAgo": 95,
+        "rule": {
+          "kind": "daily",
+          "times": [
+            "18:30"
+          ],
+          "weekdays": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      },
+      {
+        "title": "Lunch break",
+        "body": "Step away from the screen.",
+        "tone": "orange",
+        "createdDaysAgo": 100,
+        "rule": {
+          "kind": "daily",
+          "times": [
+            "12:30"
+          ],
+          "weekdays": []
+        }
+      },
+      {
+        "title": "Weekly review",
+        "body": "1. Clear inboxes\n2. Review the calendar\n3. Update the checklist",
+        "tone": "amber",
+        "createdDaysAgo": 90,
+        "rule": {
+          "kind": "daily",
+          "times": [
+            "16:00"
+          ],
+          "weekdays": [
+            5
+          ]
+        }
+      },
+      {
+        "title": "Pay rent",
+        "body": "Transfer before the **5th**.",
+        "tone": "rose",
+        "createdDaysAgo": 115,
+        "rule": {
+          "kind": "monthly",
+          "days": [
+            1
+          ],
+          "times": [
+            "10:00"
+          ]
+        }
+      },
+      {
+        "title": "Invoice clients",
+        "body": "Send invoices and log hours in the spreadsheet.",
+        "tone": "emerald",
+        "createdDaysAgo": 105,
+        "rule": {
+          "kind": "monthly",
+          "days": [
+            15,
+            28
+          ],
+          "times": [
+            "11:00"
+          ]
+        }
+      },
+      {
+        "title": "Take vitamins",
+        "body": null,
+        "tone": "slate",
+        "createdDaysAgo": 60,
+        "rule": {
+          "kind": "daily",
+          "times": [
+            "08:30"
+          ],
+          "weekdays": []
+        }
+      },
+      {
+        "title": "Team retro",
+        "body": "Bring one thing that went well and one to improve.",
+        "tone": "sky",
+        "createdDaysAgo": 20,
+        "onceDays": 3,
+        "onceTime": "15:00"
+      },
+      {
+        "title": "Submit conference talk",
+        "body": "Abstract is in Notes → *Talks*.",
+        "tone": "violet",
+        "createdDaysAgo": 30,
+        "onceDays": -6,
+        "onceTime": "14:00"
+      },
+      {
+        "title": "Evening screen curfew",
+        "body": "Lights down, phone away.",
+        "tone": "slate",
+        "createdDaysAgo": 70,
+        "active": false,
+        "rule": {
+          "kind": "daily",
+          "times": [
+            "22:30"
+          ],
+          "weekdays": []
+        }
+      }
+    ],
+    "habits": [
+      {
+        "name": "Drink water",
+        "description": "Eight glasses spread through the day.",
+        "tone": "sky",
+        "icon": "droplet",
+        "period": "daily",
+        "adherence": 0.85,
+        "createdDaysAgo": 118,
+        "targets": [
+          {
+            "metric": "volume",
+            "unit": "ml",
+            "target": 2000
+          }
+        ],
+        "logsPerPeriod": [
+          3,
+          5
+        ],
+        "schedule": {
+          "kind": "interval",
+          "every_minutes": 120,
+          "window_start": "09:00",
+          "window_end": "19:00",
+          "weekdays": []
+        }
+      },
+      {
+        "name": "Morning workout",
+        "description": "Strength or mobility, whatever fits.",
+        "tone": "rose",
+        "icon": "dumbbell",
+        "period": "daily",
+        "adherence": 0.7,
+        "createdDaysAgo": 112,
+        "targets": [
+          {
+            "metric": "duration",
+            "unit": "min",
+            "target": 30
+          }
+        ],
+        "logsPerPeriod": [
+          1,
+          1
+        ],
+        "schedule": {
+          "kind": "daily",
+          "times": [
+            "07:00"
+          ],
+          "weekdays": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      },
+      {
+        "name": "Read",
+        "description": "Fiction or technical, paper or e-ink.",
+        "tone": "violet",
+        "icon": "book",
+        "period": "daily",
+        "adherence": 0.75,
+        "createdDaysAgo": 118,
+        "targets": [
+          {
+            "metric": "count",
+            "unit": "pages",
+            "target": 20
+          }
+        ],
+        "logsPerPeriod": [
+          1,
+          2
+        ],
+        "schedule": {
+          "kind": "daily",
+          "times": [
+            "21:30"
+          ],
+          "weekdays": []
+        }
+      },
+      {
+        "name": "Walk",
+        "description": null,
+        "tone": "emerald",
+        "icon": "footprints",
+        "period": "daily",
+        "adherence": 0.8,
+        "createdDaysAgo": 100,
+        "targets": [
+          {
+            "metric": "distance",
+            "unit": "km",
+            "target": 5
+          }
+        ],
+        "logsPerPeriod": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Meditate",
+        "description": "Ten quiet minutes.",
+        "tone": "teal",
+        "icon": "brain",
+        "period": "daily",
+        "adherence": 0.65,
+        "createdDaysAgo": 80,
+        "targets": [
+          {
+            "metric": "check",
+            "unit": "",
+            "target": 1
+          }
+        ],
+        "logsPerPeriod": [
+          1,
+          1
+        ],
+        "schedule": {
+          "kind": "daily",
+          "times": [
+            "08:00"
+          ],
+          "weekdays": []
+        }
+      },
+      {
+        "name": "Eat fruit",
+        "description": null,
+        "tone": "orange",
+        "icon": "apple",
+        "period": "daily",
+        "adherence": 0.75,
+        "createdDaysAgo": 90,
+        "targets": [
+          {
+            "metric": "count",
+            "unit": "times",
+            "target": 2
+          }
+        ],
+        "logsPerPeriod": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "Long run",
+        "description": "Weekly endurance run.",
+        "tone": "amber",
+        "icon": "bike",
+        "period": "weekly",
+        "adherence": 0.8,
+        "createdDaysAgo": 112,
+        "targets": [
+          {
+            "metric": "distance",
+            "unit": "km",
+            "target": 15
+          },
+          {
+            "metric": "duration",
+            "unit": "min",
+            "target": 90
+          }
+        ],
+        "logsPerPeriod": [
+          2,
+          3
+        ]
+      },
+      {
+        "name": "Guitar practice",
+        "description": "Scales, then one song.",
+        "tone": "slate",
+        "icon": "music",
+        "period": "weekly",
+        "adherence": 0.7,
+        "createdDaysAgo": 75,
+        "targets": [
+          {
+            "metric": "duration",
+            "unit": "h",
+            "target": 3
+          }
+        ],
+        "logsPerPeriod": [
+          3,
+          4
+        ]
+      },
+      {
+        "name": "Weigh-in",
+        "description": "Track the trend, not the day.",
+        "tone": "emerald",
+        "icon": "heart",
+        "period": "weekly",
+        "adherence": 0.85,
+        "createdDaysAgo": 100,
+        "targets": [
+          {
+            "metric": "mass",
+            "unit": "kg",
+            "target": 72
+          }
+        ],
+        "logsPerPeriod": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "Finish a book",
+        "description": "One book a month.",
+        "tone": "violet",
+        "icon": "target",
+        "period": "monthly",
+        "adherence": 0.75,
+        "createdDaysAgo": 118,
+        "targets": [
+          {
+            "metric": "check",
+            "unit": "",
+            "target": 1
+          }
+        ],
+        "logsPerPeriod": [
+          1,
+          1
+        ]
+      }
+    ],
+    "habitNotes": [
+      "Felt great",
+      "Rainy, did it indoors",
+      "Short one today",
+      "With a friend",
+      "New personal best",
+      "Tired but did it"
+    ],
+    "pomodoroLabels": [
+      "Export flow",
+      "Bug triage",
+      "Release notes",
+      "Rust exercises",
+      "Inbox",
+      "Garden app",
+      "Design review"
+    ]
+  }
 }

@@ -1,5 +1,5 @@
 import type { CalendarEntry, CalendarKind } from "@/types";
-import { dayBoundsMs, endOfLocalDay, parseDateKey, toDateKey } from "./calendarMath";
+import { dayBoundsMs, endOfLocalDay, entryOnDate, parseDateKey, toDateKey } from "./calendarMath";
 
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export const HOURS_PER_DAY = 24;
@@ -122,27 +122,6 @@ export function splitTimedRangeAcrossDays(
     cursor = endOfLocalDay(parseDateKey(dateKey)) + 1;
   }
   return out;
-}
-
-function entryOnDate(entry: CalendarEntry, dateKey: string): boolean {
-  const key = (ms: number) => new Date(ms).toLocaleDateString("en-CA");
-  switch (entry.kind) {
-    case "session":
-    case "pomodoro_run":
-      return key(entry.segment_start_ms) === dateKey || key(entry.segment_end_ms) === dateKey;
-    case "checklist_completed":
-      return key(entry.completed_at) === dateKey;
-    case "checklist_due":
-      return key(entry.due_date) === dateKey;
-    case "habit_log":
-      return key(entry.logged_at) === dateKey;
-    case "habit_day":
-      return entry.date === dateKey;
-    case "reminder_occurrence":
-      return key(entry.scheduled_for) === dateKey;
-    default:
-      return false;
-  }
 }
 
 export function partitionEntriesForDay(

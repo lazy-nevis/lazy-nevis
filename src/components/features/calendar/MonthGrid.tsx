@@ -1,10 +1,11 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { CalendarDay, CalendarEntry, CalendarKind } from "@/types";
 import { cn } from "@/utils/cn";
 import { calendarKindTone } from "@/components/features/calendar/calendarKindTone";
 import { toneStyle } from "@/utils/tones";
 import type { GridDay } from "./calendarMath";
-import { isTodayKey } from "./calendarMath";
+import { groupEntriesByDate, isTodayKey } from "./calendarMath";
 
 const KIND_ORDER: CalendarKind[] = [
   "session",
@@ -25,45 +26,12 @@ export interface MonthGridProps {
   onSelectDate: (date: string, anchor: HTMLElement) => void;
 }
 
-function daySummary(
-  date: string,
-  days: CalendarDay[],
-  entries: CalendarEntry[],
-  visibleKinds: CalendarKind[],
-) {
-  const summary = days.find((d) => d.date === date);
-  const dayEntries = entries.filter(
-    (e) => entryDate(e) === date && visibleKinds.includes(entryKind(e)),
-  );
-  const markers = KIND_ORDER.flatMap((kind) => {
-    const count = dayEntries.filter((e) => entryKind(e) === kind).length;
+function dayMarkers(dayEntries: CalendarEntry[], visibleKinds: CalendarKind[]) {
+  return KIND_ORDER.flatMap((kind) => {
+    if (!visibleKinds.includes(kind)) return [];
+    const count = dayEntries.filter((e) => e.kind === kind).length;
     return count > 0 ? [{ kind, count }] : [];
   });
-  return { summary, markers };
-}
-
-function entryKind(entry: CalendarEntry): CalendarKind {
-  return entry.kind;
-}
-
-function entryDate(entry: CalendarEntry): string {
-  switch (entry.kind) {
-    case "session":
-    case "pomodoro_run":
-      return new Date(entry.segment_start_ms).toLocaleDateString("en-CA");
-    case "checklist_completed":
-      return new Date(entry.completed_at).toLocaleDateString("en-CA");
-    case "checklist_due":
-      return new Date(entry.due_date).toLocaleDateString("en-CA");
-    case "habit_log":
-      return new Date(entry.logged_at).toLocaleDateString("en-CA");
-    case "habit_day":
-      return entry.date;
-    case "reminder_occurrence":
-      return new Date(entry.scheduled_for).toLocaleDateString("en-CA");
-    default:
-      return "";
-  }
 }
 
 export function MonthGrid({
@@ -76,6 +44,8 @@ export function MonthGrid({
   onSelectDate,
 }: MonthGridProps) {
   const { t } = useTranslation(undefined, { keyPrefix: "calendar" });
+  const entriesByDate = useMemo(() => groupEntriesByDate(entries), [entries]);
+  const summaryByDate = useMemo(() => new Map(days.map((d) => [d.date, d])), [days]);
   const weekdayLabels = weekStart === 1 ? [1, 2, 3, 4, 5, 6, 0] : [0, 1, 2, 3, 4, 5, 6];
 
   return (
@@ -89,15 +59,12 @@ export function MonthGrid({
       </div>
       <div className="grid grid-cols-7">
         {grid.map((cell, index) => {
-          const { summary, markers } = daySummary(
-            cell.date,
-            days,
-            entries,
-            visibleKinds,
-          );
+          const dayEntries = entriesByDate.get(cell.date) ?? [];
+          const summary = summaryByDate.get(cell.date);
+          const markers = dayMarkers(dayEntries, visibleKinds);
           const today = isTodayKey(cell.date);
           const selected = selectedDate === cell.date;
-          const sampleEntry = entries.find((e) => entryDate(e) === cell.date);
+          const sampleEntry = dayEntries[0];
           const visibleMarkers = markers.slice(0, 3);
           const hiddenKinds = Math.max(0, markers.length - visibleMarkers.length);
           return (

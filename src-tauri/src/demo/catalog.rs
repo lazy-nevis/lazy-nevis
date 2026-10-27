@@ -451,15 +451,20 @@ pub fn apply_mode(app: &AppHandle, state: &AppState, mode: &str) -> Result<()> {
     app_mode::apply_mode(app, state, parsed, true)
 }
 
+/// Logical window size for screenshots; the capture keeps the display's
+/// backing scale, so Retina output is twice this in pixels.
+const SHOT_FULL_SIZE: (f64, f64) = (1280.0, 860.0);
+const SHOT_COMPACT_SIZE: (f64, f64) = (400.0, 900.0);
+
 fn apply_shot_frame(app: &AppHandle, mode: &str) -> Result<()> {
     use tauri::{LogicalSize, Size};
     let Some(main) = app.get_webview_window("main") else {
         return Ok(());
     };
     let (width, height) = if mode == "compact" {
-        (380.0, 860.0)
+        (SHOT_COMPACT_SIZE.0, SHOT_COMPACT_SIZE.1)
     } else {
-        (1100.0, 820.0)
+        (SHOT_FULL_SIZE.0, SHOT_FULL_SIZE.1)
     };
     main.set_size(Size::Logical(LogicalSize::new(width, height)))
         .map_err(|error| AppError::Internal(error.to_string()))?;

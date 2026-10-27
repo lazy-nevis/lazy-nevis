@@ -128,6 +128,11 @@ pub fn run() {
                 demo::apply_demo_seed(&state)
                     .map_err(|error| std::io::Error::other(error.to_string()))?;
                 info!("screenshot demo seed applied");
+                // The webview starts loading before setup finishes, so its first
+                // queries can race the seed and render an empty profile.
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.eval("window.location.reload()");
+                }
             }
 
             let session_was_recovered = if demo_active {

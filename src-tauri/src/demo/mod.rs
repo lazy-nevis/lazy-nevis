@@ -5,6 +5,7 @@
 
 mod capture;
 pub mod catalog;
+mod dataset;
 pub mod seed;
 
 pub use catalog::{run_catalog, CatalogFile};

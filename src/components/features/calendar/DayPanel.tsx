@@ -8,6 +8,7 @@ import { formatDurationHuman, formatPercent, formatTime } from "@/utils/formatte
 import { calendarKindTone } from "@/components/features/calendar/calendarKindTone";
 import { toneStyle, toTone } from "@/utils/tones";
 import { cn } from "@/utils/cn";
+import { entryOnDate } from "./calendarMath";
 
 export interface DayPanelProps {
   dateKey: string;
@@ -42,7 +43,7 @@ export function DayPanel({
   }, [dateKey, i18n.language]);
 
   const sections = useMemo(() => {
-    const filtered = entries.filter((e) => visibleKinds.includes(e.kind) && onDate(e, dateKey));
+    const filtered = entries.filter((e) => visibleKinds.includes(e.kind) && entryOnDate(e, dateKey));
     return [
       { key: "sessions", items: filtered.filter((e) => e.kind === "session") },
       { key: "pomodoro", items: filtered.filter((e) => e.kind === "pomodoro_run") },
@@ -261,25 +262,4 @@ function ReminderRow({ entry, locale }: { entry: CalendarEntry; locale: string }
       })}
     </div>
   );
-}
-
-function onDate(entry: CalendarEntry, dateKey: string): boolean {
-  const key = (ms: number) => new Date(ms).toLocaleDateString("en-CA");
-  switch (entry.kind) {
-    case "session":
-    case "pomodoro_run":
-      return key(entry.segment_start_ms) === dateKey || key(entry.segment_end_ms) === dateKey;
-    case "checklist_completed":
-      return key(entry.completed_at) === dateKey;
-    case "checklist_due":
-      return key(entry.due_date) === dateKey;
-    case "habit_log":
-      return key(entry.logged_at) === dateKey;
-    case "habit_day":
-      return entry.date === dateKey;
-    case "reminder_occurrence":
-      return key(entry.scheduled_for) === dateKey;
-    default:
-      return false;
-  }
 }

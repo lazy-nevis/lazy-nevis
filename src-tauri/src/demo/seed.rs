@@ -16,6 +16,8 @@ struct SeedFile {
     checklist: Vec<SeedChecklistItem>,
     #[serde(default)]
     pose_defaults: serde_json::Value,
+    #[serde(default)]
+    dataset: Option<super::dataset::DatasetPools>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -139,7 +141,22 @@ fn parse_seed(json: &str) -> Result<SeedFile> {
 }
 
 /// Apply the embedded fictional seed into an empty/isolated database.
+///
+/// Seeding runs once per data dir: a profile that already holds sessions is left
+/// untouched so relaunching the demo never duplicates history.
 pub fn apply_demo_seed(state: &AppState) -> Result<()> {
+    let existing: i64 = {
+        let db = state
+            .db
+            .lock()
+            .map_err(|_| AppError::Internal("db lock".into()))?;
+        db.conn()
+            .query_row(queries::COUNT_SESSIONS, [], |row| row.get(0))
+            .map_err(AppError::Database)?
+    };
+    if existing > 0 {
+        return Ok(());
+    }
     let seed = parse_seed(EMBEDDED_SEED)?;
     apply_seed_file(state, &seed)
 }
@@ -191,6 +208,9 @@ fn apply_seed_file(state: &AppState, seed: &SeedFile) -> Result<()> {
     };
 
     let now = crate::state::now_ms();
+    if let Some(ref pools) = seed.dataset {
+        return super::dataset::apply(state, pools, &snapshot, now);
+    }
     let day_ms = 24 * 60 * 60 * 1000_i64;
 
     {
@@ -418,6 +438,96 @@ mod tests {
 
         let open = state.checklist.list_open(0).unwrap();
         assert!(!open.is_empty());
+    }
+
+    fn count(state: &AppState, sql: &str) -> i64 {
+        let db = state.db.lock().unwrap();
+        db.conn().query_row(sql, [], |row| row.get(0)).unwrap()
+    }
+
+    #[test]
+    fn rich_dataset_covers_every_surface() {
+        let state = test_state();
+        apply_demo_seed(&state).unwrap();
+
+        assert!(count(&state, "SELECT COUNT(*) FROM sessions") > 150);
+        assert_eq!(
+            count(
+                &state,
+                "SELECT COUNT(*) FROM sessions WHERE id = 'demo-hero-session'"
+            ),
+            1
+        );
+        assert!(
+            count(
+                &state,
+                "SELECT COUNT(*) FROM timeline_events WHERE event_type = 'alert_shown'"
+            ) > 50
+        );
+        assert!(count(&state, "SELECT COUNT(*) FROM checkpoints") > 100);
+        assert!(
+            count(
+                &state,
+                "SELECT COUNT(*) FROM checklist_items WHERE completed_at IS NOT NULL"
+            ) > 100
+        );
+        assert!(count(&state, "SELECT COUNT(*) FROM checklist_items WHERE completed_at IS NULL AND due_date IS NOT NULL") >= 8);
+        assert!(count(&state, "SELECT COUNT(*) FROM checklist_item_sessions") > 30);
+        assert!(count(&state, "SELECT COUNT(*) FROM checklist_categories") >= 5);
+        assert!(count(&state, "SELECT COUNT(*) FROM reminders") >= 10);
+        assert!(count(&state, "SELECT COUNT(*) FROM reminders WHERE active = 0") >= 1);
+        assert!(
+            count(
+                &state,
+                "SELECT COUNT(*) FROM trigger_events WHERE owner_kind = 'reminder'"
+            ) > 200
+        );
+        assert!(
+            count(
+                &state,
+                "SELECT COUNT(*) FROM trigger_events WHERE owner_kind = 'habit'"
+            ) > 50
+        );
+        assert!(count(&state, "SELECT COUNT(*) FROM habits") >= 10);
+        assert_eq!(
+            count(&state, "SELECT COUNT(DISTINCT period) FROM habits"),
+            3
+        );
+        assert!(count(&state, "SELECT COUNT(*) FROM habit_logs") > 500);
+        assert!(count(&state, "SELECT COUNT(*) FROM pomodoro_runs") > 40);
+        assert!(
+            count(
+                &state,
+                "SELECT COUNT(*) FROM pomodoro_phases WHERE kind = 'long_break'"
+            ) > 5
+        );
+
+        let now = crate::state::now_ms();
+        for table in ["sessions", "pomodoro_runs"] {
+            let future = count(
+                &state,
+                &format!("SELECT COUNT(*) FROM {table} WHERE ended_at > {now}"),
+            );
+            assert_eq!(future, 0, "{table} has rows ending in the future");
+        }
+        assert_eq!(
+            count(
+                &state,
+                &format!("SELECT COUNT(*) FROM habit_logs WHERE logged_at > {now}")
+            ),
+            0
+        );
+    }
+
+    #[test]
+    fn demo_seed_applies_once_per_data_dir() {
+        let state = test_state();
+        apply_demo_seed(&state).unwrap();
+        let sessions = count(&state, "SELECT COUNT(*) FROM sessions");
+        let habits = count(&state, "SELECT COUNT(*) FROM habits");
+        apply_demo_seed(&state).unwrap();
+        assert_eq!(count(&state, "SELECT COUNT(*) FROM sessions"), sessions);
+        assert_eq!(count(&state, "SELECT COUNT(*) FROM habits"), habits);
     }
 
     #[test]

@@ -14,6 +14,53 @@ export function toDateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/** Local `YYYY-MM-DD` for an epoch ms. Avoids `toLocaleDateString`, which is slow in WebKit. */
+export function msToDateKey(ms: number): string {
+  return toDateKey(new Date(ms));
+}
+
+/** Local date an entry is filed under (timed entries use their start). */
+export function entryDateKey(entry: CalendarEntry): string {
+  switch (entry.kind) {
+    case "session":
+    case "pomodoro_run":
+      return msToDateKey(entry.segment_start_ms);
+    case "checklist_completed":
+      return msToDateKey(entry.completed_at);
+    case "checklist_due":
+      return msToDateKey(entry.due_date);
+    case "habit_log":
+      return msToDateKey(entry.logged_at);
+    case "habit_day":
+      return entry.date;
+    case "reminder_occurrence":
+      return msToDateKey(entry.scheduled_for);
+    default:
+      return "";
+  }
+}
+
+/** True when the entry falls on `dateKey`; timed entries also match the day they end on. */
+export function entryOnDate(entry: CalendarEntry, dateKey: string): boolean {
+  if (entryDateKey(entry) === dateKey) return true;
+  return (
+    (entry.kind === "session" || entry.kind === "pomodoro_run") &&
+    msToDateKey(entry.segment_end_ms) === dateKey
+  );
+}
+
+/** Buckets entries by `entryDateKey`, keeping their order. */
+export function groupEntriesByDate(entries: CalendarEntry[]): Map<string, CalendarEntry[]> {
+  const out = new Map<string, CalendarEntry[]>();
+  for (const entry of entries) {
+    const key = entryDateKey(entry);
+    const bucket = out.get(key);
+    if (bucket) bucket.push(entry);
+    else out.set(key, [entry]);
+  }
+  return out;
+}
+
 export function parseDateKey(key: string): Date {
   const [y, m, d] = key.split("-").map((part) => Number.parseInt(part, 10));
   return new Date(y, m - 1, d);

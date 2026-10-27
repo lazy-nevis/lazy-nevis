@@ -211,10 +211,11 @@ impl PomodoroEngine {
             .active
             .lock()
             .map_err(|_| AppError::Internal("lock".into()))?;
-        if guard.is_none() {
-            return Ok((self.state(settings, now)?, effects));
-        }
-        let active = guard.as_mut().unwrap();
+        // `self.state()` would re-lock `active` and deadlock the ticker.
+        let Some(active) = guard.as_mut() else {
+            let today = count_today_focus_phases(&self.db, now)?;
+            return Ok((snapshot_state(None, settings, today), effects));
+        };
         if elapsed_since_last > SUSPEND_GAP_MS && active.state == PomodoroRunState::Running {
             active.state = PomodoroRunState::Paused;
             if let Some(phase) = active.phase.as_mut() {
@@ -1083,6 +1084,19 @@ mod tests {
             stop_session_with_run: false,
             daily_goal: 8,
         }
+    }
+
+    #[test]
+    fn tick_without_active_run_returns_idle_state() {
+        let db = Arc::new(Mutex::new(Database::open_in_memory().unwrap()));
+        let engine = PomodoroEngine::new(db);
+        let (_, effects) = engine
+            .tick(&enabled_settings(), 1_000_000, TICK_MS)
+            .unwrap();
+        assert!(effects.is_empty());
+        assert!(!engine.is_running());
+        // The engine must stay usable after an idle tick.
+        engine.state(&enabled_settings(), 1_000_000).unwrap();
     }
 
     #[test]

@@ -223,6 +223,15 @@ bun run quality
 
 Production bundles: `bun run tauri build`.
 
+**Demo mode and screenshots:**
+
+```bash
+bun run dev:demo --fresh   # open the dev app with ~4 months of fictional daily use
+bun run screenshots:dev    # capture every screen (light + dark) into docs/screenshots/<platform>/
+```
+
+Demo mode never touches your real profile. See [docs/screenshots](docs/screenshots/README.md) for what gets seeded and captured.
+
 Contributor workflow: [CONTRIBUTING.md](CONTRIBUTING.md) — Architecture: [docs/architecture/overview.md](docs/architecture/overview.md) — Release process: [docs/architecture/release.md](docs/architecture/release.md).
 
 ---

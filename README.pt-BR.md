@@ -169,6 +169,15 @@ bun run quality
 
 Bundles de produção: `bun run tauri build`.
 
+**Modo demonstração e capturas de tela:**
+
+```bash
+bun run dev:demo --fresh   # abre o app de dev com ~4 meses de uso diário fictício
+bun run screenshots:dev    # captura todas as telas (claro + escuro) em docs/screenshots/<plataforma>/
+```
+
+O modo demonstração nunca usa o seu perfil real. Veja [docs/screenshots](docs/screenshots/README.md) para o que é gerado e capturado.
+
 Fluxo para contribuidores: [CONTRIBUTING.md](CONTRIBUTING.md) — Arquitetura: [docs/architecture/overview.md](docs/architecture/overview.md) — Release: [docs/architecture/release.md](docs/architecture/release.md).
 
 ---
