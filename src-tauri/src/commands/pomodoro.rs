@@ -45,12 +45,9 @@ pub async fn start_pomodoro_inner(
     let now = now_ms();
     let checklist_item_id = args.checklist_item_id.clone();
     let (session_id, session_owned) = if settings.pomodoro.link_focus_session {
-        let active = state
-            .active_session
-            .lock()
-            .map_err(|_| AppError::Internal("lock".into()))?;
-        if let Some(s) = active.as_ref() {
-            (Some(s.session.id.clone()), false)
+        // The guard must be gone before start_session_inner locks active_session again.
+        if let Some(id) = crate::state::active_session_id(&state.active_session)? {
+            (Some(id), false)
         } else {
             let session =
                 crate::commands::session::start_session_inner(app, state, args.label.clone())?;

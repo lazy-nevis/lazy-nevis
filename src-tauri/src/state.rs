@@ -154,6 +154,15 @@ pub struct AppState {
     pub pomodoro: Arc<crate::services::pomodoro::PomodoroEngine>,
 }
 
+/// Returns the running session's id. The lock is released before returning, so the caller can
+/// start a session (which locks `active_session` again) without deadlocking.
+pub fn active_session_id(active: &Mutex<Option<SessionData>>) -> Result<Option<String>> {
+    let guard = active
+        .lock()
+        .map_err(|_| AppError::Internal("lock".into()))?;
+    Ok(guard.as_ref().map(|s| s.session.id.clone()))
+}
+
 pub fn now_ms() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now()
@@ -240,5 +249,39 @@ mod tests {
         assert_eq!(data.continuous_focus_start_ms, Some(20_000));
         assert!(data.end_break(21_000).is_err());
         assert_eq!(data.focus_ms, 5_000);
+    }
+}
+
+#[cfg(test)]
+mod active_session_tests {
+    use super::*;
+
+    fn session(id: &str) -> Session {
+        Session {
+            id: id.into(),
+            label: None,
+            started_at: 0,
+            ended_at: None,
+            total_focus_ms: 0,
+            total_distracted_ms: 0,
+            total_idle_ms: 0,
+            total_alerts: 0,
+            notes: None,
+            settings_snapshot: "{}".into(),
+        }
+    }
+
+    #[test]
+    fn active_session_id_is_none_without_session_and_releases_lock() {
+        let active = Mutex::new(None);
+        assert_eq!(active_session_id(&active).unwrap(), None);
+        assert!(active.try_lock().is_ok());
+    }
+
+    #[test]
+    fn active_session_id_returns_running_id_and_releases_lock() {
+        let active = Mutex::new(Some(SessionData::new(session("s-1"))));
+        assert_eq!(active_session_id(&active).unwrap().as_deref(), Some("s-1"));
+        assert!(active.try_lock().is_ok());
     }
 }
