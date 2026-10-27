@@ -47,7 +47,7 @@ Drop the folder into the marketing project and map assets by `manifest.shots[].i
 | [`scripts/screenshots/schemas/`](../../scripts/screenshots/schemas/) | Catalog + manifest JSON Schema |
 | [`scripts/screenshots/seed/demo-seed.json`](../../scripts/screenshots/seed/demo-seed.json) | Fictional seed |
 | [`scripts/screenshots/run.ts`](../../scripts/screenshots/run.ts) | Bun launcher |
-| OpenSpec | [`openspec/changes/2026-07-screenshot-automation/`](../../openspec/changes/2026-07-screenshot-automation/) |
+| OKF | [`knowledge/changes/2026-07-01/screenshot-automation/`](../../knowledge/changes/2026-07-01/screenshot-automation/) |
 
 **macOS notes**
 

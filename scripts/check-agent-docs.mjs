@@ -1,10 +1,13 @@
 import { access, readFile } from "node:fs/promises";
 
 const required = [
-  "AGENTS.md", "CLAUDE.md", ".claude/rules/project-rules.md",
-  ".cursor/rules/lazy-nevis.mdc", ".github/copilot-instructions.md",
+  "AGENTS.md",
+  "CLAUDE.md",
+  ".claude/rules/project-rules.md",
+  ".cursor/rules/lazy-nevis.mdc",
+  ".github/copilot-instructions.md",
 ];
-const links = ["AGENTS.md", "RTK.md", "openspec"];
+const links = ["AGENTS.md", "RTK.md", "knowledge"];
 let failed = false;
 for (const file of required) {
   try {

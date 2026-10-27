@@ -19,7 +19,7 @@ For usage questions, please use [Discussions](https://github.com/lazy-nevis/lazy
 ## Before you start
 
 1. Read `README.md` and `RTK.md` to understand the project.
-2. Read the relevant `openspec/specs/*/spec.md` if your change touches a defined capability.
+2. Read the relevant `knowledge/product/capabilities/*.md` if your change touches a defined capability.
 3. Check existing issues and pull requests — your idea may already be in progress.
 4. For substantial features, open an issue first so we can align on approach before you spend time on implementation.
 
@@ -106,17 +106,13 @@ When adding a new Tauri command:
 
 ---
 
-## OpenSpec requirement
+## OKF (knowledge) requirement
 
-Features, behavior changes, schema changes, and cross-module refactors require an OpenSpec proposal before implementation begins.
+Features, behavior changes, schema changes, and cross-module refactors require an **OKF** planning bundle under `knowledge/changes/<yyyy-MM-dd>/<name>/` with `spec.md`, `plan.md`, and `tasks.md` **before** implementation. See `AGENTS.md` and [docs/contributing/okf.md](docs/contributing/okf.md).
 
-Read [docs/contributing/openspec.md](docs/contributing/openspec.md) for the full workflow. The short version:
+When capability contracts change, update `knowledge/product/capabilities/` in the same change set. External contributors wait for maintainer approval of the OKF `spec.md` before implementation.
 
-1. Create `openspec/changes/YYYY-MM-description/proposal.md`.
-2. Wait for maintainer approval.
-3. Implement, update the relevant spec, archive.
-
-Docs-only, test-only, dependency-only, and trivial behavior-preserving fixes may claim the PR exemption.
+Docs-only, test-only, dependency-only, and trivial behavior-preserving fixes may claim a PR exemption; still write durable learnings into `knowledge/` when constraints or product behavior change.
 
 ---
 
@@ -176,7 +172,7 @@ A good PR description includes:
 
 - **What changed and why** — a concise summary of the change and the problem it solves.
 - **Linked issue** — reference the issue this closes (e.g., `Closes #42`).
-- **OpenSpec reference or exemption** — either `OpenSpec: openspec/changes/YYYY-MM-description` or `OpenSpec exemption: <reason>`.
+- **OKF reference or exemption** — either `OKF: knowledge/changes/YYYY-MM-DD/name` or `OKF exemption: <reason>`.
 - **What you tested** — platforms you ran it on, scenarios you verified manually.
 - **What you did not test** — honest gaps, so reviewers know where to focus.
 - **Screenshots** for visual changes.
@@ -219,7 +215,7 @@ After you open a PR:
 
 LazyNevis is maintainer-led. `@simstm` has final authority over roadmap, merges, security response, releases, signing identities, and repository access. Reviews seek technical consensus, but maintenance capacity, privacy, safety, and product scope may decide an outcome.
 
-Contributors retain authorship of their work under the project license. Material decisions should be visible in issues, OpenSpec changes, or ADRs. If sustained participation grows, governance may evolve toward delegated area ownership; changes will be proposed publicly and recorded here.
+Contributors retain authorship of their work under the project license. Material decisions should be visible in issues, OKF change bundles, or ADRs. If sustained participation grows, governance may evolve toward delegated area ownership; changes will be proposed publicly and recorded here.
 
 ---
 

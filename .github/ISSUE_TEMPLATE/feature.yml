@@ -26,7 +26,7 @@ body:
   - type: checkboxes
     id: spec
     attributes:
-      label: OpenSpec
+      label: OKF
       options:
-        - label: I understand accepted behavior changes require an approved OpenSpec proposal before implementation.
+        - label: I understand accepted behavior changes require an approved OKF bundle (`knowledge/changes/…/spec.md`) before implementation.
           required: true
