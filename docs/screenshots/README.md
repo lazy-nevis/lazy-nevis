@@ -34,8 +34,9 @@ Consumers (site, docs) should map images through `manifest.shots[]` by `id`, `fe
 
 ## Framing
 
-Main-window shots use a fixed logical frame of **1280×860** in Full Mode and **400×900** in
-Compact Mode, captured at the display's backing scale (Retina output is twice that in pixels).
+Main-window shots use a fixed logical frame of **1920×1080** (16:9) in Full Mode and **400×900**
+in Compact Mode, captured at the display's backing scale: a 1× display gives 1920×1080 pixels,
+a Retina display twice that. Full Mode shots fit a 1080p video frame without cropping.
 The frame lives in `SHOT_FULL_SIZE` / `SHOT_COMPACT_SIZE` in
 [`src-tauri/src/demo/catalog.rs`](../../src-tauri/src/demo/catalog.rs).
 

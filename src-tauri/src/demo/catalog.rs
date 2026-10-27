@@ -452,8 +452,9 @@ pub fn apply_mode(app: &AppHandle, state: &AppState, mode: &str) -> Result<()> {
 }
 
 /// Logical window size for screenshots; the capture keeps the display's
-/// backing scale, so Retina output is twice this in pixels.
-const SHOT_FULL_SIZE: (f64, f64) = (1280.0, 860.0);
+/// backing scale, so Retina output is twice this in pixels. Full Mode is 16:9
+/// so shots drop straight into a 1080p video frame.
+const SHOT_FULL_SIZE: (f64, f64) = (1920.0, 1080.0);
 const SHOT_COMPACT_SIZE: (f64, f64) = (400.0, 900.0);
 
 fn apply_shot_frame(app: &AppHandle, mode: &str) -> Result<()> {

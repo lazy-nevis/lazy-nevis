@@ -112,13 +112,13 @@ those surfaces from a compiled binary.
 
 ### Requirement: Capture framing
 
-Main-window shots SHALL be framed at a fixed logical size (1280×860 in Full Mode, 400×900 in
+Main-window shots SHALL be framed at a fixed logical size (1920×1080, 16:9, in Full Mode, 400×900 in
 Compact Mode) and captured at the display's backing scale (pixel size = logical size × scale).
 
 #### Scenario: Consistent frame
 - **GIVEN** a catalog run on a display with backing scale `s`
 - **WHEN** a Full Mode main-window shot is captured
-- **THEN** the PNG is 1280·s × 860·s pixels regardless of the window size the operator left behind
+- **THEN** the PNG is 1920·s × 1080·s pixels regardless of the window size the operator left behind
 
 ### Requirement: Permissions and startup noise suppressed in demo
 

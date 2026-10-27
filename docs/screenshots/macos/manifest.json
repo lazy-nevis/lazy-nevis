@@ -3,7 +3,7 @@
   "appVersion": "0.10.0-rc.5",
   "platform": "macos",
   "locale": "en-US",
-  "capturedAt": "2026-10-27T19:20:21.084635+00:00",
+  "capturedAt": "2026-10-27T20:35:48.323361+00:00",
   "scaleFactor": null,
   "catalogVersion": 1,
   "dataDir": "/Users/lucas/Projects/pessoal/lazy-nevis/scripts/screenshots/out/.demo-data-macos",
@@ -27,8 +27,8 @@
         "hero"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "dashboard-idle-dark",
@@ -49,8 +49,8 @@
         "hero"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "dashboard-running-light",
@@ -72,8 +72,8 @@
         "session"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "dashboard-running-dark",
@@ -95,8 +95,8 @@
         "session"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "history-light",
@@ -117,8 +117,8 @@
         "history"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "history-dark",
@@ -139,8 +139,8 @@
         "history"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "history-detail-light",
@@ -162,8 +162,8 @@
         "report"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "history-detail-dark",
@@ -185,8 +185,8 @@
         "report"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "settings-light",
@@ -207,8 +207,8 @@
         "settings"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "settings-dark",
@@ -229,8 +229,8 @@
         "settings"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "checklist-light",
@@ -250,8 +250,8 @@
         "checklist"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "checklist-dark",
@@ -271,8 +271,8 @@
         "checklist"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "sessions-light",
@@ -293,8 +293,8 @@
         "sessions"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "sessions-dark",
@@ -315,8 +315,8 @@
         "sessions"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "calendar-light",
@@ -337,8 +337,8 @@
         "calendar"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "calendar-dark",
@@ -359,8 +359,8 @@
         "calendar"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "reminders-light",
@@ -381,8 +381,8 @@
         "reminders"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "reminders-dark",
@@ -403,8 +403,8 @@
         "reminders"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "habits-light",
@@ -425,8 +425,8 @@
         "habits"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "habits-dark",
@@ -447,8 +447,8 @@
         "habits"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "pomodoro-light",
@@ -469,8 +469,8 @@
         "pomodoro"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "pomodoro-dark",
@@ -491,8 +491,8 @@
         "pomodoro"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "settings-alerts-light",
@@ -513,8 +513,8 @@
         "delivery"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "settings-alerts-dark",
@@ -535,8 +535,8 @@
         "delivery"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "about-light",
@@ -556,8 +556,8 @@
         "about"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "about-dark",
@@ -577,8 +577,8 @@
         "about"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "fullscreen-alert",
@@ -621,8 +621,8 @@
         "alerts"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "notification-alert-dark",
@@ -642,8 +642,8 @@
         "alerts"
       ],
       "status": "captured",
-      "width": 1280,
-      "height": 860
+      "width": 1920,
+      "height": 1080
     },
     {
       "id": "compact-running-light",
