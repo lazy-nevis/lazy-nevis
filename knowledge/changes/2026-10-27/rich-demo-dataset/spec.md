@@ -50,3 +50,9 @@ duplicates data when the same data dir is reused.
 - Capture frame grows from 1100×820 to 1280×860 (Full) and 380×860 to 400×900 (Compact).
 - Output moves from the gitignored `scripts/screenshots/out/<version>-<platform>/` to
   `docs/screenshots/<platform>/`, cleared before each run; the version stays in the manifest.
+
+- The Habits activity heatmap never showed its tone colours: the canvas cannot parse the
+  `var()`-based palette, so every level fell back to near-black. Worse, the grid stayed empty
+  whenever the page rendered before its data loaded, because the canvas engine never started
+  after the initial "no data" render. This affects every user with habit history; fixed in this
+  change (D14).

@@ -327,9 +327,22 @@ export interface ContributionSkylineLabels {
 const FG_FALLBACK: RGB = [23, 23, 23]
 const BG_FALLBACK: RGB = [255, 255, 255]
 
+// Canvas cannot parse `var()`, so let the cascade resolve custom properties first.
+const resolveCssColor = (color: string, scope: Element): string => {
+  if (!color.includes("var(")) return color
+  const el = document.createElement("span")
+  el.style.display = "none"
+  el.style.color = color
+  scope.appendChild(el)
+  const resolved = getComputedStyle(el).color
+  el.remove()
+  return resolved || color
+}
+
 // Any CSS colour → sRGB, by letting the browser paint it. Handles oklch, color-mix, names…
+// With `base`, translucent colours are flattened onto it.
 let probe: CanvasRenderingContext2D | null = null
-const toRGB = (color: string, fallback: RGB | null): RGB | null => {
+const toRGB = (color: string, fallback: RGB | null, base?: RGB): RGB | null => {
   if (!probe) {
     const c = document.createElement("canvas")
     c.width = c.height = 1
@@ -337,6 +350,10 @@ const toRGB = (color: string, fallback: RGB | null): RGB | null => {
   }
   if (!probe) return fallback
   probe.clearRect(0, 0, 1, 1)
+  if (base) {
+    probe.fillStyle = rgbString(base[0], base[1], base[2])
+    probe.fillRect(0, 0, 1, 1)
+  }
   probe.fillStyle = "rgba(0,0,0,0)"
   probe.fillStyle = color
   probe.fillRect(0, 0, 1, 1)
@@ -537,6 +554,8 @@ export function ContributionSkyline({
   // Everything the render loop reads, refreshed every render so the loop never closes over stale props.
   const cfg = React.useRef({ model, duration, heightScale, orbit, palette, legendLevel, onCellClick, target: view === "3d" ? 1 : 0, setActive, setWidth, setTheme, setAnnounce, describe })
   cfg.current = { model, duration, heightScale, orbit, palette, legendLevel, onCellClick, target: view === "3d" ? 1 : 0, setActive, setWidth, setTheme, setAnnounce, describe }
+  // The canvas only mounts once there is data; the engine must start then, not just on first render.
+  const hasData = Boolean(data?.length)
 
   React.useEffect(() => {
     const root = rootRef.current
@@ -643,7 +662,7 @@ export function ContributionSkyline({
       font = "400 10px " + (cs.fontFamily || "sans-serif")
       const pal = resolvePalette(cfg.current.palette, isDark)
       const empty = mixRGB(bg, fg, isDark ? 0.11 : 0.075)
-      const all: RGB[] = [empty, ...pal.map((c) => toRGB(c, FG_FALLBACK) ?? FG_FALLBACK)]
+      const all: RGB[] = [empty, ...pal.map((c) => toRGB(resolveCssColor(c, root), FG_FALLBACK, bg) ?? FG_FALLBACK)]
       for (let k = 0; k < 5; k++) for (let ch = 0; ch < 3; ch++) colGoal[k * 3 + ch] = all[k][ch]
       if (!colReady || reduced) {
         col.set(colGoal)
@@ -1164,7 +1183,7 @@ export function ContributionSkyline({
     }
     // The loop reads everything else through cfg; it is built once per mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale])
+  }, [locale, hasData])
 
   React.useEffect(() => {
     engine.current?.kick()

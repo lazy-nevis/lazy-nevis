@@ -89,4 +89,20 @@ describe("ContributionSkyline", () => {
     fireEvent.keyDown(canvas, { key: "ArrowRight" });
     expect(canvas).toHaveAttribute("tabindex", "0");
   });
+
+  it("starts the canvas engine when data arrives after an empty first render", () => {
+    const getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const props = {
+      palette: ["#111", "#222", "#333", "#444"],
+      weekStart: 1 as const,
+      unit: "times",
+      labels,
+      reducedMotion: true,
+    };
+    const { rerender } = render(<ContributionSkyline data={[]} {...props} />);
+    expect(getContext).not.toHaveBeenCalled();
+    rerender(<ContributionSkyline data={[{ date: "2024-01-01", count: 2 }]} {...props} />);
+    expect(getContext).toHaveBeenCalled();
+    getContext.mockRestore();
+  });
 });

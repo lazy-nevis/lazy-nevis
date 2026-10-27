@@ -28,3 +28,10 @@ tags: [change, tasks, demo, screenshots]
   once per load (`groupEntriesByDate`), and date keys use `msToDateKey` / shared `entryOnDate`
   in `calendarMath.ts` (also used by `DayPanel` and `calendarLayout`). Tests in
   `calendarMath.test.ts`.
+- [x] D14 Habits activity heatmap drew black (Chromium) or empty cells: `HabitSkyline` passes
+  `hsl(var(--tone-*) / a)` colours, which a canvas `fillStyle` cannot parse. `ContributionSkyline`
+  now resolves `var()` through the cascade (`resolveCssColor`) and flattens translucent levels
+  onto the card background before painting. Separately, the canvas engine effect only ran on
+  `locale`, so when the first render had no data (the "no data" text, no canvas) the engine never
+  started once data loaded and the grid stayed empty; it now also re-runs on `hasData`.
+  Regression test in `contribution-skyline.test.tsx`.
