@@ -274,7 +274,7 @@ pub fn ensure_overlay_window(app: &AppHandle) -> Result<WebviewWindow> {
 
 #[cfg(target_os = "macos")]
 fn configure_overlay_window(window: &WebviewWindow) {
-    use objc2_app_kit::{NSColor, NSScreenSaverWindowLevel, NSWindow, NSWindowCollectionBehavior};
+    use objc2_app_kit::{NSColor, NSPopUpMenuWindowLevel, NSWindow, NSWindowCollectionBehavior};
 
     let Ok(ns_window_ptr) = window.ns_window() else {
         return;
@@ -284,7 +284,12 @@ fn configure_overlay_window(window: &WebviewWindow) {
 
     ns_window.setOpaque(false);
     ns_window.setBackgroundColor(Some(&clear));
-    ns_window.setLevel(NSScreenSaverWindowLevel + 1);
+    // NSScreenSaverWindowLevel windows are not actually composited onscreen by
+    // WindowServer for ordinary apps on current macOS (verified via
+    // CGWindowListCopyWindowInfo: present under kCGWindowListOptionAll but absent
+    // under kCGWindowListOptionOnScreenOnly). NSPopUpMenuWindowLevel still floats
+    // above other windows/full-screen apps but actually renders.
+    ns_window.setLevel(NSPopUpMenuWindowLevel);
     ns_window.setCanHide(false);
     ns_window.setIgnoresMouseEvents(false);
     unsafe {
@@ -301,13 +306,13 @@ fn configure_overlay_window(window: &WebviewWindow) {
 
 #[cfg(target_os = "macos")]
 fn raise_overlay_window(window: &WebviewWindow) {
-    use objc2_app_kit::{NSScreenSaverWindowLevel, NSWindow};
+    use objc2_app_kit::{NSPopUpMenuWindowLevel, NSWindow};
 
     let Ok(ns_window_ptr) = window.ns_window() else {
         return;
     };
     let ns_window = unsafe { &*(ns_window_ptr as *mut NSWindow) };
-    ns_window.setLevel(NSScreenSaverWindowLevel + 1);
+    ns_window.setLevel(NSPopUpMenuWindowLevel);
     ns_window.orderFrontRegardless();
 }
 
@@ -404,6 +409,7 @@ fn build_overlay_payload(
         .filter(|title| !title.is_empty());
 
     OverlayAlertPayload {
+        kind: "distraction".to_string(),
         session_id: session
             .map(|s| s.session.id.clone())
             .unwrap_or_else(|| "test".to_string()),
@@ -421,6 +427,7 @@ fn build_overlay_payload(
         is_test,
         language,
         time_format,
+        reminder: None,
     }
 }
 
@@ -480,7 +487,18 @@ fn register_overlay_escape_shortcut(app: &AppHandle) {
                     return;
                 };
                 tracing::info!("dismissing overlay with Escape shortcut");
-                let _ = cancel_active_alerts_inner(&app, &state, true, Some("fullscreen"));
+                let record = state
+                    .active_overlay
+                    .lock()
+                    .ok()
+                    .and_then(|active| active.as_ref().map(|p| p.kind == "distraction"))
+                    .unwrap_or(true);
+                if record {
+                    let _ = cancel_active_alerts_inner(&app, &state, true, Some("fullscreen"));
+                } else {
+                    let _ = cancel_active_alerts_inner(&app, &state, false, None);
+                    let _ = crate::services::delivery::on_overlay_closed(&app, &state);
+                }
             });
         })
     {
@@ -497,12 +515,73 @@ fn unregister_overlay_escape_shortcut(app: &AppHandle) {
     }
 }
 
+/// Fullscreen overlay admission (distraction + scheduled alerts). Uses `overlay_queue::decide`.
+pub fn enqueue_or_show_overlay(
+    app: &AppHandle,
+    state: &AppState,
+    payload: OverlayAlertPayload,
+) -> Result<crate::services::overlay_queue::OverlayAdmission> {
+    let current = state
+        .active_overlay
+        .lock()
+        .map_err(|_| AppError::Internal("lock".into()))?
+        .clone();
+    let admission = {
+        let mut queue = state
+            .overlay_queue
+            .lock()
+            .map_err(|_| AppError::Internal("lock".into()))?;
+        queue.admit(current, payload)
+    };
+    if let crate::services::overlay_queue::OverlayAdmission::Show(show_payload) = &admission {
+        show_overlay_payload_now(app, (**show_payload).clone())?;
+    }
+    Ok(admission)
+}
+
+/// Same as `enqueue_or_show_overlay`, marshaled onto the main thread.
+///
+/// AppKit (`NSWindow.orderFrontRegardless`, called from `raise_overlay_window`)
+/// traps when invoked off the main thread. Callers that may run on a tokio
+/// worker — tauri `async fn` commands and the background reminder ticker —
+/// must go through this instead of calling `enqueue_or_show_overlay` directly.
+pub fn enqueue_or_show_overlay_on_main_thread(
+    app: &AppHandle,
+    payload: OverlayAlertPayload,
+) -> Result<crate::services::overlay_queue::OverlayAdmission> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    let app_for_thread = app.clone();
+    app.run_on_main_thread(move || {
+        let result = match app_for_thread.try_state::<AppState>() {
+            Some(state) => enqueue_or_show_overlay(&app_for_thread, &state, payload),
+            None => Err(AppError::Internal("app state unavailable".into())),
+        };
+        if let Err(error) = &result {
+            tracing::error!(?error, "failed to enqueue/show overlay alert");
+        }
+        let _ = tx.send(result);
+    })
+    .map_err(|e| AppError::Internal(e.to_string()))?;
+    rx.recv().map_err(|e| AppError::Internal(e.to_string()))?
+}
+
 pub fn show_overlay_payload(app: &AppHandle, payload: OverlayAlertPayload) -> Result<()> {
     let (tx, rx) = std::sync::mpsc::channel();
     let app = app.clone();
     app.clone()
         .run_on_main_thread(move || {
-            let result = show_overlay_payload_now(&app, payload);
+            let result = if let Some(state) = app.try_state::<AppState>() {
+                enqueue_or_show_overlay(&app, &state, payload).map(|admission| {
+                    if matches!(
+                        admission,
+                        crate::services::overlay_queue::OverlayAdmission::Fallback
+                    ) {
+                        tracing::warn!("overlay queue full; fullscreen alert dropped");
+                    }
+                })
+            } else {
+                show_overlay_payload_now(&app, payload)
+            };
             if let Err(error) = &result {
                 tracing::error!(?error, "failed to show overlay alert");
             }
@@ -655,9 +734,9 @@ pub fn overlay_window_level(app: &AppHandle) -> Result<isize> {
 
 #[cfg(all(debug_assertions, target_os = "macos"))]
 pub fn expected_overlay_window_level() -> isize {
-    use objc2_app_kit::NSScreenSaverWindowLevel;
+    use objc2_app_kit::NSPopUpMenuWindowLevel;
 
-    NSScreenSaverWindowLevel + 1
+    NSPopUpMenuWindowLevel
 }
 
 /// Show the fullscreen-style overlay alert window.
@@ -725,6 +804,12 @@ pub fn cancel_active_alerts_inner(
     record_dismiss: bool,
     alert_type: Option<&str>,
 ) -> Result<()> {
+    let overlay_kind = state
+        .active_overlay
+        .lock()
+        .ok()
+        .and_then(|active| active.as_ref().map(|payload| payload.kind.clone()));
+
     hide_overlay_window(app)?;
 
     {
@@ -733,6 +818,11 @@ pub fn cancel_active_alerts_inner(
             .lock()
             .map_err(|_| AppError::Internal("lock".into()))?;
         audio.stop();
+    }
+
+    let is_distraction = overlay_kind.as_deref() == Some("distraction");
+    if !is_distraction {
+        return Ok(());
     }
 
     let now = now_ms();
@@ -778,6 +868,7 @@ pub fn cancel_active_alerts_inner(
             .persist_runtime(snapshot)?;
     }
 
+    let _ = crate::services::delivery::on_overlay_closed(app, state);
     Ok(())
 }
 
