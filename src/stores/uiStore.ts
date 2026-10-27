@@ -15,6 +15,8 @@ interface UiStore {
   fullscreenAlertMs: number;
   isCloseWarningOpen: boolean;
   updateAvailable: string | null;
+  isCommandPaletteOpen: boolean;
+  setCommandPaletteOpen: (open: boolean) => void;
   addToast: (message: string, type?: Toast["type"]) => void;
   removeToast: (id: string) => void;
   setActiveTab: (tab: string) => void;
@@ -34,6 +36,9 @@ export const useUiStore = create<UiStore>((set) => ({
   fullscreenAlertMs: 0,
   isCloseWarningOpen: false,
   updateAvailable: null,
+  isCommandPaletteOpen: false,
+
+  setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
 
   addToast: (message, type = "success") => {
     const id = crypto.randomUUID();

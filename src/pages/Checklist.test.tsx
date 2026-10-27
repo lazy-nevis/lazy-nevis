@@ -15,7 +15,11 @@ function makeItem(overrides: Partial<ChecklistItem> = {}): ChecklistItem {
     created_at: Date.now(),
     completed_at: null,
     due_date: null,
+    due_has_time: false,
     sort_order: 1,
+    parent_id: null,
+    category: null,
+    priority: "none",
     tags: [],
     ...overrides,
   };
@@ -36,6 +40,8 @@ beforeEach(async () => {
   );
   vi.spyOn(checklistService, "listHistory").mockResolvedValue([]);
   vi.spyOn(checklistService, "listTags").mockResolvedValue([]);
+  vi.spyOn(checklistService, "listCategories").mockResolvedValue([]);
+  vi.spyOn(checklistService, "reorder").mockResolvedValue(undefined);
 });
 
 describe("Checklist page", () => {
@@ -52,7 +58,9 @@ describe("Checklist page", () => {
     fireEvent.keyDown(input, { key: "Enter" });
 
     await waitFor(() =>
-      expect(create).toHaveBeenCalledWith("Review PR", ["work", "urgent"], undefined),
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({ title: "Review PR", tags: ["work", "urgent"] }),
+      ),
     );
     // Input stays ready for the next item.
     expect(screen.getByPlaceholderText(/What needs doing/)).toBeInTheDocument();

@@ -9,8 +9,13 @@ import { useSettingsStore } from "@/stores/settingsStore";
 import { sessionService } from "@/services/tauri";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { SectionCard } from "@/components/ui/section-card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { PomodoroWidget } from "@/components/features/pomodoro/PomodoroWidget";
 import { StartSessionModal } from "@/components/features/StartSessionModal";
 import { formatDuration, formatDurationHuman, formatDateTime, formatPercent } from "@/utils/formatters";
 import { cn } from "@/utils/cn";
@@ -24,6 +29,7 @@ export function Dashboard() {
   const breakStartedAt = useSessionStore((s) => s.breakStartedAt);
   const breakReminderPending = useSessionStore((s) => s.breakReminderPending);
   const breakDurationMs = useSettingsStore((s) => s.settings.breaks.break_duration_ms);
+  const pomodoroEnabled = useSettingsStore((s) => s.settings.pomodoro.enabled);
   const { setStartModalOpen } = useUiStore();
 
   const [checkpointLabel, setCheckpointLabel] = useState("");
@@ -79,56 +85,66 @@ export function Dashboard() {
     return (
       <>
         <StartSessionModal />
-        <div className="flex h-full flex-col items-center justify-center gap-8 p-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.session.no_session_title")}</h1>
-            <p className="mt-2 text-muted-foreground max-w-sm">
-              {t("dashboard.session.no_session_description")}
-            </p>
-          </div>
+        <PageContainer>
+          <PageHeader
+            title={t("dashboard.session.no_session_title")}
+            description={t("dashboard.session.no_session_description")}
+            actions={
+              <Button variant="brand" size="lg" onClick={() => setStartModalOpen(true)} className="gap-2 px-8">
+                <Play className="h-5 w-5" />
+                {t("dashboard.session.start_button")}
+              </Button>
+            }
+          />
 
-          <Button size="lg" onClick={() => setStartModalOpen(true)} className="gap-2 text-base px-8">
-            <Play className="h-5 w-5" />
-            {t("dashboard.session.start_button")}
-          </Button>
-
-          {lastSession && (
-            <Card className="w-full max-w-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-muted-foreground font-normal">
-                  {t("dashboard.session.last_session")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1">
-                {lastSession.label && (
-                  <p className="font-medium">{lastSession.label}</p>
-                )}
-                <p className="text-sm text-muted-foreground">
-                  {formatDateTime(lastSession.started_at, i18n.language)}
-                </p>
-                <div className="flex items-center gap-4 mt-2">
-                  <span className="text-sm">
-                    {formatDurationHuman(lastSession.total_focus_ms + lastSession.total_distracted_ms + lastSession.total_idle_ms)}
-                  </span>
-                  <Badge variant="success">{formatPercent(lastSession.focus_percent)} focus</Badge>
-                  {lastSession.total_alerts > 0 && (
-                    <Badge variant="warning">{lastSession.total_alerts} alerts</Badge>
+          {lastSession ? (
+            <SectionCard title={t("dashboard.session.last_session")} className="max-w-md">
+              {lastSession.label && <p className="font-medium">{lastSession.label}</p>}
+              <p className="text-sm text-muted-foreground">
+                {formatDateTime(lastSession.started_at, i18n.language)}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <span className="text-sm">
+                  {formatDurationHuman(
+                    lastSession.total_focus_ms +
+                      lastSession.total_distracted_ms +
+                      lastSession.total_idle_ms,
                   )}
-                </div>
-              </CardContent>
-            </Card>
+                </span>
+                <Badge variant="success">{formatPercent(lastSession.focus_percent)} focus</Badge>
+                {lastSession.total_alerts > 0 && (
+                  <Badge variant="warning">{lastSession.total_alerts} alerts</Badge>
+                )}
+              </div>
+            </SectionCard>
+          ) : (
+            <EmptyState
+              icon={Play}
+              title={t("dashboard.session.no_sessions_yet")}
+              action={
+                <Button variant="brand" onClick={() => setStartModalOpen(true)} className="gap-2">
+                  <Play className="h-4 w-4" />
+                  {t("dashboard.session.start_button")}
+                </Button>
+              }
+            />
           )}
-
-          {!lastSession && (
-            <p className="text-sm text-muted-foreground">{t("dashboard.session.no_sessions_yet")}</p>
+          {pomodoroEnabled && (
+            <div className="max-w-md">
+              <PomodoroWidget />
+            </div>
           )}
-        </div>
+        </PageContainer>
       </>
     );
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 p-6 overflow-y-auto">
+    <PageContainer className="gap-4">
+      <PageHeader
+        title={activeSession?.label ?? t("nav.dashboard")}
+        description={t("dashboard.session.status_focused")}
+      />
       {/* Status bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -136,12 +152,12 @@ export function Dashboard() {
             className={cn(
               "h-3 w-3 rounded-full transition-colors",
               isPaused
-                ? "bg-yellow-500"
+                ? "bg-warning"
                 : isIdle
-                ? "bg-blue-400"
+                ? "bg-info"
                 : isDistracted
-                ? "bg-red-500 animate-pulse"
-                : "bg-green-500 animate-pulse"
+                ? "bg-destructive motion-safe:animate-pulse"
+                : "bg-success motion-safe:animate-pulse"
             )}
           />
           <span className="font-semibold">
@@ -182,7 +198,7 @@ export function Dashboard() {
       </div>
 
       {breakReminderPending && !isOnBreak && (
-        <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950 dark:border-amber-800 px-4 py-3 flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3">
           <p className="text-sm font-semibold">{t("dashboard.break.reminder")}</p>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => useSessionStore.getState().setBreakReminderPending(false)}>
@@ -213,24 +229,30 @@ export function Dashboard() {
 
       {/* Timer grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <TimerCard label={t("dashboard.timer.total")} value={formatDuration(elapsed)} variant="default" />
-        <TimerCard label={t("dashboard.timer.focused")} value={formatDuration(focusMs)} variant="success" />
-        <TimerCard label={t("dashboard.timer.distracted")} value={formatDuration(distractedMs)} variant="danger" />
-        <TimerCard label={t("dashboard.timer.idle")} value={formatDuration(idleMs)} variant="idle" />
-        <TimerCard
+        <StatCard label={t("dashboard.timer.total")} value={formatDuration(elapsed)} />
+        <StatCard label={t("dashboard.timer.focused")} value={formatDuration(focusMs)} className="[&_p:nth-child(2)]:text-success" />
+        <StatCard label={t("dashboard.timer.distracted")} value={formatDuration(distractedMs)} className="[&_p:nth-child(2)]:text-destructive" />
+        <StatCard label={t("dashboard.timer.idle")} value={formatDuration(idleMs)} className="[&_p:nth-child(2)]:text-info" />
+        <StatCard
           label={t("dashboard.timer.focus_score")}
           value={formatPercent(focusPercent)}
-          variant={focusPercent >= 70 ? "success" : focusPercent >= 40 ? "warning" : "danger"}
+          className={
+            focusPercent >= 70
+              ? "[&_p:nth-child(2)]:text-success"
+              : focusPercent >= 40
+                ? "[&_p:nth-child(2)]:text-warning"
+                : "[&_p:nth-child(2)]:text-destructive"
+          }
         />
       </div>
 
       {/* Current window */}
-      <Card>
+      <Card className="rounded-xl">
         <CardContent className="flex items-center gap-3 py-4">
           <Monitor className="h-4 w-4 text-muted-foreground shrink-0" />
           <div className="min-w-0">
             <p className="text-xs text-muted-foreground">{t("dashboard.current_window.label")}</p>
-            <p className={cn("text-sm font-medium truncate", isDistracted && "text-red-500")}>
+            <p className={cn("text-sm font-medium truncate", isDistracted && "text-destructive")}>
               {liveStats?.current_app ?? t("dashboard.current_window.none")}
             </p>
           </div>
@@ -242,6 +264,12 @@ export function Dashboard() {
           ) : null}
         </CardContent>
       </Card>
+
+      {pomodoroEnabled && (
+        <div className="max-w-md shrink-0">
+          <PomodoroWidget />
+        </div>
+      )}
 
       {/* Checkpoints */}
       <Card className="flex-1">
@@ -269,9 +297,7 @@ export function Dashboard() {
           </div>
 
           {checkpoints.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-2">
-              {t("dashboard.checkpoints.empty")}
-            </p>
+            <EmptyState title={t("dashboard.checkpoints.empty")} className="border-none bg-transparent py-4 shadow-none" />
           ) : (
             <ul className="space-y-1.5">
               {checkpoints.map((cp) => (
@@ -291,38 +317,7 @@ export function Dashboard() {
           )}
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-type TimerVariant = "default" | "success" | "danger" | "warning" | "idle";
-
-function TimerCard({
-  label,
-  value,
-  variant,
-}: {
-  label: string;
-  value: string;
-  variant: TimerVariant;
-}) {
-  return (
-    <Card>
-      <CardContent className="py-4 px-4">
-        <p className="text-xs text-muted-foreground mb-1">{label}</p>
-        <p
-          className={cn(
-            "text-xl font-mono font-bold tabular-nums",
-            variant === "success" && "text-green-600 dark:text-green-400",
-            variant === "danger" && "text-red-600 dark:text-red-400",
-            variant === "warning" && "text-yellow-600 dark:text-yellow-400",
-            variant === "idle" && "text-blue-500 dark:text-blue-400"
-          )}
-        >
-          {value}
-        </p>
-      </CardContent>
-    </Card>
+    </PageContainer>
   );
 }
 
@@ -352,12 +347,12 @@ function BreakBanner({
   }, [startedAt, breakDurationMs, onEndBreak]);
 
   return (
-    <div className="rounded-lg border border-green-300 bg-green-50 dark:bg-green-950 dark:border-green-800 px-4 py-3 flex items-center justify-between gap-4">
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-success/40 bg-success/10 px-4 py-3">
       <div>
-        <p className="text-sm font-semibold text-green-800 dark:text-green-200">
+        <p className="text-sm font-semibold text-success">
           {t("dashboard.break.active", { remaining: formatDuration(Math.max(0, breakDurationMs - elapsed)) })}
         </p>
-        <p className="text-xs text-green-700 dark:text-green-300 mt-0.5">
+        <p className="mt-0.5 text-xs text-muted-foreground">
           {t("settings.breaks.hint")}
         </p>
       </div>

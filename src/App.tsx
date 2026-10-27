@@ -4,8 +4,12 @@ import { isPermissionGranted } from "@tauri-apps/plugin-notification";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { CompactShell } from "@/components/layout/CompactShell";
+import { CommandPalette } from "@/components/command/CommandPalette";
+import { useShellHotkeys } from "@/components/command/useShellHotkeys";
+import { ContentHeader } from "@/components/layout/ContentHeader";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { TitleBar } from "@/components/layout/TitleBar";
+import { ROUTE_TITLE_KEYS } from "@/config/navigation";
+import { useSidebarCollapsed } from "@/hooks/useSidebarCollapsed";
 import { ToastContainer } from "@/components/layout/ToastContainer";
 import { PermissionsModal } from "@/components/features/PermissionsModal";
 import { Dialog, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -14,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useAppStatus } from "@/hooks/useAppStatus";
 import { useSettings } from "@/hooks/useSettings";
 import { useFocusSession } from "@/hooks/useFocusSession";
+import { usePomodoro } from "@/hooks/usePomodoro";
 import { useThemeSync } from "@/hooks/useThemeSync";
 import { useWindowTitle } from "@/hooks/useWindowTitle";
 import { overlayService, permissionsService, sessionService } from "@/services/tauri";
@@ -28,9 +33,25 @@ const History    = lazy(() => import("@/pages/History").then((m) => ({ default: 
 const ChecklistPage = lazy(() => import("@/pages/Checklist").then((m) => ({ default: m.Checklist })));
 const SettingsPage = lazy(() => import("@/pages/Settings").then((m) => ({ default: m.Settings })));
 const About      = lazy(() => import("@/pages/About").then((m) => ({ default: m.About })));
+const HabitsPage = lazy(() =>
+  import("@/components/features/habits/HabitsPage").then((m) => ({ default: m.Habits })),
+);
+const HabitDetailPage = lazy(() =>
+  import("@/components/features/habits/HabitDetailPage").then((m) => ({ default: m.HabitDetail })),
+);
+const CalendarPage = lazy(() =>
+  import("@/components/features/calendar/CalendarPage").then((m) => ({ default: m.Calendar })),
+);
+const RemindersPage = lazy(() =>
+  import("@/components/features/reminders/RemindersPage").then((m) => ({ default: m.Reminders })),
+);
+const PomodoroPage = lazy(() =>
+  import("@/components/features/pomodoro/PomodoroPage").then((m) => ({ default: m.Pomodoro })),
+);
 const OverlayPage = lazy(() => import("@/pages/Overlay").then((m) => ({ default: m.Overlay })));
 const TrayPopoverPage = lazy(() => import("@/pages/TrayPopover").then((m) => ({ default: m.TrayPopover })));
 const SecondaryShellPage = lazy(() => import("@/pages/SecondaryShell").then((m) => ({ default: m.SecondaryShell })));
+const QuickLogPage = lazy(() => import("@/pages/QuickLog").then((m) => ({ default: m.QuickLog })));
 const LinkedItemPrompt = lazy(() =>
   import("@/components/features/checklist/LinkedItemPrompt").then((m) => ({
     default: m.LinkedItemPrompt,
@@ -81,14 +102,6 @@ function CloseWarningDialog() {
   );
 }
 
-const ROUTE_TITLE_KEYS: Record<string, string> = {
-  "/": "nav.dashboard",
-  "/history": "nav.history",
-  "/checklist": "nav.checklist",
-  "/settings": "nav.settings",
-  "/about": "nav.about",
-};
-
 function AppShell() {
   const { t } = useTranslation();
   useSettings();
@@ -96,9 +109,13 @@ function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showPermissions, setShowPermissions] = useState(false);
+  const { effectiveCollapsed, toggleCollapsed } = useSidebarCollapsed();
+  const setCommandPaletteOpen = useUiStore((s) => s.setCommandPaletteOpen);
 
   // Single call to useFocusSession — sets up all Tauri event listeners
   useFocusSession();
+  usePomodoro();
+  useShellHotkeys();
 
   useThemeSync();
 
@@ -190,26 +207,38 @@ function AppShell() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
-      {/* Custom macOS title bar (spec: app-modes/custom-title-bar) */}
-      <TitleBar title={screenTitle} />
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-hidden">
-          <Suspense fallback={
-            <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-              {t("common.loading")}
-            </div>
-          }>
-            <Routes>
-              <Route path="/"          element={<Dashboard />} />
-              <Route path="/history"   element={<History />} />
-              <Route path="/checklist" element={<ChecklistPage />} />
-              <Route path="/settings"  element={<SettingsPage />} />
-              <Route path="/about"     element={<About />} />
-            </Routes>
-          </Suspense>
-        </main>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <ContentHeader
+            screenTitle={screenTitle}
+            collapsed={effectiveCollapsed}
+            onToggleCollapse={toggleCollapsed}
+            onOpenPalette={() => setCommandPaletteOpen(true)}
+          />
+          <main className="min-h-0 flex-1 overflow-hidden bg-background">
+            <Suspense fallback={
+              <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+                {t("common.loading")}
+              </div>
+            }>
+              <Routes>
+                <Route path="/"          element={<Dashboard />} />
+                <Route path="/history"   element={<History />} />
+                <Route path="/checklist" element={<ChecklistPage />} />
+                <Route path="/reminders" element={<RemindersPage />} />
+                <Route path="/calendar"  element={<CalendarPage />} />
+                <Route path="/habits"    element={<HabitsPage />} />
+                <Route path="/habits/:id" element={<HabitDetailPage />} />
+                <Route path="/pomodoro"  element={<PomodoroPage />} />
+                <Route path="/settings"  element={<SettingsPage />} />
+                <Route path="/about"     element={<About />} />
+              </Routes>
+            </Suspense>
+          </main>
+        </div>
       </div>
+      <CommandPalette />
       <ToastContainer />
       <CloseWarningDialog />
       <Suspense fallback={null}>
@@ -247,6 +276,16 @@ function RootRoutes() {
       <Suspense fallback={<div className="h-screen w-screen bg-background" />}>
         <Routes>
           <Route path="/tray" element={<TrayPopoverPage />} />
+        </Routes>
+      </Suspense>
+    );
+  }
+
+  if (location.pathname === "/quick-log") {
+    return (
+      <Suspense fallback={<div className="h-screen w-screen bg-background" />}>
+        <Routes>
+          <Route path="/quick-log" element={<QuickLogPage />} />
         </Routes>
       </Suspense>
     );

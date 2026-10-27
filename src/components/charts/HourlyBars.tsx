@@ -100,12 +100,12 @@ export function HourlyBars({ events, sessionStart, sessionEnd, title }: Props) {
                 {/* Distraction (bottom) */}
                 {b.distracted > 0 && (
                   <rect x={x} y={barH - distractPx} width={barW} height={distractPx}
-                    fill="#ef4444" rx={2} opacity={0.85} />
+                    fill="hsl(var(--chart-1))" rx={2} opacity={0.85} />
                 )}
                 {/* Focus (above distraction) */}
                 {b.focus > 0 && (
                   <rect x={x} y={barH - distractPx - focusPx} width={barW} height={focusPx}
-                    fill="#22c55e" rx={2} opacity={0.85} />
+                    fill="hsl(var(--chart-2))" rx={2} opacity={0.85} />
                 )}
                 {/* Hour label */}
                 <text x={x + barW / 2} y={barH + 14} textAnchor="middle"
@@ -127,8 +127,8 @@ Distracted: ${formatDurationHuman(b.distracted)}`}
       </div>
       {/* Legend */}
       <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-green-500" />{t("dashboard.charts.focus")}</span>
-        <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-red-500" />{t("dashboard.charts.distracted")}</span>
+        <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-chart-2" />{t("dashboard.charts.focus")}</span>
+        <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-chart-1" />{t("dashboard.charts.distracted")}</span>
       </div>
     </div>
   );

@@ -2,49 +2,119 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
+    --background: 0 0% 99%;
+    --foreground: 240 10% 4%;
     --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
+    --card-foreground: 240 10% 4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 220.9 39.3% 11%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 224 71.4% 4.1%;
-    --radius: 0.5rem;
+    --popover-foreground: 240 10% 4%;
+    --primary: 240 6% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 240 5% 94%;
+    --accent-foreground: 240 6% 10%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 6% 90%;
+    --input: 240 6% 88%;
+    --ring: 240 5% 65%;
+    --radius: 0.625rem;
+    --sidebar: 240 5% 97%;
+    --sidebar-foreground: 240 10% 4%;
+    --sidebar-accent: 240 5% 92%;
+    --sidebar-border: 240 6% 90%;
+    --brand: 24 94% 53%;
+    --brand-foreground: 0 0% 100%;
+    --success: 142 71% 40%;
+    --warning: 38 92% 50%;
+    --info: 199 89% 48%;
+    --chart-1: 24 94% 53%;
+    --chart-2: 160 70% 42%;
+    --chart-3: 199 89% 48%;
+    --chart-4: 262 70% 60%;
+    --chart-5: 38 92% 50%;
+
+    /* Named accent tones (src/utils/tones.ts) */
+    --tone-slate: 215 16% 47%;
+    --tone-sky: 199 89% 42%;
+    --tone-violet: 262 70% 56%;
+    --tone-rose: 347 77% 52%;
+    --tone-orange: 24 94% 50%;
+    --tone-amber: 38 92% 44%;
+    --tone-emerald: 160 84% 34%;
+    --tone-teal: 173 80% 34%;
   }
 
   .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 6%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 210 20% 98%;
-    --primary-foreground: 220.9 39.3% 11%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 216 12.2% 83.9%;
+    --background: 240 6% 6%;
+    --foreground: 0 0% 96%;
+    --card: 240 5% 9%;
+    --card-foreground: 0 0% 96%;
+    --popover: 240 5% 10%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 0 0% 96%;
+    --primary-foreground: 240 6% 10%;
+    --secondary: 240 4% 14%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 240 4% 14%;
+    --muted-foreground: 240 5% 63%;
+    --accent: 240 4% 15%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 63% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 17%;
+    --input: 240 4% 19%;
+    --ring: 240 5% 45%;
+    --sidebar: 240 6% 7.5%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-accent: 240 4% 14%;
+    --sidebar-border: 240 4% 15%;
+    --brand: 24 94% 53%;
+    --brand-foreground: 0 0% 100%;
+    --success: 142 71% 40%;
+    --warning: 38 92% 50%;
+    --info: 199 89% 48%;
+    --chart-1: 24 94% 53%;
+    --chart-2: 160 70% 42%;
+    --chart-3: 199 89% 48%;
+    --chart-4: 262 70% 60%;
+    --chart-5: 38 92% 50%;
+
+    --tone-slate: 215 16% 62%;
+    --tone-sky: 199 89% 58%;
+    --tone-violet: 262 83% 70%;
+    --tone-rose: 347 85% 64%;
+    --tone-orange: 24 95% 58%;
+    --tone-amber: 38 92% 55%;
+    --tone-emerald: 160 70% 48%;
+    --tone-teal: 173 70% 46%;
   }
+}
+
+/* Tone utilities — bind `--tone` with toneStyle(tone) from src/utils/tones.ts. */
+.tone-dot {
+  background-color: hsl(var(--tone));
+}
+.tone-text {
+  color: hsl(var(--tone));
+}
+.tone-soft {
+  background-color: hsl(var(--tone) / 0.12);
+  color: hsl(var(--tone));
+}
+.tone-border {
+  border-color: hsl(var(--tone) / 0.45);
+}
+.tone-glow {
+  background-image: radial-gradient(
+    circle at 100% 0%,
+    hsl(var(--tone) / 0.32),
+    hsl(var(--tone) / 0.08) 38%,
+    transparent 68%
+  );
 }
 
 /* Custom scrollbar following the app palette — thin, rounded, visible whenever
@@ -167,6 +237,20 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-brand: hsl(var(--brand));
+  --color-brand-foreground: hsl(var(--brand-foreground));
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-info: hsl(var(--info));
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);

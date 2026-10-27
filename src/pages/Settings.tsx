@@ -4,8 +4,10 @@ import type { TFunction } from "i18next";
 import {
   Plus, X, Volume2, Play, Square, FolderOpen, RefreshCw,
   Globe, Target, Bell, Music, Coffee, Keyboard, Database, Info, Cpu, Check, Clock,
-  Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, ListPlus, LogIn, ListChecks,
+  Shield, CheckCircle, AlertTriangle, XCircle, ExternalLink, ListPlus, LogIn, ListChecks, BellRing,
+  Timer,
 } from "lucide-react";
+import { PomodoroSettingsTab } from "@/components/features/pomodoro/PomodoroSettingsTab";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import { HotkeyInput } from "@/components/ui/HotkeyInput";
@@ -22,17 +24,22 @@ import { Slider } from "@/components/ui/slider";
 import { Select } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogHeader, DialogTitle, DialogClose, DialogFooter } from "@/components/ui/dialog";
+import { SectionTitle, SettingRow } from "@/components/settings/setting-primitives";
 import { cn } from "@/utils/cn";
+import { CategoryManager } from "@/components/features/checklist/CategoryManager";
+import { DeliverySettingsTab } from "@/components/features/delivery/DeliverySettingsTab";
 import type { AppSettings, PermissionState, PermissionsStatus, ShortcutStatus } from "@/types";
 
-type Tab = "general" | "focus_rules" | "alerts" | "audio" | "breaks" | "checklist" | "shortcuts" | "permissions" | "data";
+type Tab = "general" | "focus_rules" | "alerts" | "delivery" | "audio" | "breaks" | "pomodoro" | "checklist" | "shortcuts" | "permissions" | "data";
 
 const TAB_META: Record<Tab, { icon: React.ReactNode; labelKey: string }> = {
   general:     { icon: <Globe className="h-4 w-4" />,    labelKey: "settings.tabs.general" },
   focus_rules: { icon: <Target className="h-4 w-4" />,   labelKey: "settings.tabs.focus_rules" },
   alerts:      { icon: <Bell className="h-4 w-4" />,     labelKey: "settings.tabs.alerts" },
+  delivery:    { icon: <BellRing className="h-4 w-4" />, labelKey: "settings.tabs.delivery" },
   audio:       { icon: <Music className="h-4 w-4" />,    labelKey: "settings.tabs.audio" },
   breaks:      { icon: <Coffee className="h-4 w-4" />,   labelKey: "settings.tabs.breaks" },
+  pomodoro:    { icon: <Timer className="h-4 w-4" />,    labelKey: "settings.tabs.pomodoro" },
   checklist:   { icon: <ListChecks className="h-4 w-4" />, labelKey: "settings.tabs.checklist" },
   shortcuts:   { icon: <Keyboard className="h-4 w-4" />, labelKey: "settings.tabs.shortcuts" },
   permissions: { icon: <Shield className="h-4 w-4" />,   labelKey: "settings.tabs.permissions" },
@@ -65,16 +72,16 @@ export function Settings() {
   return (
     <div className="flex h-full">
       {/* Tab sidebar */}
-      <nav className="w-40 shrink-0 border-r py-4 flex flex-col gap-0.5 px-2">
+      <nav className="w-48 shrink-0 border-r border-sidebar-border bg-sidebar py-4 flex flex-col gap-0.5 px-2">
         {(Object.entries(TAB_META) as [Tab, typeof TAB_META[Tab]][]).map(([tab, meta]) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={cn(
-              "flex items-center gap-2.5 text-left text-sm px-3 py-2 rounded-md transition-colors",
+              "flex items-center gap-2.5 text-left text-sm px-3 py-2 rounded-lg transition-colors",
               activeTab === tab
-                ? "bg-accent text-accent-foreground font-medium"
-                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                ? "bg-sidebar-accent text-foreground font-medium"
+                : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-foreground"
             )}
           >
             {meta.icon}
@@ -88,8 +95,10 @@ export function Settings() {
         {activeTab === "general" && <GeneralTab settings={settings} update={update} t={t} />}
         {activeTab === "focus_rules" && <FocusRulesTab settings={settings} update={update} t={t} addToast={addToast} />}
         {activeTab === "alerts" && <AlertsTab settings={settings} update={update} t={t} />}
+        {activeTab === "delivery" && <DeliverySettingsTab />}
         {activeTab === "audio" && <AudioTab settings={settings} update={update} t={t} addToast={addToast} />}
         {activeTab === "breaks" && <BreaksTab settings={settings} update={update} t={t} />}
+        {activeTab === "pomodoro" && <PomodoroSettingsTab />}
         {activeTab === "checklist" && <ChecklistTab settings={settings} update={update} t={t} />}
         {activeTab === "shortcuts" && <ShortcutsTab settings={settings} update={update} t={t} />}
         {activeTab === "permissions" && <PermissionsTab t={t} />}
@@ -130,51 +139,12 @@ export function Settings() {
   );
 }
 
-// ─── Shared components ─────────────────────────────────────────────────────────
-
-function SettingRow({ icon, label, hint, children }: {
-  icon?: React.ReactNode;
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-3 border-b border-border/50 last:border-0">
-      <div className="flex items-start gap-2.5 flex-1 min-w-0">
-        {icon && <span className="mt-0.5 text-muted-foreground shrink-0">{icon}</span>}
-        <div>
-          <p className="text-sm font-medium">{label}</p>
-          {hint && <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{hint}</p>}
-        </div>
-      </div>
-      <div className="shrink-0">{children}</div>
-    </div>
-  );
-}
-
-function SectionTitle({ icon, titleKey, descKey, t }: {
-  icon: React.ReactNode;
-  titleKey: string;
-  descKey: string;
-  t: (k: string) => string;
-}) {
-  return (
-    <div className="flex items-start gap-3 mb-5 pb-4 border-b">
-      <div className="rounded-lg bg-primary/10 p-2 text-primary mt-0.5">{icon}</div>
-      <div>
-        <h2 className="font-semibold text-base">{t(titleKey)}</h2>
-        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{t(descKey)}</p>
-      </div>
-    </div>
-  );
-}
-
 // ─── General ──────────────────────────────────────────────────────────────────
 
 function GeneralTab({ settings, update, t }: TabProps) {
   return (
     <div>
-      <SectionTitle icon={<Globe className="h-4 w-4" />} titleKey="settings.tabs.general" descKey="settings.section_desc.general" t={t} />
+      <SectionTitle icon={<Globe className="h-4 w-4" />} title={t("settings.tabs.general")} description={t("settings.section_desc.general")} />
 
       <SettingRow icon={<Globe className="h-4 w-4" />} label={t("settings.general.language")}>
         <Select value={settings.general.language}
@@ -529,7 +499,7 @@ function FocusRulesTab({ settings, update, t, addToast }: TabProps & { addToast:
 
   return (
     <div>
-      <SectionTitle icon={<Target className="h-4 w-4" />} titleKey="settings.tabs.focus_rules" descKey="settings.section_desc.focus_rules" t={t} />
+      <SectionTitle icon={<Target className="h-4 w-4" />} title={t("settings.tabs.focus_rules")} description={t("settings.section_desc.focus_rules")} />
 
       {/* Mode */}
       <div className="mb-5">
@@ -678,7 +648,7 @@ function AlertsTab({ settings, update, t }: TabProps) {
 
   return (
     <div>
-      <SectionTitle icon={<Bell className="h-4 w-4" />} titleKey="settings.tabs.alerts" descKey="settings.section_desc.alerts" t={t} />
+      <SectionTitle icon={<Bell className="h-4 w-4" />} title={t("settings.tabs.alerts")} description={t("settings.section_desc.alerts")} />
 
       <div className="rounded-lg border p-4 mb-4">
         <div className="flex items-start justify-between mb-3">
@@ -1006,7 +976,7 @@ function AudioTab({ settings, update, t, addToast }: TabProps & { addToast: (m: 
 
   return (
     <div>
-      <SectionTitle icon={<Music className="h-4 w-4" />} titleKey="settings.tabs.audio" descKey="settings.section_desc.audio" t={t} />
+      <SectionTitle icon={<Music className="h-4 w-4" />} title={t("settings.tabs.audio")} description={t("settings.section_desc.audio")} />
 
       <SettingRow icon={<Volume2 className="h-4 w-4" />} label={t("settings.audio.volume")}>
         <div className="flex items-center gap-3 w-44">
@@ -1040,7 +1010,7 @@ function BreaksTab({ settings, update, t }: TabProps) {
 
   return (
     <div>
-      <SectionTitle icon={<Coffee className="h-4 w-4" />} titleKey="settings.tabs.breaks" descKey="settings.section_desc.breaks" t={t} />
+      <SectionTitle icon={<Coffee className="h-4 w-4" />} title={t("settings.tabs.breaks")} description={t("settings.section_desc.breaks")} />
 
       <SettingRow icon={<Coffee className="h-4 w-4" />} label={t("settings.breaks.enabled")}>
         <Switch checked={settings.breaks.enabled}
@@ -1084,14 +1054,12 @@ function BreaksTab({ settings, update, t }: TabProps) {
 function ChecklistTab({ settings, update, t }: TabProps) {
   const msToSec = (ms: number) => Math.round(ms / 1000);
   const secToMs = (s: number) => s * 1000;
-
   return (
     <div>
       <SectionTitle
         icon={<ListChecks className="h-4 w-4" />}
-        titleKey="settings.tabs.checklist"
-        descKey="settings.section_desc.checklist"
-        t={t}
+        title={t("settings.tabs.checklist")}
+        description={t("settings.section_desc.checklist")}
       />
 
       <SettingRow
@@ -1118,6 +1086,23 @@ function ChecklistTab({ settings, update, t }: TabProps) {
           <span className="text-xs text-muted-foreground">{t("common.units.seconds")}</span>
         </div>
       </SettingRow>
+
+      <SettingRow
+        icon={<ListChecks className="h-4 w-4" />}
+        label={t("settings.checklist.date_recognition")}
+        hint={t("settings.checklist.date_recognition_hint")}
+      >
+        <Switch
+          checked={settings.checklist.date_recognition}
+          onCheckedChange={(checked) =>
+            update({
+              checklist: { ...settings.checklist, date_recognition: checked },
+            })
+          }
+        />
+      </SettingRow>
+
+      <CategoryManager />
     </div>
   );
 }
@@ -1156,9 +1141,8 @@ function ShortcutsTab({ settings, update, t }: TabProps) {
     <div>
       <SectionTitle
         icon={<Keyboard className="h-4 w-4" />}
-        titleKey="settings.tabs.shortcuts"
-        descKey="settings.section_desc.shortcuts"
-        t={t}
+        title={t("settings.tabs.shortcuts")}
+        description={t("settings.section_desc.shortcuts")}
       />
 
       <p className="text-xs text-muted-foreground mb-4">
@@ -1222,7 +1206,7 @@ function ShortcutsTab({ settings, update, t }: TabProps) {
 function DataTab({ t, onClearHistory, onResetSettings }: { t: TFunction; onClearHistory: () => void; onResetSettings: () => void }) {
   return (
     <div>
-      <SectionTitle icon={<Database className="h-4 w-4" />} titleKey="settings.tabs.data" descKey="settings.section_desc.data" t={t} />
+      <SectionTitle icon={<Database className="h-4 w-4" />} title={t("settings.tabs.data")} description={t("settings.section_desc.data")} />
       <Card>
         <CardContent className="py-4 space-y-3">
           <p className="text-xs text-muted-foreground">{t("settings.data.destructive_warning")}</p>
@@ -1320,9 +1304,8 @@ function PermissionsTab({ t }: { t: TFunction }) {
     <div>
       <SectionTitle
         icon={<Shield className="h-4 w-4" />}
-        titleKey="permissions.title"
-        descKey="permissions.section_desc"
-        t={t}
+        title={t("permissions.title")}
+        description={t("permissions.section_desc")}
       />
 
       {loading ? (

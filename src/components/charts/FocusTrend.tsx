@@ -68,16 +68,16 @@ export function FocusTrend({ sessions, locale, title, emptyLabel = "Not enough s
           })}
 
           {/* Area fill */}
-          <polygon points={area} fill="#22c55e" fillOpacity={0.12} />
+          <polygon points={area} fill="hsl(var(--chart-2))" fillOpacity={0.12} />
 
           {/* Line */}
-          <polyline points={polyline} fill="none" stroke="#22c55e" strokeWidth={2}
+          <polyline points={polyline} fill="none" stroke="hsl(var(--chart-2))" strokeWidth={2}
             strokeLinejoin="round" strokeLinecap="round" />
 
           {/* Data points */}
           {points.map((p, i) => (
             <g key={i}>
-              <circle cx={p.x} cy={p.y} r={3} fill="#22c55e" />
+              <circle cx={p.x} cy={p.y} r={3} fill="hsl(var(--chart-2))" />
               <title>{`${p.label}: ${Math.round(p.pct)}% focus`}</title>
               {/* Show pct on first and last */}
               {(i === 0 || i === points.length - 1) && (

@@ -1,10 +1,13 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useNow } from "@/hooks/useNow";
+import { rollHistoryFilterToToday, useChecklistStore } from "@/stores/checklistStore";
 import { listen } from "@tauri-apps/api/event";
 import { Calendar, CheckCircle2, ChevronLeft, ChevronRight, Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { checklistService } from "@/services/tauri";
-import { useChecklistStore } from "@/stores/checklistStore";
+import type { ChecklistCategory } from "@/types";
+import { CategoryChip } from "./CategoryPicker";
 import { TagChip } from "./TagChip";
 import type { ChecklistSortMode } from "@/types";
 import {
@@ -31,22 +34,32 @@ interface Props {
 
 export function ChecklistHistory({ onSortPersist, onRestore }: Props) {
   const { t, i18n } = useTranslation();
+  const now = useNow();
   const { historyItems, setHistoryItems, allTags, setAllTags, historyFilter, setHistoryFilter } =
     useChecklistStore();
+  const [historyCategories, setHistoryCategories] = useState<ChecklistCategory[]>([]);
+
+  useEffect(() => {
+    const rolled = rollHistoryFilterToToday(historyFilter, now);
+    if (rolled) setHistoryFilter(rolled);
+  }, [now, historyFilter, setHistoryFilter]);
 
   const load = useCallback(async () => {
     try {
-      const [items, tags] = await Promise.all([
+      const [items, tags, categories] = await Promise.all([
         checklistService.listHistory(
           historyFilter.from,
           historyFilter.to,
           historyFilter.sort,
           historyFilter.tags,
+          historyFilter.categories,
         ),
         checklistService.listTags(),
+        checklistService.listCategories(),
       ]);
       setHistoryItems(items);
       setAllTags(tags);
+      setHistoryCategories(categories);
     } catch {
       /* backend unavailable */
     }
@@ -75,6 +88,15 @@ export function ChecklistHistory({ onSortPersist, onRestore }: Props) {
     const from = historyFilter.from ?? startOfLocalDay(Date.now());
     const to = historyFilter.to ?? endOfLocalDay(Date.now());
     setHistoryFilter({ from: shiftDays(from, delta), to: shiftDays(to, delta) });
+  };
+
+  const toggleCategory = (categoryId: string) => {
+    const active = historyFilter.categories.includes(categoryId);
+    setHistoryFilter({
+      categories: active
+        ? historyFilter.categories.filter((id) => id !== categoryId)
+        : [...historyFilter.categories, categoryId],
+    });
   };
 
   const toggleTag = (name: string) => {
@@ -144,6 +166,25 @@ export function ChecklistHistory({ onSortPersist, onRestore }: Props) {
         </div>
       </div>
 
+      {historyCategories.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          <span className="text-[11px] text-muted-foreground">{t("checklist.history_categories")}</span>
+          {historyCategories.map((category) => (
+            <button
+              key={category.id}
+              type="button"
+              onClick={() => toggleCategory(category.id)}
+              className={cn(
+                "rounded-full border px-0.5 transition-opacity",
+                historyFilter.categories.includes(category.id) ? "opacity-100" : "opacity-50",
+              )}
+            >
+              <CategoryChip category={category} />
+            </button>
+          ))}
+        </div>
+      )}
+
       {allTags.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1.5">
           {allTags.map((tag) => (
@@ -173,8 +214,14 @@ export function ChecklistHistory({ onSortPersist, onRestore }: Props) {
             >
               <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />
               <div className="min-w-0 flex-1">
-                <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground line-through">{item.title}</p>
+                <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground line-through">
+                  {item.parent_id ? (
+                    <span className="text-muted-foreground/70">{t("checklist.subitem_prefix")} </span>
+                  ) : null}
+                  {item.title}
+                </p>
                 <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                  {item.category && <CategoryChip category={item.category} />}
                   {item.completed_at !== null && (
                     <span>
                       {t("checklist.completed_on", {

@@ -1,12 +1,17 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
-import { Trash2, Download, ChevronLeft, Clock, Target, Bell, Search, X } from "lucide-react";
+import { Trash2, Download, ChevronLeft, Clock, Target, Bell, Search, X, History as HistoryIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { sessionService } from "@/services/tauri";
 import { useUiStore } from "@/stores/uiStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { StatCard as UiStatCard } from "@/components/ui/stat-card";
 import { Dialog, DialogHeader, DialogTitle, DialogClose, DialogFooter } from "@/components/ui/dialog";
 import { formatDate, formatDateTime, formatDurationHuman, formatPercent, formatTime } from "@/utils/formatters";
 import { cn } from "@/utils/cn";
@@ -46,6 +51,7 @@ function getDateRange(filter: DateFilter): [number, number] {
 export function History() {
   const { t, i18n } = useTranslation();
   const { addToast } = useUiStore();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,14 +81,23 @@ export function History() {
     loadSessions();
   }, [loadSessions]);
 
-  const handleOpenDetail = async (id: string) => {
+  const handleOpenDetail = useCallback(async (id: string) => {
     try {
       const detail = await sessionService.getDetail(id);
       setSelected(detail);
     } catch {
       addToast(t("common.error"), "error");
     }
-  };
+  }, [addToast, t]);
+
+  useEffect(() => {
+    const sessionId = searchParams.get("session");
+    if (!sessionId) return;
+    void handleOpenDetail(sessionId);
+    const next = new URLSearchParams(searchParams);
+    next.delete("session");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, handleOpenDetail]);
 
   // Screenshot demo: open a seeded session detail view.
   useEffect(() => {
@@ -199,10 +214,16 @@ export function History() {
     );
   }
 
+  const filterOptions = (["today", "week", "month", "all"] as DateFilter[]).map((f) => ({
+    value: f,
+    label: t(`history.filters.${f}`),
+  }));
+
   return (
-    <div className="flex h-full flex-col gap-4 p-6 overflow-y-auto">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">{t("history.title")}</h1>
+    <PageContainer>
+      <PageHeader
+        title={t("history.title")}
+        actions={
         <div className="flex items-center gap-2">
           {sessions.length > 0 && (
             <Button
@@ -228,21 +249,16 @@ export function History() {
             </Button>
           )}
         </div>
-      </div>
+        }
+      />
 
-      {/* Filters */}
-      <div className="flex gap-2 flex-wrap">
-        {(["today", "week", "month", "all"] as DateFilter[]).map((f) => (
-          <Button
-            key={f}
-            variant={filter === f ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter(f)}
-          >
-            {t(`history.filters.${f}`)}
-          </Button>
-        ))}
-      </div>
+      <SegmentedControl
+        aria-label={t("history.title")}
+        value={filter}
+        onChange={setFilter}
+        options={filterOptions}
+        className="max-w-lg"
+      />
 
       {/* Search by label */}
       <div className="relative">
@@ -257,7 +273,7 @@ export function History() {
           <button
             onClick={() => setSearchQuery("")}
             aria-label={t("history.clear_search")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -293,7 +309,7 @@ export function History() {
       {loading ? (
         <p className="text-muted-foreground text-sm">{t("common.loading")}</p>
       ) : sessions.length === 0 ? (
-        <p className="text-muted-foreground text-sm py-8 text-center">{t("history.empty")}</p>
+        <EmptyState icon={HistoryIcon} title={t("history.empty")} />
       ) : (
         <div className="space-y-2">
           {sessions
@@ -356,7 +372,7 @@ export function History() {
           </Button>
         </DialogFooter>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }
 
@@ -405,17 +421,27 @@ function SessionCard({
               </span>
               {/* Focus time */}
               {session.total_focus_ms > 0 && (
-                <span className="flex items-center gap-1 text-xs text-green-600" title={t("dashboard.timer.focused")}>
+                <span className="flex items-center gap-1 text-xs text-success" title={t("dashboard.timer.focused")}>
                   <Target className="h-3 w-3" />
                   {formatDurationHuman(session.total_focus_ms)}
                 </span>
               )}
               {/* Focus % */}
-              <span className={cn("text-xs font-medium", session.focus_percent >= 70 ? "text-green-600" : session.focus_percent >= 40 ? "text-yellow-600" : "text-red-500")} title={t("history.session_card.focus_score")}>
+              <span
+                className={cn(
+                  "text-xs font-medium",
+                  session.focus_percent >= 70
+                    ? "text-success"
+                    : session.focus_percent >= 40
+                      ? "text-warning"
+                      : "text-destructive",
+                )}
+                title={t("history.session_card.focus_score")}
+              >
                 {formatPercent(session.focus_percent)}
               </span>
               {session.total_alerts > 0 && (
-                <span className="flex items-center gap-1 text-xs text-yellow-600" title={t("history.session_card.alerts")}>
+                <span className="flex items-center gap-1 text-xs text-warning" title={t("history.session_card.alerts")}>
                   <Bell className="h-3 w-3" />
                   {session.total_alerts}
                 </span>
@@ -473,7 +499,7 @@ function DetailView({
   }, [events]);
 
   return (
-    <div className="flex h-full flex-col gap-4 p-6 overflow-y-auto">
+    <PageContainer>
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5">
           <ChevronLeft className="h-4 w-4" />
@@ -494,14 +520,26 @@ function DetailView({
 
       {/* Stats — more detail */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label={t("history.session_card.duration")} value={total > 0 ? formatDurationHuman(total) : "—"} />
-        <StatCard label={t("dashboard.timer.focused")} value={formatDurationHuman(session.total_focus_ms)} green />
-        <StatCard label={t("dashboard.timer.distracted")} value={formatDurationHuman(session.total_distracted_ms)} />
-        <StatCard label={t("dashboard.timer.idle")} value={formatDurationHuman(session.total_idle_ms)} />
-        <StatCard
+        <UiStatCard label={t("history.session_card.duration")} value={total > 0 ? formatDurationHuman(total) : "—"} />
+        <UiStatCard
+          label={t("dashboard.timer.focused")}
+          value={formatDurationHuman(session.total_focus_ms)}
+          className="[&_p:nth-child(2)]:text-success"
+        />
+        <UiStatCard
+          label={t("dashboard.timer.distracted")}
+          value={formatDurationHuman(session.total_distracted_ms)}
+          className="[&_p:nth-child(2)]:text-destructive"
+        />
+        <UiStatCard
+          label={t("dashboard.timer.idle")}
+          value={formatDurationHuman(session.total_idle_ms)}
+          className="[&_p:nth-child(2)]:text-info"
+        />
+        <UiStatCard
           label={t("history.session_card.focus_score")}
           value={formatPercent((session.total_focus_ms / Math.max(total, 1)) * 100)}
-          green
+          className="[&_p:nth-child(2)]:text-success"
         />
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 text-xs">
@@ -513,8 +551,8 @@ function DetailView({
           <p className="text-muted-foreground mb-0.5">{t("history.detail.ended")}</p>
           <p className="font-medium">{session.ended_at ? formatDateTime(session.ended_at, locale) : "—"}</p>
         </div>
-        <StatCard label={t("history.session_card.alerts")} value={String(session.total_alerts)} />
-        <StatCard label={t("history.detail.checkpoints")} value={String(checkpoints.length)} />
+        <UiStatCard label={t("history.session_card.alerts")} value={String(session.total_alerts)} />
+        <UiStatCard label={t("history.detail.checkpoints")} value={String(checkpoints.length)} />
       </div>
 
       {/* Charts row */}
@@ -530,8 +568,14 @@ function DetailView({
                   label: app,
                   value: ms,
                   color: [
-                    "#22c55e","#3b82f6","#a855f7","#f59e0b","#ef4444",
-                    "#06b6d4","#84cc16","#f97316",
+                    "hsl(var(--chart-2))",
+                    "hsl(var(--chart-3))",
+                    "hsl(var(--chart-4))",
+                    "hsl(var(--chart-5))",
+                    "hsl(var(--chart-1))",
+                    "hsl(var(--chart-3))",
+                    "hsl(var(--chart-2))",
+                    "hsl(var(--chart-1))",
                   ][i % 8],
                 }))}
               />
@@ -590,7 +634,7 @@ function DetailView({
                 key={ev.id}
                 className={cn(
                   "flex items-center gap-3 text-xs py-1 border-b border-border/50",
-                  ev.is_distraction && "text-red-600 dark:text-red-400"
+                  ev.is_distraction && "text-destructive"
                 )}
               >
                 <span className="text-muted-foreground font-mono tabular-nums shrink-0 w-16">
@@ -608,17 +652,6 @@ function DetailView({
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-function StatCard({ label, value, green }: { label: string; value: string; green?: boolean }) {
-  return (
-    <Card>
-      <CardContent className="py-4 px-4">
-        <p className="text-xs text-muted-foreground mb-1">{label}</p>
-        <p className={cn("text-lg font-bold tabular-nums", green && "text-green-600")}>{value}</p>
-      </CardContent>
-    </Card>
+    </PageContainer>
   );
 }
