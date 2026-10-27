@@ -102,6 +102,26 @@ impl Database {
             4,
             include_str!("migrations/0004_checklist.sql"),
         )?;
+        apply_sql_migration(
+            &mut self.conn,
+            5,
+            include_str!("migrations/0005_checklist_organization.sql"),
+        )?;
+        apply_sql_migration(
+            &mut self.conn,
+            6,
+            include_str!("migrations/0006_reminders_scheduler.sql"),
+        )?;
+        apply_sql_migration(
+            &mut self.conn,
+            7,
+            include_str!("migrations/0007_habits.sql"),
+        )?;
+        apply_sql_migration(
+            &mut self.conn,
+            8,
+            include_str!("migrations/0008_pomodoro.sql"),
+        )?;
         Ok(())
     }
 
@@ -227,7 +247,8 @@ pub fn checkpoint_from_row(row: &rusqlite::Row) -> rusqlite::Result<crate::model
 pub fn checklist_item_from_row(
     row: &rusqlite::Row,
 ) -> rusqlite::Result<crate::models::ChecklistItem> {
-    use crate::models::ChecklistItem;
+    use crate::models::{ChecklistItem, Priority};
+    let due_has_time: i64 = row.get(9)?;
     Ok(ChecklistItem {
         id: row.get(0)?,
         title: row.get(1)?,
@@ -235,6 +256,10 @@ pub fn checklist_item_from_row(
         completed_at: row.get(3)?,
         due_date: row.get(4)?,
         sort_order: row.get(5)?,
+        parent_id: row.get(6)?,
+        category: None,
+        priority: Priority::from_db(row.get(8)?),
+        due_has_time: due_has_time != 0,
         tags: Vec::new(),
     })
 }
@@ -307,7 +332,26 @@ mod tests {
         assert_eq!(runtime_table_count, 1);
         assert_eq!(recent_audio_table_count, 1);
         assert_eq!(checklist_table_count, 4);
-        assert_eq!(migration_count, 4);
+        let habits_table_count: i64 = db
+            .conn()
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'habits'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+
+        assert_eq!(habits_table_count, 1);
+        assert_eq!(migration_count, 8);
+        let pomodoro_table_count: i64 = db
+            .conn()
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('pomodoro_runs', 'pomodoro_phases', 'pomodoro_runtime')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(pomodoro_table_count, 3);
 
         drop(db);
         Database::open(&path).unwrap();

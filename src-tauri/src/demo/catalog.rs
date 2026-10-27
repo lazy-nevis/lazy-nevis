@@ -630,6 +630,7 @@ fn show_overlay_pose(app: &AppHandle, state: &AppState) -> Result<()> {
         .map(|settings| settings.general.time_format.clone())
         .unwrap_or_else(|_| "24h".into());
     let payload = OverlayAlertPayload {
+        kind: "distraction".into(),
         session_id: "demo-overlay".into(),
         app_name: "Safari".into(),
         window_title: Some("Example — Safari".into()),
@@ -641,6 +642,7 @@ fn show_overlay_pose(app: &AppHandle, state: &AppState) -> Result<()> {
         is_test: true,
         language,
         time_format,
+        reminder: None,
     };
     monitor::show_overlay_payload_for_screenshots(app, payload)
 }

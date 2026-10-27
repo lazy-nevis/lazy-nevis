@@ -1,6 +1,6 @@
 use crate::error::{AppError, Result};
-use crate::models::{ChecklistItem, Tag};
-use crate::services::checklist::HistorySort;
+use crate::models::{ChecklistCategory, ChecklistItem, Priority, Tag};
+use crate::services::checklist::{CreateItem, HistorySort, UpdateItem};
 use crate::state::{now_ms, AppState};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, State};
@@ -9,7 +9,6 @@ const MAX_TITLE_LEN: usize = 500;
 const MAX_TAGS: usize = 20;
 const MAX_TAG_LEN: usize = 50;
 
-/// Broadcast after every mutation so all windows re-fetch (spec: daily-checklist).
 #[derive(Debug, Clone, Serialize)]
 pub struct ChecklistChangedPayload {
     pub reason: String,
@@ -40,6 +39,13 @@ fn validate_item_args(title: &str, tags: &[String]) -> Result<()> {
     Ok(())
 }
 
+fn parse_priority(value: Option<String>) -> Priority {
+    match value {
+        None => Priority::None,
+        Some(raw) => Priority::parse_token(&raw).unwrap_or(Priority::None),
+    }
+}
+
 fn grace_cutoff(state: &AppState) -> Result<i64> {
     let grace_ms = state
         .settings
@@ -55,7 +61,15 @@ pub struct CreateChecklistItemArgs {
     pub title: String,
     pub due_date: Option<i64>,
     #[serde(default)]
+    pub due_has_time: bool,
+    #[serde(default)]
     pub tags: Vec<String>,
+    #[serde(default)]
+    pub category: Option<String>,
+    #[serde(default)]
+    pub priority: Option<String>,
+    #[serde(default)]
+    pub parent_id: Option<String>,
 }
 
 #[tauri::command]
@@ -66,9 +80,15 @@ pub async fn create_checklist_item(
 ) -> Result<ChecklistItem> {
     validate_item_args(&args.title, &args.tags)?;
     let item = state.checklist.create(
-        args.title.trim().to_string(),
-        args.due_date,
-        args.tags,
+        CreateItem {
+            title: args.title.trim().to_string(),
+            due_date: args.due_date,
+            due_has_time: args.due_has_time,
+            tags: args.tags,
+            category: args.category,
+            priority: parse_priority(args.priority),
+            parent_id: args.parent_id,
+        },
         now_ms(),
     )?;
     emit_changed(&app, "created", Some(item.id.clone()));
@@ -81,7 +101,13 @@ pub struct UpdateChecklistItemArgs {
     pub title: String,
     pub due_date: Option<i64>,
     #[serde(default)]
+    pub due_has_time: bool,
+    #[serde(default)]
     pub tags: Vec<String>,
+    #[serde(default)]
+    pub category: Option<String>,
+    #[serde(default)]
+    pub priority: Option<String>,
 }
 
 #[tauri::command]
@@ -93,9 +119,14 @@ pub async fn update_checklist_item(
     validate_item_args(&args.title, &args.tags)?;
     let item = state.checklist.update(
         &args.id,
-        args.title.trim().to_string(),
-        args.due_date,
-        args.tags,
+        UpdateItem {
+            title: args.title.trim().to_string(),
+            due_date: args.due_date,
+            due_has_time: args.due_has_time,
+            tags: args.tags,
+            category: args.category,
+            priority: parse_priority(args.priority),
+        },
         now_ms(),
     )?;
     emit_changed(&app, "updated", Some(item.id.clone()));
@@ -149,7 +180,6 @@ pub async fn reorder_checklist_items(
     Ok(())
 }
 
-/// Open items plus recently-completed ones still inside the grace window.
 #[tauri::command]
 pub async fn list_open_checklist_items(state: State<'_, AppState>) -> Result<Vec<ChecklistItem>> {
     let cutoff = grace_cutoff(&state)?;
@@ -163,6 +193,8 @@ pub struct ChecklistHistoryArgs {
     pub sort: String,
     #[serde(default)]
     pub tags: Vec<String>,
+    #[serde(default)]
+    pub categories: Vec<String>,
 }
 
 #[tauri::command]
@@ -173,12 +205,69 @@ pub async fn list_checklist_history(
     let sort = HistorySort::parse(&args.sort)?;
     state
         .checklist
-        .list_history(args.from, args.to, sort, &args.tags)
+        .list_history(args.from, args.to, sort, &args.tags, &args.categories)
 }
 
 #[tauri::command]
 pub async fn list_checklist_tags(state: State<'_, AppState>) -> Result<Vec<Tag>> {
     state.checklist.list_tags()
+}
+
+#[tauri::command]
+pub async fn list_checklist_categories(
+    state: State<'_, AppState>,
+) -> Result<Vec<ChecklistCategory>> {
+    state.checklist.list_categories()
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateChecklistCategoryArgs {
+    pub name: String,
+    pub tone: Option<String>,
+}
+
+#[tauri::command]
+pub async fn create_checklist_category(
+    args: CreateChecklistCategoryArgs,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<ChecklistCategory> {
+    let category = state
+        .checklist
+        .create_category(args.name, args.tone, now_ms())?;
+    emit_changed(&app, "category_created", None);
+    Ok(category)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateChecklistCategoryArgs {
+    pub id: String,
+    pub name: String,
+    pub tone: String,
+}
+
+#[tauri::command]
+pub async fn update_checklist_category(
+    args: UpdateChecklistCategoryArgs,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<ChecklistCategory> {
+    let category = state
+        .checklist
+        .update_category(&args.id, args.name, args.tone)?;
+    emit_changed(&app, "category_updated", None);
+    Ok(category)
+}
+
+#[tauri::command]
+pub async fn delete_checklist_category(
+    id: String,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<()> {
+    state.checklist.delete_category(&id)?;
+    emit_changed(&app, "category_deleted", None);
+    Ok(())
 }
 
 #[tauri::command]
@@ -192,7 +281,6 @@ pub async fn link_checklist_session(
         .link_session(&item_id, &session_id, now_ms())
 }
 
-/// Latest still-open item linked to the session, for the stop-completion prompt.
 #[tauri::command]
 pub async fn get_linked_checklist_item(
     session_id: String,

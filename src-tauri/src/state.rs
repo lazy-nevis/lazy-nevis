@@ -1,7 +1,7 @@
 use crate::db::Database;
 use crate::error::{AppError, Result};
 use crate::models::{
-    AppSettings, OverlayAlertPayload, Session, SessionRuntimeSnapshot, WindowInfo,
+    AppSettings, BreakSource, OverlayAlertPayload, Session, SessionRuntimeSnapshot, WindowInfo,
 };
 use crate::services::{AudioPlayer, SessionLogger};
 use std::sync::{Arc, Mutex};
@@ -25,6 +25,7 @@ pub struct SessionData {
     pub last_break_reminder_ms: Option<i64>,
     pub on_break: bool,
     pub break_started_at_ms: Option<i64>,
+    pub break_source: BreakSource,
     // Idle tracking
     pub idle_ms: i64,
     pub is_idle: bool,
@@ -49,6 +50,7 @@ impl SessionData {
             last_break_reminder_ms: None,
             on_break: false,
             break_started_at_ms: None,
+            break_source: BreakSource::Manual,
             idle_ms: 0,
             is_idle: false,
         }
@@ -70,8 +72,10 @@ impl SessionData {
             last_tick_ms: now,
             continuous_focus_start_ms: runtime.continuous_focus_start_ms,
             last_break_reminder_ms: runtime.last_break_reminder_ms,
+            // Session recovery clears break state; pomodoro re-applies break mapping on resume.
             on_break: false,
             break_started_at_ms: None,
+            break_source: BreakSource::Manual,
             idle_ms: runtime.idle_ms,
             is_idle: false,
         }
@@ -88,6 +92,8 @@ impl SessionData {
             is_distracted: self.is_distracted,
             is_idle: self.is_idle,
             on_break: self.on_break,
+            break_started_at_ms: self.break_started_at_ms,
+            break_source: self.break_source,
             distracted_since_ms: self.distracted_since_ms,
             last_alert_ms: self.last_alert_ms,
             continuous_focus_start_ms: self.continuous_focus_start_ms,
@@ -98,12 +104,13 @@ impl SessionData {
         }
     }
 
-    pub fn start_break(&mut self, now: i64) -> Result<()> {
+    pub fn start_break(&mut self, now: i64, source: BreakSource) -> Result<()> {
         if self.on_break {
             return Err(AppError::InvalidArgument("Break is already active".into()));
         }
         self.on_break = true;
         self.break_started_at_ms = Some(now);
+        self.break_source = source;
         self.continuous_focus_start_ms = None;
         self.last_tick_ms = now;
         Ok(())
@@ -115,6 +122,7 @@ impl SessionData {
         }
         self.on_break = false;
         self.break_started_at_ms = None;
+        self.break_source = BreakSource::Manual;
         self.continuous_focus_start_ms = Some(now);
         self.last_tick_ms = now;
         Ok(())
@@ -139,6 +147,11 @@ pub struct AppState {
     pub app_status: Arc<crate::services::app_status::AppStatusManager>,
     /// Screenshot demo gate — pose/seed commands refuse work when false.
     pub demo_active: bool,
+    pub reminders: Arc<crate::services::reminders::ReminderService>,
+    pub habits: Arc<crate::services::habits::HabitService>,
+    pub scheduler: Arc<Mutex<crate::services::scheduler::Scheduler>>,
+    pub overlay_queue: Mutex<crate::services::overlay_queue::OverlayQueue>,
+    pub pomodoro: Arc<crate::services::pomodoro::PomodoroEngine>,
 }
 
 pub fn now_ms() -> i64 {
@@ -152,6 +165,7 @@ pub fn now_ms() -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::BreakSource;
 
     #[test]
     fn recovered_session_is_always_paused_without_counting_downtime() {
@@ -177,6 +191,8 @@ mod tests {
             is_distracted: true,
             is_idle: false,
             on_break: true,
+            break_started_at_ms: Some(7_500),
+            break_source: BreakSource::Manual,
             distracted_since_ms: Some(7_000),
             last_alert_ms: None,
             continuous_focus_start_ms: None,
@@ -212,11 +228,11 @@ mod tests {
         let mut data = SessionData::new(session);
         data.focus_ms = 5_000;
 
-        data.start_break(10_000).unwrap();
+        data.start_break(10_000, BreakSource::Manual).unwrap();
         assert!(data.on_break);
         assert_eq!(data.break_started_at_ms, Some(10_000));
         assert!(data.continuous_focus_start_ms.is_none());
-        assert!(data.start_break(11_000).is_err());
+        assert!(data.start_break(11_000, BreakSource::Manual).is_err());
         assert_eq!(data.focus_ms, 5_000);
 
         data.end_break(20_000).unwrap();

@@ -120,6 +120,7 @@ impl SessionLogger {
                     snapshot.last_tick_ms,
                     snapshot.last_heartbeat_at,
                     last_window_json,
+                    snapshot.break_source.as_str(),
                 ],
             )
             .map_err(AppError::Database)?;
@@ -181,6 +182,11 @@ impl SessionLogger {
                 is_distracted: row.get::<_, i64>(15)? != 0,
                 is_idle: row.get::<_, i64>(16)? != 0,
                 on_break: row.get::<_, i64>(17)? != 0,
+                break_started_at_ms: None,
+                break_source: {
+                    let raw: String = row.get(25)?;
+                    crate::models::BreakSource::parse(&raw)
+                },
                 distracted_since_ms: row.get(18)?,
                 last_alert_ms: row.get(19)?,
                 continuous_focus_start_ms: row.get(20)?,
@@ -507,6 +513,8 @@ mod tests {
             is_distracted: true,
             is_idle: false,
             on_break: false,
+            break_started_at_ms: None,
+            break_source: crate::models::BreakSource::Manual,
             distracted_since_ms: Some(8_000),
             last_alert_ms: None,
             continuous_focus_start_ms: None,
@@ -707,6 +715,8 @@ mod tests {
                 is_distracted: false,
                 is_idle: false,
                 on_break: false,
+                break_started_at_ms: None,
+                break_source: crate::models::BreakSource::Manual,
                 distracted_since_ms: None,
                 last_alert_ms: None,
                 continuous_focus_start_ms: None,

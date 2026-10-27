@@ -1,5 +1,5 @@
 use crate::error::{AppError, Result};
-use crate::models::{focus_percent, Checkpoint, Session, SessionStats};
+use crate::models::{focus_percent, BreakSource, Checkpoint, Session, SessionStats};
 use crate::state::{now_ms, AppState, SessionData};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, State};
@@ -54,7 +54,15 @@ pub async fn start_session(
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> Result<Session> {
-    if args.label.as_ref().is_some_and(|label| label.len() > 255) {
+    start_session_inner(&app, state.inner(), args.label)
+}
+
+pub fn start_session_inner(
+    app: &AppHandle,
+    state: &AppState,
+    label: Option<String>,
+) -> Result<Session> {
+    if label.as_ref().is_some_and(|l| l.len() > 255) {
         return Err(AppError::InvalidArgument(
             "Session label cannot exceed 255 characters".into(),
         ));
@@ -83,12 +91,10 @@ pub async fn start_session(
             .logger
             .lock()
             .map_err(|_| AppError::Internal("lock".into()))?;
-        logger.create_session(args.label, snapshot)?
+        logger.create_session(label, snapshot)?
     };
 
-    // Start monitor — deref State<'_, AppState> to &AppState
     {
-        let inner: &AppState = &state;
         let mut active = state
             .active_session
             .lock()
@@ -101,7 +107,7 @@ pub async fn start_session(
                 .lock()
                 .map_err(|_| AppError::Internal("lock".into()))?
                 .persist_runtime(&snapshot)?;
-            crate::monitor::start_monitor(app.clone(), inner, s)?;
+            crate::monitor::start_monitor(app.clone(), state, s)?;
         }
     }
 
@@ -114,7 +120,7 @@ pub async fn start_session(
         },
     );
     state.app_status.update_session(
-        &app,
+        app,
         crate::services::app_status::SessionSummary {
             state: crate::services::app_status::TraySessionState::Running,
             elapsed_ms: 0,
@@ -130,12 +136,30 @@ pub async fn stop_session(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<SessionSummary> {
+    stop_session_inner(&app, state.inner(), notes)
+}
+
+pub fn stop_session_inner(
+    app: &AppHandle,
+    state: &AppState,
+    notes: Option<String>,
+) -> Result<SessionSummary> {
     if notes.as_ref().is_some_and(|value| value.len() > 10_000) {
         return Err(AppError::InvalidArgument(
             "Session notes cannot exceed 10000 characters".into(),
         ));
     }
-    crate::commands::monitor::cancel_active_alerts_inner(&app, &state, false, None)?;
+    crate::commands::monitor::cancel_active_alerts_inner(app, state, false, None)?;
+    {
+        let settings = state
+            .settings
+            .lock()
+            .map_err(|_| AppError::Internal("lock".into()))?
+            .clone();
+        let _ = state
+            .pomodoro
+            .on_session_stopped(&settings.pomodoro, now_ms());
+    }
 
     let session_state = {
         let mut active = state
@@ -190,22 +214,34 @@ pub async fn stop_session(
     );
     state
         .app_status
-        .update_session(&app, crate::services::app_status::SessionSummary::idle());
+        .update_session(app, crate::services::app_status::SessionSummary::idle());
 
     Ok(SessionSummary::from(session))
 }
 
 #[tauri::command]
 pub async fn pause_session(app: AppHandle, state: State<'_, AppState>) -> Result<()> {
+    let paused = {
+        let active = state
+            .active_session
+            .lock()
+            .map_err(|_| AppError::Internal("lock".into()))?;
+        let s = active.as_ref().ok_or(AppError::NoActiveSession)?;
+        !s.paused
+    };
+    set_session_paused_inner(&app, state.inner(), paused)
+}
+
+pub fn set_session_paused_inner(app: &AppHandle, state: &AppState, paused: bool) -> Result<()> {
     let (snapshot, lifecycle_event, payload) = {
         let mut active = state
             .active_session
             .lock()
             .map_err(|_| AppError::Internal("lock".into()))?;
         let s = active.as_mut().ok_or(AppError::NoActiveSession)?;
-        s.paused = !s.paused;
+        s.paused = paused;
         s.last_tick_ms = now_ms();
-        let event = if s.paused {
+        let event = if paused {
             "session:paused"
         } else {
             "session:resumed"
@@ -223,9 +259,9 @@ pub async fn pause_session(app: AppHandle, state: State<'_, AppState>) -> Result
         .map_err(|_| AppError::Internal("lock".into()))?
         .persist_runtime(&snapshot)?;
     state.app_status.update_session(
-        &app,
+        app,
         crate::services::app_status::SessionSummary {
-            state: if lifecycle_event == "session:paused" {
+            state: if paused {
                 crate::services::app_status::TraySessionState::Paused
             } else {
                 crate::services::app_status::TraySessionState::Running
@@ -426,6 +462,10 @@ pub async fn get_live_stats(state: State<'_, AppState>) -> Result<Option<LiveSta
 /// Start a break: record break_start in timeline, set on_break flag.
 #[tauri::command]
 pub async fn start_break(state: State<'_, AppState>) -> Result<()> {
+    start_break_inner(state.inner(), BreakSource::Manual)
+}
+
+pub fn start_break_inner(state: &AppState, source: BreakSource) -> Result<()> {
     let (session_id, snapshot) = {
         let mut active = state
             .active_session
@@ -433,7 +473,7 @@ pub async fn start_break(state: State<'_, AppState>) -> Result<()> {
             .map_err(|_| AppError::Internal("lock".into()))?;
         let s = active.as_mut().ok_or(AppError::NoActiveSession)?;
         let now = now_ms();
-        s.start_break(now)?;
+        s.start_break(now, source)?;
         (s.session.id.clone(), s.runtime_snapshot(now))
     };
     let mut logger = state
@@ -457,6 +497,10 @@ pub async fn start_break(state: State<'_, AppState>) -> Result<()> {
 /// End a break: record break_end in timeline, clear on_break flag.
 #[tauri::command]
 pub async fn end_break(state: State<'_, AppState>) -> Result<()> {
+    end_break_inner(state.inner())
+}
+
+pub fn end_break_inner(state: &AppState) -> Result<()> {
     let (session_id, snapshot) = {
         let mut active = state
             .active_session

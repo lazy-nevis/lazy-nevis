@@ -12,6 +12,12 @@ pub struct GeneralSettings {
     pub launch_at_login: bool,
     #[serde(default = "default_time_format")]
     pub time_format: String,
+    #[serde(default = "default_week_start")]
+    pub week_start: u8,
+}
+
+fn default_week_start() -> u8 {
+    1
 }
 
 impl Default for GeneralSettings {
@@ -24,6 +30,7 @@ impl Default for GeneralSettings {
             start_minimized: false,
             launch_at_login: false,
             time_format: default_time_format(),
+            week_start: default_week_start(),
         }
     }
 }
@@ -105,6 +112,112 @@ impl Default for AlertSettings {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct AlertChannels {
+    pub notification: bool,
+    pub fullscreen: bool,
+    pub sound: bool,
+}
+
+impl AlertChannels {
+    pub fn validate(&self) -> crate::error::Result<()> {
+        if !self.notification && !self.fullscreen && !self.sound {
+            return Err(crate::error::AppError::InvalidArgument(
+                "At least one delivery channel must be enabled".into(),
+            ));
+        }
+        Ok(())
+    }
+}
+
+impl Default for AlertChannels {
+    fn default() -> Self {
+        Self {
+            notification: true,
+            fullscreen: false,
+            sound: true,
+        }
+    }
+}
+
+fn default_reminder_channels() -> AlertChannels {
+    AlertChannels {
+        notification: true,
+        fullscreen: false,
+        sound: true,
+    }
+}
+
+fn default_habit_channels() -> AlertChannels {
+    AlertChannels {
+        notification: true,
+        fullscreen: false,
+        sound: false,
+    }
+}
+
+fn default_pomodoro_channels() -> AlertChannels {
+    AlertChannels {
+        notification: true,
+        fullscreen: false,
+        sound: true,
+    }
+}
+
+fn default_delivery_sound() -> String {
+    "builtin:alert1.wav".to_string()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct DeliverySettings {
+    #[serde(default = "default_reminder_channels")]
+    pub reminders: AlertChannels,
+    #[serde(default = "default_habit_channels")]
+    pub habits: AlertChannels,
+    #[serde(default = "default_pomodoro_channels")]
+    pub pomodoro: AlertChannels,
+    #[serde(default = "default_delivery_sound")]
+    pub reminder_sound: String,
+    #[serde(default = "default_delivery_sound")]
+    pub habit_sound: String,
+    #[serde(default = "default_delivery_sound")]
+    pub pomodoro_sound: String,
+}
+
+impl Default for DeliverySettings {
+    fn default() -> Self {
+        Self {
+            reminders: default_reminder_channels(),
+            habits: default_habit_channels(),
+            pomodoro: default_pomodoro_channels(),
+            reminder_sound: default_delivery_sound(),
+            habit_sound: default_delivery_sound(),
+            pomodoro_sound: default_delivery_sound(),
+        }
+    }
+}
+
+impl DeliverySettings {
+    pub fn validate(&self) -> crate::error::Result<()> {
+        self.reminders.validate()?;
+        self.habits.validate()?;
+        self.pomodoro.validate()?;
+        for sound in [
+            &self.reminder_sound,
+            &self.habit_sound,
+            &self.pomodoro_sound,
+        ] {
+            if sound.trim().is_empty() || sound.len() > 512 {
+                return Err(crate::error::AppError::InvalidArgument(
+                    "Invalid delivery sound id".into(),
+                ));
+            }
+        }
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct AudioSettings {
@@ -177,6 +290,16 @@ pub struct ChecklistSettings {
     pub grace_period_ms: u64,
     /// Last-used history sort: "created" | "due" | "completed".
     pub history_sort: String,
+    /// Group-by dimensions for the open list (spec: checklist-organization).
+    #[serde(default)]
+    pub group_by: Vec<String>,
+    /// Natural-language due date recognition in entry lines.
+    #[serde(default = "default_date_recognition")]
+    pub date_recognition: bool,
+}
+
+fn default_date_recognition() -> bool {
+    true
 }
 
 impl Default for ChecklistSettings {
@@ -184,6 +307,38 @@ impl Default for ChecklistSettings {
         Self {
             grace_period_ms: 10_000,
             history_sort: "created".to_string(),
+            group_by: Vec::new(),
+            date_recognition: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct UiSettings {
+    pub sidebar_collapsed: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct CalendarSettings {
+    pub visible_kinds: Vec<String>,
+    pub default_view: String,
+}
+
+impl Default for CalendarSettings {
+    fn default() -> Self {
+        Self {
+            visible_kinds: vec![
+                "session".into(),
+                "pomodoro_run".into(),
+                "checklist_completed".into(),
+                "checklist_due".into(),
+                "habit_log".into(),
+                "habit_day".into(),
+                "reminder_occurrence".into(),
+            ],
+            default_view: "month".into(),
         }
     }
 }
@@ -223,9 +378,13 @@ pub struct AppSettings {
     #[serde(default)]
     pub general: GeneralSettings,
     #[serde(default)]
+    pub ui: UiSettings,
+    #[serde(default)]
     pub focus_rules: FocusRules,
     #[serde(default)]
     pub alerts: AlertSettings,
+    #[serde(default)]
+    pub delivery: DeliverySettings,
     #[serde(default)]
     pub audio: AudioSettings,
     #[serde(default)]
@@ -233,7 +392,11 @@ pub struct AppSettings {
     #[serde(default)]
     pub shortcuts: ShortcutSettings,
     #[serde(default)]
+    pub pomodoro: crate::models::pomodoro::PomodoroSettings,
+    #[serde(default)]
     pub checklist: ChecklistSettings,
+    #[serde(default)]
+    pub calendar: CalendarSettings,
     #[serde(default)]
     pub app_mode: AppModeSettings,
 }
@@ -308,6 +471,40 @@ impl AppSettings {
         ) {
             return Err(invalid("Invalid checklist history sort"));
         }
+        let allowed_group_by = ["category", "date", "priority"];
+        let mut seen_group_by = std::collections::HashSet::new();
+        for key in &self.checklist.group_by {
+            if !allowed_group_by.contains(&key.as_str()) || !seen_group_by.insert(key.clone()) {
+                return Err(invalid("Invalid checklist group_by"));
+            }
+        }
+        if !matches!(self.general.week_start, 0 | 1) {
+            return Err(invalid("week_start must be 0 (Sunday) or 1 (Monday)"));
+        }
+        let allowed_calendar_kinds = [
+            "session",
+            "pomodoro_run",
+            "checklist_completed",
+            "checklist_due",
+            "habit_log",
+            "habit_day",
+            "reminder_occurrence",
+        ];
+        let mut seen_kinds = std::collections::HashSet::new();
+        for kind in &self.calendar.visible_kinds {
+            if !allowed_calendar_kinds.contains(&kind.as_str()) || !seen_kinds.insert(kind.clone())
+            {
+                return Err(invalid("Invalid calendar visible_kinds"));
+            }
+        }
+        if !matches!(
+            self.calendar.default_view.as_str(),
+            "month" | "week" | "day"
+        ) {
+            return Err(invalid("Invalid calendar default_view"));
+        }
+        self.delivery.validate()?;
+        self.pomodoro.validate()?;
         if !matches!(self.app_mode.mode.as_str(), "full" | "compact") {
             return Err(invalid("Invalid app mode"));
         }
@@ -404,6 +601,24 @@ mod app_settings_tests {
             serde_json::from_str(r#"{"general":{"language":"pt-BR"}}"#).unwrap();
         assert_eq!(settings.checklist.grace_period_ms, 10_000);
         assert_eq!(settings.checklist.history_sort, "created");
+        assert!(settings.checklist.group_by.is_empty());
+        assert!(settings.checklist.date_recognition);
+        settings.validate().unwrap();
+    }
+
+    #[test]
+    fn old_settings_default_ui_sidebar_collapsed_to_false() {
+        let settings: AppSettings =
+            serde_json::from_str(r#"{"general":{"language":"en-US"}}"#).unwrap();
+        assert!(!settings.ui.sidebar_collapsed);
+    }
+
+    #[test]
+    fn old_settings_default_delivery_and_week_start() {
+        let settings: AppSettings =
+            serde_json::from_str(r#"{"general":{"language":"en-US"}}"#).unwrap();
+        assert_eq!(settings.general.week_start, 1);
+        assert!(settings.delivery.reminders.sound);
         settings.validate().unwrap();
     }
 }

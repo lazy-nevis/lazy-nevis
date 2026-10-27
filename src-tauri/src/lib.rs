@@ -92,6 +92,18 @@ pub fn run() {
             let language = settings.general.language.clone();
             let logger = Arc::new(Mutex::new(SessionLogger::new(Arc::clone(&db))));
             let checklist = Arc::new(services::checklist::ChecklistService::new(Arc::clone(&db)));
+            let scheduler = Arc::new(Mutex::new(services::scheduler::Scheduler::new(Arc::clone(
+                &db,
+            ))));
+            let reminders = Arc::new(services::reminders::ReminderService::new(
+                Arc::clone(&db),
+                Arc::clone(&scheduler),
+            ));
+            let habits = Arc::new(services::habits::HabitService::new(
+                Arc::clone(&db),
+                Arc::clone(&scheduler),
+            ));
+            let pomodoro = Arc::new(services::pomodoro::PomodoroEngine::new(Arc::clone(&db)));
 
             app.manage(AppState {
                 db,
@@ -104,6 +116,11 @@ pub fn run() {
                 checklist,
                 app_status: Arc::new(services::app_status::AppStatusManager::new()),
                 demo_active,
+                reminders,
+                habits,
+                scheduler,
+                overlay_queue: Mutex::new(services::overlay_queue::OverlayQueue::new()),
+                pomodoro,
             });
 
             if demo_active {
@@ -152,6 +169,23 @@ pub fn run() {
                     state.app_status.update_session(app.handle(), summary);
                 }
             }
+            if !demo_active {
+                let state = app.state::<AppState>();
+                let settings = state
+                    .settings
+                    .lock()
+                    .map_err(|_| std::io::Error::other("settings lock"))?
+                    .clone();
+                if state
+                    .pomodoro
+                    .recover_paused(&settings.pomodoro, state::now_ms())
+                    .map_err(|e| std::io::Error::other(e.to_string()))?
+                {
+                    if let Ok(pstate) = state.pomodoro.state(&settings.pomodoro, state::now_ms()) {
+                        let _ = app.emit("pomodoro:changed", pstate);
+                    }
+                }
+            }
             let configured_shortcuts = app
                 .state::<AppState>()
                 .settings
@@ -193,6 +227,11 @@ pub fn run() {
             if let Err(error) = commands::app_mode::ensure_secondary_window(app.handle()) {
                 tracing::warn!(?error, "secondary window unavailable");
             }
+            if let Err(error) = commands::quick_log::ensure_quick_log_window(app.handle()) {
+                tracing::warn!(?error, "quick-log window unavailable");
+            }
+            monitor::start_scheduler_ticker(app.handle().clone());
+            monitor::start_pomodoro_ticker(app.handle().clone());
             #[cfg(debug_assertions)]
             {
                 maybe_run_overlay_smoke_test(app);
@@ -275,6 +314,13 @@ pub fn run() {
         .on_window_event(|window, event| {
             // The reusable secondary window hides on close so reopening stays
             // instant (spec: app-modes/instant-secondary-window).
+            if window.label() == commands::quick_log::QUICKLOG_WINDOW_LABEL {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+                return;
+            }
             if window.label() == commands::app_mode::SECONDARY_WINDOW_LABEL {
                 if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                     api.prevent_close();
@@ -364,6 +410,18 @@ pub fn run() {
             commands::session::update_event_classification,
             commands::session::start_break,
             commands::session::end_break,
+            commands::pomodoro::get_pomodoro_state,
+            commands::pomodoro::start_pomodoro,
+            commands::pomodoro::pause_pomodoro,
+            commands::pomodoro::resume_pomodoro,
+            commands::pomodoro::skip_pomodoro_phase,
+            commands::pomodoro::start_next_pomodoro_phase,
+            commands::pomodoro::stop_pomodoro,
+            commands::pomodoro::list_pomodoro_runs,
+            commands::pomodoro::get_pomodoro_stats,
+            commands::pomodoro::list_pomodoro_phases,
+            commands::pomodoro::delete_pomodoro_run,
+            commands::pomodoro::export_pomodoro,
             commands::settings::get_settings,
             commands::settings::save_settings,
             commands::settings::reset_settings,
@@ -383,10 +441,37 @@ pub fn run() {
             commands::monitor::cancel_active_alerts,
             commands::monitor::hide_overlay_alert,
             commands::notifications::send_app_notification,
+            commands::reminders::list_reminders,
+            commands::reminders::get_reminder,
+            commands::reminders::create_reminder,
+            commands::reminders::update_reminder,
+            commands::reminders::delete_reminder,
+            commands::reminders::set_reminder_active,
+            commands::reminders::preview_schedule,
+            commands::reminders::list_trigger_events,
+            commands::reminders::act_on_trigger_event,
+            commands::reminders::test_delivery,
+            commands::reminders::resolve_overlay_action,
             commands::app_mode::get_app_status,
             commands::app_mode::set_app_mode,
             commands::app_mode::set_window_pin,
             commands::app_mode::open_secondary_window,
+            commands::habits::list_habits,
+            commands::habits::get_habit_detail,
+            commands::habits::create_habit,
+            commands::habits::update_habit,
+            commands::habits::delete_habit,
+            commands::habits::set_habit_active,
+            commands::habits::reorder_habits,
+            commands::habits::log_habit,
+            commands::habits::update_habit_log,
+            commands::habits::delete_habit_log,
+            commands::habits::list_habit_logs,
+            commands::habits::get_habits_today,
+            commands::habits::get_habit_day_series,
+            commands::habits::get_habit_reports,
+            commands::habits::export_habits,
+            commands::habits::open_quick_log,
             commands::checklist::create_checklist_item,
             commands::checklist::update_checklist_item,
             commands::checklist::complete_checklist_item,
@@ -398,9 +483,14 @@ pub fn run() {
             commands::checklist::list_checklist_tags,
             commands::checklist::link_checklist_session,
             commands::checklist::get_linked_checklist_item,
+            commands::checklist::list_checklist_categories,
+            commands::checklist::create_checklist_category,
+            commands::checklist::update_checklist_category,
+            commands::checklist::delete_checklist_category,
             commands::permissions::check_permissions,
             commands::permissions::request_notification_permission,
             commands::permissions::open_accessibility_settings,
+            commands::calendar::get_calendar_range,
             commands::demo::demo_is_active,
             commands::demo::demo_apply_seed,
             commands::demo::demo_set_appearance,
@@ -580,6 +670,7 @@ fn maybe_run_overlay_smoke_test(app: &tauri::App) {
 
         for attempt in 1..=2 {
             let payload = models::OverlayAlertPayload {
+                kind: "distraction".to_string(),
                 session_id: "smoke-test".to_string(),
                 app_name: format!("Smoke Test {attempt}"),
                 window_title: Some("Overlay show/dismiss/show smoke test".to_string()),
@@ -591,6 +682,7 @@ fn maybe_run_overlay_smoke_test(app: &tauri::App) {
                 is_test: true,
                 language: "en-US".to_string(),
                 time_format: "24h".to_string(),
+                reminder: None,
             };
 
             if let Err(error) = commands::monitor::show_overlay_payload(&app, payload) {

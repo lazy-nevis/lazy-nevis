@@ -215,7 +215,20 @@ fn apply_seed_file(state: &AppState, seed: &SeedFile) -> Result<()> {
             .as_ref()
             .map(|tag| vec![tag.clone()])
             .unwrap_or_default();
-        let created = checklist.create(item.title.clone(), None, tags, now)?;
+        use crate::models::Priority;
+        use crate::services::checklist::CreateItem;
+        let created = checklist.create(
+            CreateItem {
+                title: item.title.clone(),
+                due_date: None,
+                due_has_time: false,
+                tags,
+                category: None,
+                priority: Priority::None,
+                parent_id: None,
+            },
+            now,
+        )?;
         if item.done {
             checklist.set_completed(&created.id, Some(now - 3_600_000))?;
         }
@@ -341,6 +354,20 @@ mod tests {
     fn test_state() -> AppState {
         let db = Arc::new(Mutex::new(Database::open_in_memory().unwrap()));
         let settings = AppSettings::default();
+        let scheduler = Arc::new(Mutex::new(crate::services::scheduler::Scheduler::new(
+            Arc::clone(&db),
+        )));
+        let reminders = Arc::new(crate::services::reminders::ReminderService::new(
+            Arc::clone(&db),
+            Arc::clone(&scheduler),
+        ));
+        let habits = Arc::new(crate::services::habits::HabitService::new(
+            Arc::clone(&db),
+            Arc::clone(&scheduler),
+        ));
+        let pomodoro = Arc::new(crate::services::pomodoro::PomodoroEngine::new(Arc::clone(
+            &db,
+        )));
         AppState {
             db: Arc::clone(&db),
             logger: Arc::new(Mutex::new(SessionLogger::new(Arc::clone(&db)))),
@@ -352,6 +379,11 @@ mod tests {
             checklist: Arc::new(ChecklistService::new(Arc::clone(&db))),
             app_status: Arc::new(AppStatusManager::new()),
             demo_active: true,
+            reminders,
+            habits,
+            scheduler,
+            overlay_queue: Mutex::new(crate::services::overlay_queue::OverlayQueue::new()),
+            pomodoro,
         }
     }
 

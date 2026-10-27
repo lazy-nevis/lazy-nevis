@@ -9,7 +9,7 @@ use crate::services::window_monitor::{monitor_loop, WindowChangeEvent};
 use crate::state::{now_ms, AppState, SessionData};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::oneshot;
 use tokio::time;
 
@@ -141,6 +141,7 @@ pub fn start_monitor(
     let settings = Arc::clone(&state.settings);
     let logger = Arc::clone(&state.logger);
     let app_status = Arc::clone(&state.app_status);
+    let pomodoro_tick = Arc::clone(&state.pomodoro);
 
     // ── 1-second ticker: time accumulation + ALERT CHECKING ────────────────────
     // KEY FIX: alerts were only checked on window change events, so if the user
@@ -157,6 +158,7 @@ pub fn start_monitor(
         let mut idle_cache_tick: u64 = 0;
 
         let status_tick = Arc::clone(&app_status);
+        let pomodoro_engine = Arc::clone(&pomodoro_tick);
         tauri::async_runtime::spawn(async move {
             let mut interval = time::interval(Duration::from_millis(1000));
             let mut tick_count: u64 = 0;
@@ -175,6 +177,7 @@ pub fn start_monitor(
                                 let now = now_ms();
                                 s.last_tick_ms = now;
                                 let break_finished = s.on_break
+                                    && s.break_source == crate::models::BreakSource::Manual
                                     && s.break_started_at_ms.is_some_and(|started| {
                                         settings_tick.lock().is_ok_and(|settings| {
                                             now - started
@@ -241,7 +244,9 @@ pub fn start_monitor(
 
                                     if let Ok(settings) = settings_tick.lock() {
                                         let breaks = &settings.breaks;
+                                        let pomodoro_active = pomodoro_engine.is_running();
                                         if breaks.enabled
+                                            && !pomodoro_active
                                             && !s.is_distracted
                                             && !s.is_idle
                                             && !s.on_break
@@ -334,6 +339,7 @@ pub fn start_monitor(
                                                     .filter(|title| !title.is_empty());
                                                 let overlay_payload =
                                                     crate::models::OverlayAlertPayload {
+                                                        kind: "distraction".to_string(),
                                                         session_id: sid.clone(),
                                                         app_name: alert_app.clone(),
                                                         window_title,
@@ -349,6 +355,7 @@ pub fn start_monitor(
                                                             .general
                                                             .time_format
                                                             .clone(),
+                                                        reminder: None,
                                                     };
                                                 tracing::info!(
                                                 "ALERT fullscreen: distracted for {}ms (threshold {}ms)",
@@ -516,6 +523,74 @@ fn build_on_change(
             }
         }
     }
+}
+
+/// Always-on 1-second scheduler for reminders/habits (spec: calendar-and-reminders).
+pub fn start_pomodoro_ticker(app: AppHandle) {
+    tauri::async_runtime::spawn(async move {
+        let mut interval = time::interval(Duration::from_millis(1000));
+        let mut last_tick = now_ms();
+        loop {
+            interval.tick().await;
+            let now = now_ms();
+            let elapsed = now - last_tick;
+            last_tick = now;
+            let state = app.state::<AppState>();
+            let settings = match state.settings.lock() {
+                Ok(guard) => guard.clone(),
+                Err(_) => continue,
+            };
+            if !settings.pomodoro.enabled && !state.pomodoro.is_running() {
+                continue;
+            }
+            let (pstate, effects) = match state.pomodoro.tick(&settings.pomodoro, now, elapsed) {
+                Ok(value) => value,
+                Err(error) => {
+                    tracing::warn!(?error, "pomodoro tick failed");
+                    continue;
+                }
+            };
+            let _ = app.emit("pomodoro:tick", &pstate);
+            if let Err(error) =
+                crate::commands::pomodoro::apply_pomodoro_effects(&app, &state, effects).await
+            {
+                tracing::warn!(?error, "pomodoro effects failed");
+            }
+        }
+    });
+}
+
+pub fn start_scheduler_ticker(app: AppHandle) {
+    tauri::async_runtime::spawn(async move {
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(1));
+        loop {
+            interval.tick().await;
+            let Some(state) = app.try_state::<AppState>() else {
+                continue;
+            };
+            let now = crate::state::now_ms();
+            let due = {
+                let mut scheduler = match state.scheduler.lock() {
+                    Ok(guard) => guard,
+                    Err(_) => continue,
+                };
+                match scheduler.tick(now) {
+                    Ok(triggers) => triggers,
+                    Err(error) => {
+                        tracing::warn!(?error, "scheduler tick failed");
+                        continue;
+                    }
+                }
+            };
+            for trigger in due {
+                if let Err(error) =
+                    crate::commands::reminders::deliver_due_trigger(&app, &state, trigger).await
+                {
+                    tracing::warn!(?error, "failed to deliver scheduled trigger");
+                }
+            }
+        }
+    });
 }
 
 #[cfg(test)]

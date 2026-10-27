@@ -1,9 +1,14 @@
 pub mod app_mode;
 pub mod audio;
+pub mod calendar;
 pub mod checklist;
 pub mod demo;
+pub mod habits;
 pub mod monitor;
 pub mod notifications;
 pub mod permissions;
+pub mod pomodoro;
+pub mod quick_log;
+pub mod reminders;
 pub mod session;
 pub mod settings;

@@ -15,7 +15,7 @@ export function unsupportedCapture(platform: ScreenshotPlatform): CaptureAdapter
     async capture(request: CaptureRequest): Promise<CaptureResult> {
       throw new Error(
         `Screenshot capture is not implemented for ${platform} (shot=${request.shotId}). ` +
-          `See openspec/changes/2026-07-screenshot-automation/design.md Phase C.`,
+          `See knowledge/changes/2026-07-01/screenshot-automation/plan.md Phase C.`,
       );
     },
   };
