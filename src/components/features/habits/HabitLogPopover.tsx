@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { AnchoredPanel } from "@/components/ui/popover";
-import { PopIn } from "@/components/ui/motion";
 import { HabitLogForm } from "@/components/features/habits/HabitLogForm";
 import type { Habit, HabitLogInput, HabitTargetProgress } from "@/types";
 
@@ -21,15 +20,13 @@ export function HabitLogPopover({
   const { t } = useTranslation(undefined, { keyPrefix: "habits" });
   return (
     <AnchoredPanel anchor={anchor} onClose={onClose} ariaLabel={t("log_title")} className="w-[22rem] max-w-[calc(100vw-1rem)]">
-      <PopIn>
-        <HabitLogForm
-          habit={habit}
-          progress={progress}
-          source="card"
-          onCancel={onClose}
-          onSubmit={onSubmit}
-        />
-      </PopIn>
+      <HabitLogForm
+        habit={habit}
+        progress={progress}
+        source="card"
+        onCancel={onClose}
+        onSubmit={onSubmit}
+      />
     </AnchoredPanel>
   );
 }

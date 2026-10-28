@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { motion } from "motion/react";
 import { cn } from "@/utils/cn";
 
 const GAP = 6;
@@ -21,7 +22,7 @@ function useAnchoredPosition(
   panelRef: React.RefObject<HTMLDivElement | null>,
   align: "start" | "end",
 ) {
-  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const [position, setPosition] = useState<{ top: number; left: number; above: boolean } | null>(null);
   const anchorRef = useRef(getAnchor);
   anchorRef.current = getAnchor;
 
@@ -34,7 +35,9 @@ function useAnchoredPosition(
       const anchor = anchorRef.current();
       const panel = panelRef.current;
       if (!anchor || !panel) return;
-      const { width, height } = panel.getBoundingClientRect();
+      // Layout size, not getBoundingClientRect: an entrance scale would shrink the measurement.
+      const width = panel.offsetWidth;
+      const height = panel.offsetHeight;
       const fitsBelow = anchor.bottom + GAP + height <= window.innerHeight - VIEWPORT_MARGIN;
       const top = fitsBelow ? anchor.bottom + GAP : Math.max(VIEWPORT_MARGIN, anchor.top - GAP - height);
       const rawLeft = align === "end" ? anchor.right - width : anchor.left;
@@ -42,7 +45,7 @@ function useAnchoredPosition(
         Math.max(VIEWPORT_MARGIN, rawLeft),
         window.innerWidth - width - VIEWPORT_MARGIN,
       );
-      setPosition({ top, left });
+      setPosition({ top, left, above: !fitsBelow });
     };
     place();
     window.addEventListener("resize", place);
@@ -197,15 +200,21 @@ export function AnchoredPanel({
     };
   }, [anchor]);
 
+  // The whole panel (frame included) zooms and fades, so an AnimatePresence exit leaves nothing behind.
   return createPortal(
-    <div
+    <motion.div
       ref={panelRef}
       role="dialog"
       aria-label={ariaLabel}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.14, ease: "easeIn" } }}
+      transition={{ type: "spring", bounce: 0.2, visualDuration: 0.2 }}
       style={{
         top: position?.top ?? 0,
         left: position?.left ?? 0,
         visibility: position ? "visible" : "hidden",
+        transformOrigin: position?.above ? "bottom left" : "top left",
       }}
       className={cn(
         "fixed z-[80] rounded-xl border border-border bg-popover text-popover-foreground shadow-xl",
@@ -213,7 +222,7 @@ export function AnchoredPanel({
       )}
     >
       {children}
-    </div>,
+    </motion.div>,
     document.body,
   );
 }
