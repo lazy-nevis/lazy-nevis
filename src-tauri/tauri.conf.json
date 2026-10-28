@@ -51,7 +51,8 @@
     ],
     "resources": {
       "sounds/*": "sounds/",
-      "icons/**/*": "icons/"
+      "icons/icon.icns": "icons/icon.icns",
+      "icons/icon.png": "icons/icon.png"
     },
     "macOS": {
       "minimumSystemVersion": "12.0",

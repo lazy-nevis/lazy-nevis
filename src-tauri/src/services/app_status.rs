@@ -138,9 +138,9 @@ fn next_fullscreen_transition(
 /// Embedded PNG bytes for the tray icon of a given state.
 ///
 /// Compiled directly into the binary rather than resolved via
-/// `BaseDirectory::Resource` at runtime: Tauri's `"icons/**/*": "icons/"`
-/// resource glob flattens subdirectories, so `icons/tray/idle_monochrome.png`
-/// is actually copied to `icons/idle_monochrome.png` — a path-resolved lookup
+/// `BaseDirectory::Resource` at runtime: the old `"icons/**/*": "icons/"`
+/// resource glob flattened subdirectories, so `icons/tray/idle_monochrome.png`
+/// was actually copied to `icons/idle_monochrome.png` — a path-resolved lookup
 /// for `icons/tray/idle_monochrome.png` silently fails and falls back to the
 /// app's default (non-template-shaped) icon, which renders as a plain filled
 /// square once `icon_as_template` forces template compositing on it. This bit
