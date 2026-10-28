@@ -15,7 +15,7 @@
   <a href="https://deps.rs/repo/github/lazy-nevis/lazy-nevis"><img src="https://deps.rs/repo/github/lazy-nevis/lazy-nevis/status.svg" alt="Status das Dependências"></a>
   <a href="https://github.com/lazy-nevis/lazy-nevis/commits/main"><img src="https://img.shields.io/github/last-commit/lazy-nevis/lazy-nevis" alt="Último Commit"></a>
   <a href="https://github.com/lazy-nevis/lazy-nevis/releases/latest"><img src="https://img.shields.io/github/v/release/lazy-nevis/lazy-nevis?label=release&color=brightgreen" alt="Último Release"></a>
-  <a href="https://github.com/lazy-nevis/lazy-nevis/releases"><img src="https://img.shields.io/github/v/release/lazy-nevis/lazy-nevis?include_prereleases&label=pre-release&color=orange" alt="Último Pre-release"></a>
+  <a href="https://github.com/lazy-nevis/lazy-nevis/releases"><img src="https://img.shields.io/github/v/release/lazy-nevis/lazy-nevis?label=release&color=orange" alt="Última versão"></a>
   <a href="https://github.com/lazy-nevis/lazy-nevis/releases"><img src="https://img.shields.io/github/downloads/lazy-nevis/lazy-nevis/total?label=downloads" alt="Total de Downloads"></a>
   <a href="https://github.com/lazy-nevis/lazy-nevis/issues"><img src="https://img.shields.io/github/issues/lazy-nevis/lazy-nevis" alt="Issues Abertas"></a>
   <img src="https://img.shields.io/badge/plataforma-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey" alt="Plataformas: macOS, Windows, Linux">
@@ -129,7 +129,7 @@ Baixe apenas em [GitHub Releases](https://github.com/lazy-nevis/lazy-nevis/relea
 | Windows 10+ | x64, ARM64 | Instalador NSIS | [docs/install/windows.md](docs/install/windows.md) |
 | Linux | x64 | AppImage, DEB, RPM | [docs/install/linux.md](docs/install/linux.md) |
 
-Builds RC podem não ser assinadas enquanto as credenciais de assinatura são configuradas. Veja [macOS Gatekeeper](docs/troubleshooting/gatekeeper.md) e [Windows SmartScreen](docs/troubleshooting/smartscreen.md) para os passos de liberação. Após instalar, siga o [Guia de primeiros passos](docs/getting-started.md).
+Builds podem não ser assinadas enquanto as credenciais de assinatura são configuradas. Veja [macOS Gatekeeper](docs/troubleshooting/gatekeeper.md) e [Windows SmartScreen](docs/troubleshooting/smartscreen.md) para os passos de liberação. Após instalar, siga o [Guia de primeiros passos](docs/getting-started.md).
 
 ---
 

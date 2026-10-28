@@ -8,6 +8,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 
 ## [Unreleased]
 
+---
+
+## [1.0.0] - 2026-10-28
+
+First stable release. Highlights: planner suite (reminders, habits, Pomodoro, calendar), Quiet Workspace UI refresh, proactive new-version notice (tray dot, dashboard alert, About badge), and fixes listed below.
+
 ### Added
 - Proactive update notice: background release check (startup + every 6 h, silent offline), dismissible orange Dashboard alert, unseen badge on About, tray orange-dot icon variants plus "New version X available" menu entry, and a highlighted About card with release notes. OKF: `knowledge/changes/2026-10-28/proactive-update-notice/`.
 - Pomodoro timer (opt-in): engine with crash recovery, migration `0008`, linked focus sessions via `break_source`, phase alerts through the shared delivery service, `/pomodoro` page, Dashboard widget, Compact strip, tray block/tooltip, command palette, Settings tab, history (delete/export CSV/JSON), and reports (Today panel; 7/30/90-day completion rate, average pauses, best hour, per-day chart). OKF: `knowledge/changes/2026-10-26/pomodoro-timer/`.
