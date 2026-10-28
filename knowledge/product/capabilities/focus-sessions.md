@@ -22,6 +22,11 @@ The system SHALL allow at most one active session and SHALL support start, pause
 - **WHEN** the user starts, pauses, resumes, checkpoints, and stops a session
 - **THEN** state and elapsed counters reflect those transitions and the completed session is durable
 
+#### Scenario: Session started outside the UI
+- **GIVEN** the main window is open with no active session
+- **WHEN** a session starts or stops from a linked Pomodoro run, the tray quick panel, or a shortcut
+- **THEN** the frontend session state re-hydrates from the backend on `session:started` / `session:stopped`
+
 #### Scenario: Invalid transition
 - **GIVEN** no session is active
 - **WHEN** a pause or stop is requested

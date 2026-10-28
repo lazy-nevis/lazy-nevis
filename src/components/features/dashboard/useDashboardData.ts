@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { calendarService, pomodoroService, reminderService, sessionService } from "@/services/tauri";
+import { calendarService, reminderService, sessionService } from "@/services/tauri";
 import { useChecklistStore } from "@/stores/checklistStore";
+import { usePomodoroStore } from "@/stores/pomodoroStore";
 import { useSessionStore } from "@/stores/sessionStore";
 import type { CalendarDay, PomodoroState, Reminder, SessionSummary } from "@/types";
 
@@ -41,7 +42,8 @@ export function useDashboardData(): DashboardData {
   const [sessionsToday, setSessionsToday] = useState<SessionSummary[]>([]);
   const [sessionsWeekCount, setSessionsWeekCount] = useState(0);
   const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [pomodoro, setPomodoro] = useState<PomodoroState | null>(null);
+  // Live state: AppShell feeds this store from pomodoro:changed and pomodoro:tick.
+  const pomodoro = usePomodoroStore((s) => s.state);
   const [monthDays, setMonthDays] = useState<CalendarDay[]>([]);
   // Starting/stopping a session changes today's session list.
   const activeSessionId = useSessionStore((s) => s.activeSession?.id ?? null);
@@ -52,14 +54,12 @@ export function useDashboardData(): DashboardData {
       sessionService.listByRange(todayStart, todayEnd),
       sessionService.listByRange(todayStart - 6 * DAY_MS, todayEnd),
       reminderService.list(),
-      pomodoroService.getState(),
       calendarService.getRange(from, to),
     ]);
-    const [today, week, rem, pomo, cal] = results;
+    const [today, week, rem, cal] = results;
     if (today.status === "fulfilled") setSessionsToday(today.value);
     if (week.status === "fulfilled") setSessionsWeekCount(week.value.length);
     if (rem.status === "fulfilled") setReminders(rem.value);
-    if (pomo.status === "fulfilled") setPomodoro(pomo.value);
     if (cal.status === "fulfilled") setMonthDays(cal.value.days);
   }, [now, todayStart, todayEnd]);
 

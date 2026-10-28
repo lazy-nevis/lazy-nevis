@@ -140,6 +140,9 @@ export function useFocusSession() {
       ] as const;
       for (const [eventName, kind] of lifecycleEvents) {
         const unLifecycle = await listen<SessionLifecyclePayload>(eventName, async (ev) => {
+          // Sessions started/stopped outside this window's handlers (Pomodoro
+          // link, tray quick panel) only reach the store through these events.
+          if (kind === "started" || kind === "stopped") void refreshSession();
           const cfg = settingsRef.current;
           if (!cfg.alerts.session_feedback_notifications) return;
           const label = ev.payload.label ?? tRef.current("notifications.unnamed_session");
