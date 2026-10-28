@@ -28,6 +28,8 @@
     --sidebar-border: 240 6% 90%;
     --brand: 24 94% 53%;
     --brand-foreground: 0 0% 100%;
+    --notice: 24 94% 53%;
+    --notice-foreground: 0 0% 100%;
     --success: 142 71% 40%;
     --warning: 38 92% 50%;
     --info: 199 89% 48%;
@@ -74,6 +76,8 @@
     --sidebar-border: 240 4% 15%;
     --brand: 24 94% 53%;
     --brand-foreground: 0 0% 100%;
+    --notice: 24 94% 53%;
+    --notice-foreground: 0 0% 100%;
     --success: 142 71% 40%;
     --warning: 38 92% 50%;
     --info: 199 89% 48%;
@@ -243,6 +247,8 @@
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-brand: hsl(var(--brand));
   --color-brand-foreground: hsl(var(--brand-foreground));
+  --color-notice: hsl(var(--notice));
+  --color-notice-foreground: hsl(var(--notice-foreground));
   --color-success: hsl(var(--success));
   --color-warning: hsl(var(--warning));
   --color-info: hsl(var(--info));

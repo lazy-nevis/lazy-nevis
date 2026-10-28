@@ -9,6 +9,7 @@ import { useHabits } from "@/hooks/useHabits";
 import { useSidebarCollapsed } from "@/hooks/useSidebarCollapsed";
 import { useChecklistStore } from "@/stores/checklistStore";
 import { useUiStore } from "@/stores/uiStore";
+import { selectUnseenVersion, useUpdateStore } from "@/stores/updateStore";
 import { IS_MAC } from "@/utils/platform";
 import { cn } from "@/utils/cn";
 
@@ -29,7 +30,7 @@ export function Sidebar() {
   const { effectiveCollapsed } = useSidebarCollapsed();
   const openCount = useChecklistStore((s) => s.openItems.length);
   const { pendingTodayCount } = useHabits();
-  const updateAvailable = useUiStore((s) => s.updateAvailable);
+  const updateAvailable = useUpdateStore(selectUnseenVersion);
   const setCommandPaletteOpen = useUiStore((s) => s.setCommandPaletteOpen);
   const modLabel = IS_MAC ? "⌘" : "Ctrl";
 
@@ -160,10 +161,11 @@ export function Sidebar() {
                 {item.id === "about" && updateAvailable && (
                   <span
                     className={cn(
-                      "h-2 w-2 rounded-full bg-brand",
+                      "h-2 w-2 rounded-full bg-notice",
                       effectiveCollapsed ? "absolute right-1.5 top-1.5" : "ml-1",
                     )}
-                    aria-label={t("about.update_available", { version: updateAvailable })}
+                    aria-label={t("update.badge")}
+                    data-testid="update-badge"
                   />
                 )}
               </NavLink>

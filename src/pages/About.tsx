@@ -8,8 +8,8 @@ import { PageContainer, PageHeader } from "@/components/ui/page";
 import { SectionCard } from "@/components/ui/section-card";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useSettingsStore } from "@/stores/settingsStore";
-import { useUiStore } from "@/stores/uiStore";
-import { checkForUpdate, type ReleaseInfo } from "@/services/updates";
+import { useUpdateStore } from "@/stores/updateStore";
+import { checkForUpdate } from "@/services/updates";
 import logoDark from "@/assets/brand/logo-dark.png";
 import logoLight from "@/assets/brand/logo-light.png";
 
@@ -18,16 +18,23 @@ export function About() {
   const theme = useSettingsStore((s) => s.settings.general.theme);
   const [version, setVersion] = useState("...");
   const [checking, setChecking] = useState(false);
-  const [update, setUpdate] = useState<ReleaseInfo | null>(null);
+  const update = useUpdateStore((s) => s.release);
+  const setRelease = useUpdateStore((s) => s.setRelease);
+  const markSeen = useUpdateStore((s) => s.markSeen);
   const [updateResult, setUpdateResult] = useState<
     { kind: "available" | "current" | "error"; message: string } | null
   >(null);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const setUpdateAvailable = useUiStore((state) => state.setUpdateAvailable);
 
   useEffect(() => () => {
     if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
   }, []);
+
+  // Opening the details settles the sidebar badge, tray dot and dashboard alert.
+  const pendingVersion = update?.version;
+  useEffect(() => {
+    if (pendingVersion) markSeen();
+  }, [pendingVersion, markSeen]);
 
   useEffect(() => {
     getVersion().then(setVersion).catch(() => setVersion(t("common.unavailable")));
@@ -58,8 +65,7 @@ export function About() {
     setUpdateResult(null);
     try {
       const available = await checkForUpdate(version);
-      setUpdate(available);
-      setUpdateAvailable(available?.version ?? null);
+      setRelease(available);
       showResult(
         available ? "available" : "current",
         t(available ? "about.update_available" : "about.up_to_date", {
@@ -159,10 +165,32 @@ export function About() {
           </div>
         )}
         {update && (
-          <Button onClick={() => openLink(update.url)} className="w-full gap-2">
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-            {t("about.open_release")}
-          </Button>
+          <section
+            aria-label={t("update.card_title")}
+            className="fade-slide-in rounded-xl border border-notice/50 bg-notice/10 p-4 shadow-sm"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 text-sm font-semibold">
+                <Download className="h-4 w-4 text-notice" aria-hidden="true" />
+                {t("update.card_title")}
+              </h2>
+              <span className="rounded-full bg-notice px-2 py-0.5 text-xs font-medium text-notice-foreground">
+                {t("update.card_version", { version: update.version })}
+              </span>
+            </div>
+            {update.notes && (
+              <div className="mt-3">
+                <h3 className="text-xs font-medium text-muted-foreground">{t("update.notes_title")}</h3>
+                <p className="mt-1 max-h-48 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed">
+                  {update.notes}
+                </p>
+              </div>
+            )}
+            <Button onClick={() => openLink(update.url)} className="mt-3 w-full gap-2">
+              <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              {t("about.open_release")}
+            </Button>
+          </section>
         )}
 
         {/* Footer line */}
