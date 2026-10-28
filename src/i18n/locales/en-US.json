@@ -725,7 +725,8 @@
     "state_idle": "Idle",
     "state_running": "Focusing",
     "state_paused": "Paused",
-    "open_quick_panel": "Quick Panel"
+    "open_quick_panel": "Quick Panel",
+    "update_available": "New version {{version}} available"
   },
   "habits": {
     "title": "Habits",
@@ -1060,5 +1061,15 @@
   "runtime": {
     "browser_title": "Open LazyNevis in the desktop app",
     "browser_body": "This page is the development server for the LazyNevis window. It needs the Tauri runtime, so it does nothing in a regular browser tab."
+  },
+  "update": {
+    "alert_title": "Version {{version}} is available",
+    "alert_body": "A newer LazyNevis release is ready to download.",
+    "view_details": "View details",
+    "dismiss": "Dismiss",
+    "card_title": "Update available",
+    "card_version": "Version {{version}}",
+    "notes_title": "Release notes",
+    "badge": "Update available"
   }
 }

@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { useAppStatus } from "@/hooks/useAppStatus";
 import { useSettings } from "@/hooks/useSettings";
 import { useFocusSession } from "@/hooks/useFocusSession";
+import { useUpdateWatcher } from "@/hooks/useUpdateWatcher";
 import { StartSessionModal } from "@/components/features/StartSessionModal";
 import { usePomodoro } from "@/hooks/usePomodoro";
 import { useThemeSync } from "@/hooks/useThemeSync";
@@ -121,6 +122,7 @@ function AppShell() {
   useShellHotkeys();
 
   useThemeSync();
+  useUpdateWatcher();
 
   // "LazyNevis — <screen>" follows the active route (or Compact Mode)
   // (spec: app-modes/window-titles).
@@ -146,6 +148,13 @@ function AppShell() {
   useEffect(() => {
     let unlisten: (() => void) | null = null;
     listen("shortcut:open_home", () => navigate("/")).then((fn) => { unlisten = fn; });
+    return () => { unlisten?.(); };
+  }, [navigate]);
+
+  // Tray "New version available" entry opens About.
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    listen("update:open", () => navigate("/about")).then((fn) => { unlisten = fn; });
     return () => { unlisten?.(); };
   }, [navigate]);
 

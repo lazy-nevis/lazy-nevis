@@ -18,6 +18,7 @@ function pushTrayLabels() {
       state_running: i18n.t("tray.state_running"),
       state_paused: i18n.t("tray.state_paused"),
       open_quick_panel: i18n.t("tray.open_quick_panel"),
+      update_available: i18n.t("tray.update_available", { version: "{version}", interpolation: { escapeValue: false } }),
     })
     .catch(() => undefined);
 }

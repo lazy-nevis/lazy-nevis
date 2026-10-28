@@ -14,7 +14,6 @@ interface UiStore {
   fullscreenAlertApp: string;
   fullscreenAlertMs: number;
   isCloseWarningOpen: boolean;
-  updateAvailable: string | null;
   isCommandPaletteOpen: boolean;
   setCommandPaletteOpen: (open: boolean) => void;
   addToast: (message: string, type?: Toast["type"]) => void;
@@ -24,7 +23,6 @@ interface UiStore {
   showFullscreenAlert: (app: string, ms: number) => void;
   hideFullscreenAlert: () => void;
   setCloseWarningOpen: (open: boolean) => void;
-  setUpdateAvailable: (version: string | null) => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -35,7 +33,6 @@ export const useUiStore = create<UiStore>((set) => ({
   fullscreenAlertApp: "",
   fullscreenAlertMs: 0,
   isCloseWarningOpen: false,
-  updateAvailable: null,
   isCommandPaletteOpen: false,
 
   setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
@@ -58,5 +55,4 @@ export const useUiStore = create<UiStore>((set) => ({
   hideFullscreenAlert: () =>
     set({ isFullscreenAlert: false, fullscreenAlertApp: "", fullscreenAlertMs: 0 }),
   setCloseWarningOpen: (open) => set({ isCloseWarningOpen: open }),
-  setUpdateAvailable: (updateAvailable) => set({ updateAvailable }),
 }));

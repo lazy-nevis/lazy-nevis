@@ -449,6 +449,7 @@ pub fn run() {
             commands::monitor::get_idle_time,
             commands::monitor::list_running_apps,
             commands::monitor::set_tray_labels,
+            commands::monitor::set_update_notice,
             commands::monitor::show_overlay_alert,
             commands::monitor::get_active_overlay_alert,
             commands::monitor::dismiss_overlay_alert,
@@ -829,11 +830,11 @@ fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
         .try_state::<AppState>()
         .map(|state| state.app_status.labels())
         .unwrap_or_default();
-    let menu = build_tray_menu(app, &labels)?;
+    let menu = build_tray_menu(app, &labels, None)?;
 
     // Embedded bytes, not a resolved resource path — see `icon_bytes`'s doc
     // comment for why (Tauri's resource glob flattens the `tray/` subdirectory).
-    let tray_icon = Image::from_bytes(icon_bytes(TraySessionState::Idle)).or_else(|_| {
+    let tray_icon = Image::from_bytes(icon_bytes(TraySessionState::Idle, false)).or_else(|_| {
         app.default_window_icon()
             .cloned()
             .ok_or_else(|| tauri::Error::AssetNotFound("tray icon".into()))
@@ -861,6 +862,10 @@ fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
         .on_menu_event(|app, event| match event.id.as_ref() {
             "show" => show_window(app),
             "open_quick_panel" => commands::monitor::open_tray_popover(app),
+            "update" => {
+                show_window(app);
+                let _ = app.emit("update:open", ());
+            }
             "quit" => {
                 // Stop any active session before quitting
                 if let Some(state) = app.try_state::<AppState>() {
