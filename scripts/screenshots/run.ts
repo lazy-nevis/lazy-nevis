@@ -9,7 +9,7 @@
  * Env: LAZYNEVIS_BIN, LAZYNEVIS_USE_DEV=1
  */
 
-import { mkdir, readFile, rm, access, stat } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, access, stat } from "node:fs/promises";
 import { spawn, type ChildProcess } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,6 +54,10 @@ function printHelp(): void {
               via LAZYNEVIS_* env vars (CLI args break cargo under tauri dev).
               Close any existing \`tauri dev\` first (port 1420).
 
+  Output: docs/screenshots/<platform>/ (PNGs + manifest.json), replaced on
+  every run. The demo profile lives in scripts/screenshots/out/.
+
+  LAZYNEVIS_SCREENSHOT_OUT      Override the output folder
   LAZYNEVIS_BIN                 Override binary path (release path only)
   LAZYNEVIS_USE_DEV             Same as --use-dev
   LAZYNEVIS_SCREENSHOT_TIMEOUT_MS  Max wait for tauri dev catalog (default ${DEFAULT_DEV_TIMEOUT_MS})
@@ -340,6 +344,15 @@ function countRequiredFailures(manifest: ScreenshotManifest): number {
   }).length;
 }
 
+/** Drop last run's PNGs and manifest so removed shots don't linger. */
+async function clearPreviousShots(outDir: string): Promise<void> {
+  for (const entry of await readdir(outDir)) {
+    if (entry.endsWith(".png") || entry === "manifest.json") {
+      await rm(path.join(outDir, entry), { force: true });
+    }
+  }
+}
+
 async function main(): Promise<void> {
   const { useDev, help } = parseArgs(process.argv.slice(2));
   if (help) {
@@ -351,9 +364,11 @@ async function main(): Promise<void> {
 
   const platform = detectPlatform();
   const appVersion = process.env.LAZYNEVIS_VERSION ?? (await readPackageVersion());
+  // Stable per-platform folder so docs and README can link the images;
+  // the app version lives in manifest.json.
   const outDir =
     process.env.LAZYNEVIS_SCREENSHOT_OUT ??
-    path.join(__dirname, "out", `${appVersion}-${platform}`);
+    path.join(repoRoot, "docs", "screenshots", platform);
   const dataDir =
     process.env.LAZYNEVIS_DATA_DIR ??
     path.join(__dirname, "out", `.demo-data-${platform}`);
@@ -363,6 +378,7 @@ async function main(): Promise<void> {
   await rm(dataDir, { recursive: true, force: true });
   await mkdir(dataDir, { recursive: true });
   await mkdir(outDir, { recursive: true });
+  await clearPreviousShots(outDir);
 
   console.log(`LazyNevis screenshots`);
   console.log(`mode:     ${useDev ? "tauri dev (--use-dev)" : "binary"}`);

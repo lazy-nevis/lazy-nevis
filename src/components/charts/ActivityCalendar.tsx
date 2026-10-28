@@ -56,11 +56,11 @@ export function ActivityCalendar({ sessions, locale, weeks = 16, title }: Props)
     const entry = dayMap[key];
     if (!entry) return "bg-muted/30";
     const pct = entry.bestFocus;
-    if (pct >= 80) return "bg-green-500";
-    if (pct >= 60) return "bg-green-400";
-    if (pct >= 40) return "bg-green-300";
-    if (pct >= 20) return "bg-green-200 dark:bg-green-700";
-    return "bg-green-100 dark:bg-green-900";
+    if (pct >= 80) return "bg-chart-2";
+    if (pct >= 60) return "bg-chart-2/80";
+    if (pct >= 40) return "bg-chart-2/55";
+    if (pct >= 20) return "bg-chart-2/35";
+    return "bg-chart-2/15";
   }
 
   const cellSize = 12;
@@ -125,7 +125,7 @@ export function ActivityCalendar({ sessions, locale, weeks = 16, title }: Props)
       {/* Legend */}
       <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
         <span>{t("dashboard.charts.less")}</span>
-        {["bg-muted/30", "bg-green-100 dark:bg-green-900", "bg-green-300", "bg-green-400", "bg-green-500"].map((c) => (
+        {["bg-muted/30", "bg-chart-2/15", "bg-chart-2/35", "bg-chart-2/55", "bg-chart-2"].map((c) => (
           <div key={c} className={cn("h-2.5 w-2.5 rounded-sm", c)} />
         ))}
         <span>{t("dashboard.charts.more")}</span>

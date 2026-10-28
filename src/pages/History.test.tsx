@@ -1,10 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import i18n from "@/i18n";
 import { sessionService } from "@/services/tauri";
 import { useUiStore } from "@/stores/uiStore";
 import type { SessionSummary } from "@/types";
 import { History } from "./History";
+
+function renderHistory() {
+  return render(
+    <MemoryRouter>
+      <History />
+    </MemoryRouter>,
+  );
+}
 
 const session: SessionSummary = {
   id: "session-1",
@@ -31,7 +40,7 @@ describe("History", () => {
     const list = vi.mocked(sessionService.list);
     list.mockRejectedValueOnce(new Error("database unavailable"));
 
-    render(<History />);
+    renderHistory();
 
     expect(await screen.findByText("No sessions found. Start your first session!")).toBeInTheDocument();
     expect(useUiStore.getState().toasts.some((toast) => toast.type === "error")).toBe(true);
@@ -39,7 +48,7 @@ describe("History", () => {
 
   it("filters loaded sessions by label and clears the search accessibly", async () => {
     vi.mocked(sessionService.list).mockResolvedValueOnce([session]);
-    render(<History />);
+    renderHistory();
 
     expect(await screen.findByText("Deep Work")).toBeInTheDocument();
     const search = screen.getByPlaceholderText("Search by label or note...");
@@ -51,17 +60,17 @@ describe("History", () => {
   });
 
   it("uses the date-range service when a date filter changes", async () => {
-    render(<History />);
+    renderHistory();
     await screen.findByText("No sessions found. Start your first session!");
 
-    fireEvent.click(screen.getByRole("button", { name: "Today" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Today" }));
     await waitFor(() => expect(sessionService.listByRange).toHaveBeenCalledOnce());
   });
 
   it("deletes a session only after confirmation", async () => {
     vi.mocked(sessionService.list).mockResolvedValueOnce([session]);
     const deleteSession = vi.spyOn(sessionService, "delete").mockResolvedValue();
-    render(<History />);
+    renderHistory();
     await screen.findByText("Deep Work");
 
     fireEvent.click(screen.getByRole("button", { name: "Delete session Deep Work" }));

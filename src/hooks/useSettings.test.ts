@@ -16,6 +16,7 @@ const mockSettings: AppSettings = {
     launch_at_login: false,
     time_format: "24h",
   },
+  ui: { sidebar_collapsed: false },
   focus_rules: {
     mode: "blocklist",
     apps: [],

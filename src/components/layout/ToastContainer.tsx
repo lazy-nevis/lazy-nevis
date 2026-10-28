@@ -13,15 +13,14 @@ export function ToastContainer() {
         <div
           key={toast.id}
           className={cn(
-            "flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg text-sm",
+            "flex items-center gap-3 rounded-xl border border-border bg-popover px-4 py-3 text-sm text-popover-foreground shadow-lg",
             "animate-in slide-in-from-right-5 duration-200",
-            toast.type === "success" && "bg-green-50 border-green-200 text-green-900 dark:bg-green-950 dark:border-green-800 dark:text-green-100",
-            toast.type === "error" && "bg-red-50 border-red-200 text-red-900 dark:bg-red-950 dark:border-red-800 dark:text-red-100",
-            toast.type === "info" && "bg-background border text-foreground"
+            toast.type === "success" && "border-success/30",
+            toast.type === "error" && "border-destructive/40",
           )}
         >
-          {toast.type === "success" && <CheckCircle className="h-4 w-4 shrink-0 text-green-600" />}
-          {toast.type === "error" && <XCircle className="h-4 w-4 shrink-0 text-red-600" />}
+          {toast.type === "success" && <CheckCircle className="h-4 w-4 shrink-0 text-success" />}
+          {toast.type === "error" && <XCircle className="h-4 w-4 shrink-0 text-destructive" />}
           {toast.type === "info" && <Info className="h-4 w-4 shrink-0" />}
           <span>{toast.message}</span>
           <button onClick={() => removeToast(toast.id)} className="ml-auto opacity-60 hover:opacity-100">

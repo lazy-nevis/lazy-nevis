@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { Monitor, Pause, Play, Square } from "lucide-react";
+import { ListChecks, Monitor, Pause, Play, Square } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
-import { ChecklistItemRow } from "@/components/features/checklist/ChecklistItemRow";
+import { PomodoroTrayBlock } from "@/components/features/pomodoro/PomodoroTrayBlock";
+import { ChecklistGroupedList } from "@/components/features/checklist/ChecklistGroupedList";
+import { usePomodoro } from "@/hooks/usePomodoro";
 import { ChecklistInput } from "@/components/features/checklist/ChecklistInput";
 import { useChecklist } from "@/hooks/useChecklist";
 import { useThemeSync } from "@/hooks/useThemeSync";
@@ -33,8 +36,13 @@ export function TrayPopover() {
     completeItem,
     uncompleteItem,
     createItem,
+    updateItem,
+    previewReorder,
+    commitReorder,
     refresh: refreshChecklist,
   } = useChecklist();
+  const checklistSettings = useSettingsStore((s) => s.settings.checklist);
+  usePomodoro();
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -132,9 +140,9 @@ export function TrayPopover() {
   return (
     // Lower opacity + backdrop-blur so the native vibrancy shows through more
     // (liquid-glass look); backdrop-blur is a no-op on the Linux opaque fallback.
-    <div className="flex h-screen flex-col overflow-hidden rounded-xl border border-border/50 bg-background/55 text-foreground backdrop-blur-2xl">
+    <div className="flex h-screen flex-col overflow-hidden rounded-xl border border-border/60 bg-background/55 text-foreground shadow-lg backdrop-blur-2xl">
       {/* Session block */}
-      <div className="border-b p-3">
+      <div className="border-b border-border/60 p-3">
         {activeSession ? (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -145,7 +153,7 @@ export function TrayPopover() {
                 {formatDuration(liveStats?.total_ms ?? 0)}
               </span>
             </div>
-            <div className="grid grid-cols-3 gap-1 text-center text-[11px] text-muted-foreground">
+            <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted/40 p-2 text-center text-[11px] text-muted-foreground">
               <div>
                 <p className="font-mono tabular-nums text-foreground">
                   {formatDuration(liveStats?.focus_ms ?? 0)}
@@ -171,6 +179,7 @@ export function TrayPopover() {
                 {liveStats.current_app}
               </p>
             )}
+            <PomodoroTrayBlock />
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -205,7 +214,7 @@ export function TrayPopover() {
               placeholder={t("tray_panel.session_name_placeholder")}
               className="h-8 text-sm"
             />
-            <Button size="sm" className="w-full gap-1.5" disabled={busy} onClick={() => void startSession()}>
+            <Button size="sm" variant="brand" className="w-full gap-1.5" disabled={busy} onClick={() => void startSession()}>
               <Play className="h-3.5 w-3.5" />
               {t("dashboard.session.start_button")}
             </Button>
@@ -222,20 +231,26 @@ export function TrayPopover() {
             block's full width (aligned with the session button above). */}
         <div className="-mr-2 min-h-0 flex-1 space-y-1 overflow-y-auto pr-2 [scrollbar-gutter:stable]">
           {openView.length === 0 && (
-            <p className="py-3 text-center text-xs text-muted-foreground">
-              {t("checklist.empty_open")}
-            </p>
-          )}
-          {openView.map((entry) => (
-            <ChecklistItemRow
-              key={entry.item.id}
-              entry={entry}
-              graceMs={graceMs}
-              compact
-              onToggleComplete={(item) => void completeItem(item.id)}
-              onUndo={(item) => void uncompleteItem(item.id)}
+            <EmptyState
+              icon={ListChecks}
+              title={t("checklist.empty_open")}
+              className="border-none bg-transparent py-4 shadow-none"
             />
-          ))}
+          )}
+          <ChecklistGroupedList
+            openView={openView}
+            groupBy={checklistSettings.group_by ?? []}
+            graceMs={graceMs}
+            compact
+            categoryFilterIds={[]}
+            createItem={createItem}
+            onToggleComplete={(item) => void completeItem(item.id)}
+            onUndo={(item) => void uncompleteItem(item.id)}
+            onUpdate={(item, patch) => void updateItem(item, patch)}
+            onDelete={() => {}}
+            previewReorder={previewReorder}
+            commitReorder={commitReorder}
+          />
           <ChecklistInput onCreate={createItem} />
         </div>
 

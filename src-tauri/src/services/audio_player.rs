@@ -134,6 +134,8 @@ impl Default for AudioPlayer {
 /// Resolve a sound source to an absolute path.
 pub fn resolve_sound_path(source: &str, resource_dir: &Path) -> Result<PathBuf> {
     if let Some(name) = source.strip_prefix("builtin:") {
+        // Older delivery pickers saved a doubled `builtin:builtin:` prefix.
+        let name = name.trim_start_matches("builtin:");
         let builtin = Path::new(name);
         let extension = builtin.extension().and_then(|value| value.to_str());
         if builtin.file_name().and_then(|value| value.to_str()) != Some(name)
@@ -200,5 +202,22 @@ mod tests {
         let text = directory.path().join("sound.txt");
         std::fs::write(&text, b"not audio").unwrap();
         assert!(resolve_sound_path(text.to_str().unwrap(), directory.path()).is_err());
+    }
+
+    #[test]
+    fn resolves_builtin_sound_with_doubled_prefix() {
+        let directory = tempfile::tempdir().unwrap();
+        let sounds = directory.path().join("sounds");
+        std::fs::create_dir(&sounds).unwrap();
+        std::fs::write(sounds.join("alarm.wav"), b"RIFF").unwrap();
+        let expected = sounds.join("alarm.wav");
+        assert_eq!(
+            resolve_sound_path("builtin:alarm.wav", directory.path()).unwrap(),
+            expected
+        );
+        assert_eq!(
+            resolve_sound_path("builtin:builtin:alarm.wav", directory.path()).unwrap(),
+            expected
+        );
     }
 }

@@ -2,7 +2,7 @@
 
 SQLite is local and bundled through `rusqlite`. Numbered migrations in `src-tauri/src/db/migrations/` create durable schema; new SQL constants belong in `src-tauri/src/db/queries.rs`. Sessions, timeline events, checkpoints, settings, and crash-recovery runtime snapshots are persisted. Recent audio history is local metadata.
 
-Migrations are forward-only, ordered in `schema_migrations`, transactional, and tested against fresh and upgraded databases. Foreign keys cascade session deletion to timeline events, checkpoints, and runtime state. Exports are user-created copies, not database backups. Schema changes require an OpenSpec proposal with migration and privacy consequences.
+Migrations are forward-only, ordered in `schema_migrations`, transactional, and tested against fresh and upgraded databases. Foreign keys cascade session deletion to timeline events, checkpoints, and runtime state. Exports are user-created copies, not database backups. Schema changes require an OKF bundle (`knowledge/changes/…`) with migration and privacy consequences, plus capability doc updates when contracts change.
 
 ## Location And Backup
 

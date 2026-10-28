@@ -194,6 +194,59 @@ describe("useFocusSession", () => {
     useSettingsStore.setState({ settings: current });
   });
 
+  // Regression: a session started by a linked Pomodoro or the tray never went
+  // through startSession, so the Dashboard hero stayed "Not running".
+  it("hydrates the store when a session is started or stopped outside the UI", async () => {
+    const handlers = new Map<string, (ev: { payload: unknown }) => void | Promise<void>>();
+    vi.mocked(listen).mockImplementation(async (event, handler) => {
+      handlers.set(event as string, handler as never);
+      return () => {};
+    });
+    let backendSession: Session | null = null;
+    vi.spyOn(tauriService.sessionService, "getRuntime").mockImplementation(async () =>
+      backendSession
+        ? {
+            session: backendSession,
+            live_stats: {
+              total_ms: 1000,
+              focus_ms: 1000,
+              distracted_ms: 0,
+              idle_ms: 0,
+              focus_percent: 100,
+              alert_count: 0,
+              is_distracted: false,
+              is_paused: false,
+              is_idle: false,
+              current_app: null,
+            },
+            checkpoints: [],
+          }
+        : null,
+    );
+
+    renderHook(() => useFocusSession());
+    await waitFor(() => expect(handlers.has("session:started")).toBe(true));
+    await waitFor(() => expect(useSessionStore.getState().hydrationStatus).toBe("ready"));
+    expect(useSessionStore.getState().activeSession).toBeNull();
+
+    backendSession = mockSession;
+    await act(async () => {
+      await handlers.get("session:started")!({
+        payload: { session_id: "sess-1", label: "Test", elapsed_ms: 0 },
+      });
+    });
+    await waitFor(() => expect(useSessionStore.getState().activeSession?.id).toBe("sess-1"));
+    expect(useSessionStore.getState().liveStats?.total_ms).toBe(1000);
+
+    backendSession = null;
+    await act(async () => {
+      await handlers.get("session:stopped")!({
+        payload: { session_id: "sess-1", label: "Test", elapsed_ms: 1000 },
+      });
+    });
+    await waitFor(() => expect(useSessionStore.getState().activeSession).toBeNull());
+  });
+
   it("registers one listener per event and removes all listeners on cleanup", async () => {
     const cleanups: Array<ReturnType<typeof vi.fn>> = [];
     vi.mocked(listen).mockImplementation(async () => {

@@ -26,7 +26,12 @@
     "history": "History",
     "settings": "Settings",
     "about": "About",
-    "checklist": "Checklist"
+    "checklist": "Checklist",
+    "reminders": "Reminders",
+    "calendar": "Calendar",
+    "habits": "Habits",
+    "pomodoro": "Pomodoro",
+    "sessions": "Sessions"
   },
   "dashboard": {
     "session": {
@@ -149,7 +154,8 @@
       "shortcuts": "Shortcuts",
       "data": "Data",
       "permissions": "Permissions",
-      "checklist": "Checklist"
+      "checklist": "Checklist",
+      "pomodoro": "Pomodoro"
     },
     "section_desc": {
       "general": "Language, theme, and window monitoring parameters.",
@@ -287,7 +293,9 @@
     },
     "checklist": {
       "grace_period": "Undo grace period",
-      "grace_period_hint": "How long a completed item stays visible with an undo option before moving to history."
+      "grace_period_hint": "How long a completed item stays visible with an undo option before moving to history.",
+      "date_recognition": "Natural date recognition",
+      "date_recognition_hint": "Highlight due dates typed in item titles (e.g. tomorrow, 03/11)."
     }
   },
   "permissions": {
@@ -331,7 +339,12 @@
     "fullscreen_dismiss": "Got it, back to work!",
     "break_notification_title": "LazyNevis — Time for a break!",
     "break_notification_body": "You've been focused for {{time}}. Take a short break.",
-    "break_app": "Break time!"
+    "break_app": "Break time!",
+    "overlay_kind_reminder": "Reminder",
+    "overlay_kind_habit": "Habit",
+    "overlay_kind_pomodoro": "Pomodoro",
+    "overlay_log": "Log now",
+    "overlay_escape_hint": "Press Esc to dismiss"
   },
   "app": {
     "recovery_notification_title": "LazyNevis — Session recovered",
@@ -342,6 +355,42 @@
     "close_keep": "Keep session running",
     "close_confirm": "End session & close",
     "close_note": "Session ended when the app window closed"
+  },
+  "shell": {
+    "group_plan": "Plan",
+    "group_track": "Track",
+    "brand_no_session": "No active session",
+    "brand_focusing": "Focusing · {{time}}",
+    "brand_paused": "Paused · {{time}}",
+    "breadcrumb": "Breadcrumb",
+    "collapse_sidebar": "Collapse sidebar",
+    "expand_sidebar": "Expand sidebar"
+  },
+  "command_palette": {
+    "title": "Command palette",
+    "open": "Open command palette",
+    "search_placeholder": "Search…",
+    "empty": "No matching commands",
+    "group_navigation": "Navigation",
+    "group_actions": "Actions",
+    "group_checklist": "Checklist",
+    "group_habits": "Habits",
+    "group_pomodoro": "Pomodoro",
+    "log_habit": "Log habit: {{name}}",
+    "pomodoro_open": "Open Pomodoro",
+    "pomodoro_start": "Start Pomodoro",
+    "pomodoro_pause": "Pause Pomodoro",
+    "pomodoro_resume": "Resume Pomodoro",
+    "pomodoro_skip": "Skip Pomodoro phase",
+    "pomodoro_stop": "Stop Pomodoro",
+    "pomodoro_start_next": "Start next Pomodoro phase",
+    "start_session": "Start session",
+    "pause_resume_session": "Pause or resume session",
+    "stop_session": "Stop session",
+    "toggle_theme": "Toggle theme"
+  },
+  "ui": {
+    "segment_label": "Section"
   },
   "about": {
     "title": "About LazyNevis",
@@ -364,6 +413,96 @@
     "up_to_date": "You're up to date.",
     "update_failed": "Couldn't check for updates. Check your connection and try again.",
     "open_release": "Open release page"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "description": "See what you did and what is planned across focus, checklist, habits, and reminders.",
+    "loading": "Loading calendar…",
+    "today": "Today",
+    "prev": "Previous",
+    "next": "Next",
+    "view_label": "Calendar view",
+    "week_of": "Week of {{date}}",
+    "close_panel": "Close day panel",
+    "day_empty": "Nothing on this day for the selected types.",
+    "session_unnamed": "Unnamed session",
+    "completed": "Completed",
+    "due": "Due",
+    "overdue": "Overdue",
+    "late": "Late",
+    "late_suffix": " (late)",
+    "session_row": "{{start}} – {{end}} · {{duration}} · {{focus}} focus",
+    "habit_day_entry": "{{name}} · {{status}}",
+    "habit_log_entry": "{{name}} · {{time}}",
+    "checklist_completed_entry": "{{title}} · {{status}}{{late}}",
+    "checklist_due_entry": "{{title}} · {{status}}",
+    "reminder_entry": "{{title}} · {{time}} · {{status}}{{late}}",
+    "new_reminder_on_day": "New reminder on this day",
+    "habit_ring": "{{met}}/{{due}} habits",
+    "all_day": "All day",
+    "pomodoro_block": "Pomodoro",
+    "pomodoro_run": "Pomodoro · {{status}}",
+    "views": {
+      "month": "Month",
+      "week": "Week",
+      "day": "Day"
+    },
+    "weekdays": {
+      "short": {
+        "0": "Sun",
+        "1": "Mon",
+        "2": "Tue",
+        "3": "Wed",
+        "4": "Thu",
+        "5": "Fri",
+        "6": "Sat"
+      }
+    },
+    "sections": {
+      "sessions": "Sessions",
+      "pomodoro": "Pomodoro",
+      "habits": "Habits",
+      "checklist": "Checklist",
+      "reminders": "Reminders"
+    },
+    "kinds": {
+      "filter_label": "Filter entry types",
+      "session": "Sessions",
+      "pomodoro_run": "Pomodoro",
+      "checklist_completed": "Checklist done",
+      "checklist_due": "Checklist due",
+      "habit_log": "Habit logs",
+      "habit_day": "Habits",
+      "reminder_occurrence": "Reminders"
+    },
+    "habit_status": {
+      "met": "Met",
+      "partial": "Partial",
+      "missed": "Missed",
+      "pending": "Pending"
+    },
+    "reminder_status": {
+      "planned": "Planned",
+      "delivered": "Delivered",
+      "done": "Done",
+      "snoozed": "Snoozed",
+      "dismissed": "Dismissed",
+      "missed": "Missed",
+      "not_delivered": "Not delivered"
+    },
+    "pomodoro_entry": "{{start}}–{{end}} · {{cycles}} focus cycles · {{focus}} focus · {{status}}",
+    "pomodoro_status": {
+      "active": "In progress",
+      "completed": "Completed",
+      "cancelled": "Stopped"
+    },
+    "new_reminder": "New reminder",
+    "search_placeholder": "Search events…",
+    "search_clear": "Clear search",
+    "filter_button": "Filters",
+    "filter_show_all": "Show all kinds",
+    "day_count_one": "{{count}} item",
+    "day_count_other": "{{count}} items"
   },
   "notifications": {
     "unnamed_session": "Unnamed session",
@@ -408,7 +547,175 @@
     "linked_prompt_title": "Complete the linked item?",
     "linked_prompt_body": "This session was started from “{{title}}”. Mark it as done too?",
     "linked_prompt_complete": "Complete item",
-    "linked_prompt_keep": "Keep open"
+    "linked_prompt_keep": "Keep open",
+    "add_sub_item": "Add sub-item",
+    "reject_date": "Ignore recognized date",
+    "empty_title_hint": "Add a title after removing dates and tags.",
+    "group_by": "Group by",
+    "group_dimension": {
+      "category": "Category",
+      "date": "Date",
+      "priority": "Priority"
+    },
+    "groups": {
+      "no_category": "No category",
+      "category": "{{name}}",
+      "no_date": "No date",
+      "overdue": "Overdue",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "due_on": "Due {{date}}"
+    },
+    "priority": {
+      "label": "Priority",
+      "none": "No priority",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "category": {
+      "label": "Category",
+      "none": "No category",
+      "manage_title": "Categories",
+      "new_placeholder": "New category name",
+      "add": "Add category",
+      "delete_confirm": "Delete category “{{name}}”? Items will become uncategorized."
+    },
+    "delete_confirm_subitems": "“{{title}}” and {{count}} sub-items will be removed.",
+    "subitem_progress": "{{done}}/{{total}}",
+    "subitem_prefix": "Parent ›",
+    "history_categories": "Categories:"
+  },
+  "reminders": {
+    "title": "Reminders",
+    "subtitle": "Scheduled nudges with notification, sound, or fullscreen delivery.",
+    "add": "New reminder",
+    "filter_all": "All",
+    "filter_active": "Active",
+    "filter_paused": "Paused",
+    "filter_finished": "Finished",
+    "list": {
+      "empty": "No reminders match this filter.",
+      "no_next": "No upcoming occurrence",
+      "next_soon": "In less than a minute",
+      "next_in_minutes": "In {{count}} min",
+      "active": "Active",
+      "paused": "Paused"
+    },
+    "editor": {
+      "title_new": "New reminder",
+      "title_edit": "Edit reminder",
+      "title_label": "Title",
+      "body_label": "Description (Markdown)",
+      "preview": "Preview",
+      "tone": "Tone",
+      "schedules": "Schedules",
+      "add_schedule": "Add schedule",
+      "delivery": "Delivery",
+      "inherit": "Use default channels",
+      "custom": "Custom channels",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete reminder",
+      "delete_confirm": "Delete this reminder and its activity?",
+      "next_preview": "Next 5 occurrences",
+      "write": "Write",
+      "format": {
+        "bold": "Bold (⌘B)",
+        "italic": "Italic (⌘I)",
+        "bullet": "Bulleted list",
+        "numbered": "Numbered list"
+      }
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No events yet.",
+      "done": "Done",
+      "snooze": "Snooze"
+    },
+    "overlay": {
+      "late": "Late",
+      "done": "Done",
+      "dismiss": "Dismiss",
+      "snooze": "Snooze",
+      "snooze_5": "5 minutes",
+      "snooze_10": "10 minutes",
+      "snooze_30": "30 minutes",
+      "snooze_60": "1 hour"
+    }
+  },
+  "schedule": {
+    "kinds": {
+      "once": "Once",
+      "daily": "Daily",
+      "interval": "Interval",
+      "monthly": "Monthly"
+    },
+    "weekdays": {
+      "every_day": "Every day",
+      "short": {
+        "0": "Sun",
+        "1": "Mon",
+        "2": "Tue",
+        "3": "Wed",
+        "4": "Thu",
+        "5": "Fri",
+        "6": "Sat"
+      }
+    },
+    "summary": {
+      "unset": "not set",
+      "once": "Once at {{at}}",
+      "daily": "Daily at {{times}} · {{days}}",
+      "interval": "Every {{minutes}} min, {{start}}–{{end}} · {{days}}",
+      "monthly": "Monthly on day {{days}} at {{times}}"
+    },
+    "fields": {
+      "at": "Date & time",
+      "times": "Times",
+      "weekdays": "Weekdays",
+      "every_minutes": "Every (minutes)",
+      "window_start": "Window start",
+      "window_end": "Window end",
+      "month_days": "Month days",
+      "starts_on": "Starts on",
+      "ends_on": "Ends on",
+      "no_start": "Starts now",
+      "no_end": "No end date"
+    },
+    "actions": {
+      "remove": "Remove schedule",
+      "remove_time": "Remove time",
+      "add_time": "Add time"
+    }
+  },
+  "delivery": {
+    "tab_title": "Reminders, habits & Pomodoro delivery",
+    "tab_description": "How reminders, habits and Pomodoro reach you: channels and sounds per type.",
+    "week_start": "Week starts on",
+    "week_start_sunday": "Sunday",
+    "week_start_monday": "Monday",
+    "types": {
+      "reminder": "Reminders",
+      "habit": "Habits",
+      "pomodoro": "Pomodoro"
+    },
+    "channels": {
+      "notification": "Notification",
+      "fullscreen": "Fullscreen",
+      "sound": "Sound"
+    },
+    "sound": "Sound",
+    "test": "Test delivery",
+    "inherit_default": "Inherit default",
+    "override": {
+      "title": "Delivery",
+      "default": "Default",
+      "custom": "Custom",
+      "default_hint": "Uses the channels set in Settings → Alerts.",
+      "custom_hint": "Only this item uses these channels."
+    }
   },
   "tray": {
     "show": "Open LazyNevis",
@@ -420,11 +727,254 @@
     "state_paused": "Paused",
     "open_quick_panel": "Quick Panel"
   },
+  "habits": {
+    "title": "Habits",
+    "subtitle": "Build routines with quick logging and gentle reminders.",
+    "new_habit": "New habit",
+    "views": {
+      "today": "Today",
+      "all": "All habits",
+      "reports": "Reports"
+    },
+    "today_summary": "{{met}} of {{total}} habits met today",
+    "period_daily": "Today",
+    "period_weekly": "This week",
+    "period_monthly": "This month",
+    "log": "Log",
+    "card_progress": "Progress",
+    "skyline_overview": "Activity overview",
+    "empty_logs": "No logs for this habit yet.",
+    "quick_log_hint": "Quick log window — save to dismiss.",
+    "reports_title": "Completion by habit",
+    "reports_empty": "No report data for this range.",
+    "mark_done": "Mark done",
+    "logged_toast": "Logged",
+    "streak_days": "{{count}} days",
+    "inactive_badge": "Inactive",
+    "menu_edit": "Edit",
+    "menu_deactivate": "Deactivate",
+    "menu_activate": "Activate",
+    "menu_history": "History",
+    "menu_log_with_note": "Log with note",
+    "delete_confirm": "Delete this habit and all logs? This cannot be undone.",
+    "editor_title_create": "New habit",
+    "editor_title_edit": "Edit habit",
+    "field_name": "Name",
+    "field_description": "Description",
+    "field_period": "Period",
+    "field_tone": "Tone",
+    "field_icon": "Icon",
+    "field_skip_when_met": "Skip reminders when goal is met",
+    "targets_title": "Targets",
+    "add_target": "Add target",
+    "target_metric": "Metric",
+    "target_unit": "Unit",
+    "target_value": "Goal",
+    "reminders_title": "Reminders",
+    "delivery_title": "Delivery",
+    "save": "Save",
+    "cancel": "Cancel",
+    "validation_targets": "Add between 1 and 5 targets.",
+    "targets_change_note": "Changing targets recalculates progress; old logs stay in history.",
+    "log_title": "Log habit",
+    "log_note": "Note",
+    "log_when": "When",
+    "quick_add": "Quick add",
+    "stepper_decrease": "Decrease {{metric}}",
+    "stepper_increase": "Increase {{metric}}",
+    "stepper_edit": "{{value}} {{unit}} — tap to type a value",
+    "stepper_input": "{{metric}} value",
+    "preset_hours": "+{{count}} h",
+    "log_more_options": "More options",
+    "done_today": "Done today",
+    "done_week": "Done this week",
+    "done_month": "Done this month",
+    "log_error_toast": "Couldn't save the log",
+    "stopwatch_start": "Start",
+    "stopwatch_pause": "Pause",
+    "stopwatch_reset": "Reset",
+    "detail_stats_streak": "Current streak",
+    "detail_stats_best": "Best streak",
+    "detail_stats_rate_7": "Completion (7 periods)",
+    "detail_stats_rate_30": "Completion (30 periods)",
+    "detail_stats_rate_90": "Completion (90 periods)",
+    "detail_history": "Period history",
+    "detail_logs": "Logs",
+    "export_csv": "Export CSV",
+    "export_json": "Export JSON",
+    "reports_range_7": "Last 7 days",
+    "reports_range_30": "Last 30 days",
+    "reports_range_90": "Last 90 days",
+    "reports_range_year": "This year",
+    "reports_best": "Best habit",
+    "reports_worst": "Needs attention",
+    "skyline_2d": "2D",
+    "skyline_3d": "3D",
+    "skyline_less": "Less",
+    "skyline_more": "More",
+    "skyline_tooltip": "{{value}} {{unit}} on {{date}}",
+    "skyline_no_data": "No activity yet",
+    "skyline_chart_view_aria": "Contribution chart view",
+    "skyline_hint_heatmap": "Hover a day for details. Use arrow keys to move.",
+    "skyline_hint_orbit": "Drag to orbit. Double-click to reset.",
+    "skyline_stat_year": "Year total",
+    "skyline_stat_busiest": "Busiest day",
+    "skyline_stat_longest": "Longest streak",
+    "skyline_stat_current": "Current streak",
+    "skyline_day": "day",
+    "skyline_days": "days",
+    "skyline_level_no": "No {{unit}}",
+    "skyline_level_light": "Light",
+    "skyline_level_moderate": "Moderate",
+    "skyline_level_heavy": "Heavy",
+    "skyline_level_heaviest": "Heaviest",
+    "skyline_highlight_level": "Highlight {{level}}",
+    "skyline_aria_chart": "{{total}} {{unit}} between {{range}} in {{mode}} view",
+    "skyline_title": "{{total}} {{unit}} in the last year",
+    "day_popover_title": "Logs on {{date}}",
+    "day_popover_empty": "No logs this day.",
+    "log_delete": "Delete",
+    "log_edit_title": "Edit log",
+    "log_delete_confirm_title": "Delete log?",
+    "log_delete_confirm_body": "This log will be removed permanently.",
+    "reorder_up": "Move up",
+    "reorder_down": "Move down",
+    "quick_log_pick": "Pick a habit to log",
+    "empty_today": "No active habits yet. Create one to start tracking.",
+    "empty_all": "No habits yet.",
+    "metrics": {
+      "check": "Done check",
+      "count": "Count",
+      "volume": "Volume",
+      "mass": "Mass",
+      "distance": "Distance",
+      "duration": "Duration"
+    },
+    "units": {
+      "time": "time",
+      "times": "times",
+      "ml": "ml",
+      "l": "L",
+      "g": "g",
+      "kg": "kg",
+      "m": "m",
+      "km": "km",
+      "min": "min",
+      "h": "h"
+    },
+    "targets_help": "A target is what counts as done for the period. Add up to 5 (e.g. 2 L of water and 8 glasses).",
+    "target_metric_help": "What you measure: a simple check, a count, volume, mass, distance or duration.",
+    "target_unit_help": "Label shown next to the value, e.g. glasses, km, min.",
+    "target_value_help": "Amount to reach in each period.",
+    "target_check_hint": "Done when marked once per period.",
+    "remove_target": "Remove target",
+    "add_schedule": "Add reminder",
+    "icons": {
+      "droplet": "Water",
+      "dumbbell": "Workout",
+      "book": "Reading",
+      "footprints": "Walk",
+      "bed": "Sleep",
+      "apple": "Nutrition",
+      "brain": "Mind",
+      "pill": "Medication",
+      "heart": "Health",
+      "timer": "Timer",
+      "pencil": "Writing",
+      "music": "Music",
+      "sun": "Morning",
+      "leaf": "Nature",
+      "bike": "Cycling",
+      "target": "Goal",
+      "coffee": "Break",
+      "smile": "Mood"
+    }
+  },
   "tray_panel": {
     "focus": "Focus",
     "distracted": "Distracted",
     "idle": "Idle",
     "session_name_placeholder": "Session name (optional)"
+  },
+  "pomodoro": {
+    "page": {
+      "title": "Pomodoro",
+      "description": "Structured focus and break cycles.",
+      "disabled": "Enable Pomodoro in Settings to use this page."
+    },
+    "phase": {
+      "idle": "Ready",
+      "focus": "Focus",
+      "short_break": "Short break",
+      "long_break": "Long break"
+    },
+    "controls": {
+      "start": "Start",
+      "pause": "Pause",
+      "resume": "Resume",
+      "skip": "Skip",
+      "stop": "Stop",
+      "start_next": "Start next"
+    },
+    "today_progress": "{{done}} / {{goal}} focus phases today",
+    "start_dialog": {
+      "title": "Start Pomodoro",
+      "label_placeholder": "Label (optional)"
+    },
+    "widget": {
+      "title": "Pomodoro"
+    },
+    "tray": {
+      "title": "Pomodoro"
+    },
+    "stats": {
+      "today_title": "Today",
+      "report_title": "Report",
+      "focus_phases": "Focus phases",
+      "focus_minutes": "Focus minutes",
+      "breaks": "Breaks taken",
+      "interruptions": "Interruptions",
+      "interruptions_hint": "{{pauses}} pauses · {{skips}} skips · {{cancels}} cancels",
+      "range_label": "Report range",
+      "range_7": "7 days",
+      "range_30": "30 days",
+      "range_90": "90 days",
+      "completion_rate": "Completion rate",
+      "completion_hint": "{{completed}} of {{started}} focus phases",
+      "avg_pauses": "Avg. pauses per focus",
+      "best_hour": "Best hour",
+      "no_data": "No data yet",
+      "chart_title": "Focus per day",
+      "metric_label": "Chart metric",
+      "bar_title": "{{date}}: {{phases}} focus phases · {{minutes}} min"
+    },
+    "history": {
+      "title": "Recent runs",
+      "empty": "No runs yet.",
+      "unlabeled": "Untitled run",
+      "delete": "Delete",
+      "export_csv": "Export CSV",
+      "export_json": "Export JSON",
+      "delete_confirm_title": "Delete this run?",
+      "delete_confirm_body": "This removes the run and its phases from history. This cannot be undone.",
+      "delete_confirm": "Delete",
+      "delete_cancel": "Cancel"
+    },
+    "settings": {
+      "title": "Pomodoro",
+      "description": "Cycle lengths and session linking.",
+      "enabled": "Enable Pomodoro",
+      "focus_minutes": "Focus length (minutes)",
+      "short_break_minutes": "Short break (minutes)",
+      "long_break_minutes": "Long break (minutes)",
+      "daily_goal": "Daily focus goal",
+      "link_focus_session": "Link focus session"
+    },
+    "overlay": {
+      "start_next": "Start next",
+      "skip": "Skip",
+      "dismiss": "Dismiss"
+    }
   },
   "app_modes": {
     "compact_title": "LazyNevis",
@@ -434,5 +984,81 @@
     "unpin": "Unpin",
     "view_reports": "View reports",
     "view_previous_activities": "View previous activities"
+  },
+  "overview": {
+    "title": "Overview",
+    "description": "Today across sessions, Pomodoro, checklist, reminders and habits.",
+    "hero": {
+      "sessions_title": "Focus sessions",
+      "sessions_desc": "Track focus, distractions and checkpoints.",
+      "sessions_start": "Start a session",
+      "sessions_open": "Open session",
+      "idle": "Not running",
+      "pomodoro_title": "Pomodoro",
+      "pomodoro_desc": "Timed focus blocks with breaks.",
+      "pomodoro_today": "{{done}} of {{goal}} today",
+      "pomodoro_start": "Start a Pomodoro",
+      "pomodoro_open": "Open timer",
+      "checklist_title": "Checklist",
+      "checklist_desc": "Your open tasks and due dates.",
+      "checklist_open_one": "{{count}} open item",
+      "checklist_open_other": "{{count}} open items",
+      "checklist_open_cta": "Open checklist"
+    },
+    "stats": {
+      "sessions_today": "Sessions today",
+      "sessions_week_one": "{{count}} in the last 7 days",
+      "sessions_week_other": "{{count}} in the last 7 days",
+      "focus_today": "Focus today",
+      "session_active": "Session running now",
+      "session_none": "No active session",
+      "checklist_today": "Due today",
+      "reminders_today": "Reminders today",
+      "upcoming_one": "{{count}} upcoming",
+      "upcoming_other": "{{count}} upcoming",
+      "habits_met": "Habits met",
+      "pomodoros": "Pomodoros"
+    },
+    "habits": {
+      "title": "Today's habits",
+      "see_all_one": "See all ({{count}})",
+      "see_all_other": "See all ({{count}})",
+      "streak_one": "{{count}}-day streak",
+      "streak_other": "{{count}}-day streak"
+    },
+    "calendar": {
+      "open": "Calendar"
+    },
+    "checklist": {
+      "title": "Due today",
+      "open": "Checklist",
+      "empty": "Nothing due today."
+    },
+    "reminders": {
+      "title": "Reminders",
+      "open": "Reminders",
+      "empty": "No reminders scheduled.",
+      "upcoming": "Upcoming"
+    },
+    "layout": {
+      "reset": "Reset layout",
+      "resize": "Change widget size",
+      "drag": "Drag to reorder"
+    }
+  },
+  "pickers": {
+    "prev_month": "Previous month",
+    "next_month": "Next month",
+    "hour": "Hour",
+    "minute": "Min",
+    "clear": "Clear",
+    "pick_date": "Pick a date",
+    "pick_time": "Pick a time",
+    "pick_datetime": "Pick date & time",
+    "today": "Today"
+  },
+  "runtime": {
+    "browser_title": "Open LazyNevis in the desktop app",
+    "browser_body": "This page is the development server for the LazyNevis window. It needs the Tauri runtime, so it does nothing in a regular browser tab."
   }
 }

@@ -9,6 +9,10 @@ import type {
   ChecklistSortMode,
   LiveStats,
   OverlayAlertPayload,
+  Reminder,
+  ReminderInput,
+  ScheduleRule,
+  TriggerEvent,
   Session,
   SessionStats,
   SessionSummary,
@@ -108,6 +112,66 @@ export const overlayService = {
     invoke("get_active_overlay_alert"),
 
   cancelActive: (): Promise<void> => invoke("cancel_active_alerts"),
+
+  resolveAction: (
+    eventId: string | null,
+    action: string,
+    snoozeMinutes?: number,
+  ): Promise<void> =>
+    invoke("resolve_overlay_action", {
+      eventId,
+      action,
+      snoozeMinutes: snoozeMinutes ?? null,
+    }),
+};
+
+export const reminderService = {
+  list: (): Promise<Reminder[]> => invoke("list_reminders"),
+  get: (id: string): Promise<Reminder> => invoke("get_reminder", { id }),
+  create: (input: ReminderInput): Promise<Reminder> =>
+    invoke("create_reminder", { input }),
+  update: (id: string, input: ReminderInput): Promise<Reminder> =>
+    invoke("update_reminder", { id, input }),
+  delete: (id: string): Promise<void> => invoke("delete_reminder", { id }),
+  setActive: (id: string, active: boolean): Promise<Reminder> =>
+    invoke("set_reminder_active", { id, active }),
+  previewSchedule: (
+    rule: ScheduleRule,
+    startsOn: string | null,
+    endsOn: string | null,
+    count?: number,
+  ): Promise<number[]> =>
+    invoke("preview_schedule", {
+      rule,
+      startsOn,
+      endsOn,
+      count: count ?? null,
+    }),
+  listEvents: (
+    limit?: number,
+    ownerKind?: string,
+    ownerId?: string,
+  ): Promise<TriggerEvent[]> =>
+    invoke("list_trigger_events", {
+      limit: limit ?? null,
+      ownerKind: ownerKind ?? null,
+      ownerId: ownerId ?? null,
+    }),
+  actOnEvent: (
+    eventId: string,
+    action: string,
+    snoozeMinutes?: number,
+  ): Promise<void> =>
+    invoke("act_on_trigger_event", {
+      eventId,
+      action,
+      snoozeMinutes: snoozeMinutes ?? null,
+    }),
+};
+
+export const deliveryService = {
+  test: (kind: "reminder" | "habit" | "pomodoro"): Promise<void> =>
+    invoke("test_delivery", { kind }),
 };
 
 export const notificationService = {
@@ -117,11 +181,31 @@ export const notificationService = {
 
 // Daily checklist commands (spec: daily-checklist)
 export const checklistService = {
-  create: (title: string, tags: string[] = [], dueDate?: number): Promise<ChecklistItem> =>
-    invoke("create_checklist_item", { args: { title, due_date: dueDate ?? null, tags } }),
+  create: (input: import("@/types").CreateChecklistInput): Promise<ChecklistItem> =>
+    invoke("create_checklist_item", {
+      args: {
+        title: input.title,
+        due_date: input.dueDate ?? null,
+        due_has_time: input.dueHasTime ?? false,
+        tags: input.tags ?? [],
+        category: input.category ?? null,
+        priority: input.priority && input.priority !== "none" ? input.priority : null,
+        parent_id: input.parentId ?? null,
+      },
+    }),
 
-  update: (id: string, title: string, tags: string[] = [], dueDate?: number | null): Promise<ChecklistItem> =>
-    invoke("update_checklist_item", { args: { id, title, due_date: dueDate ?? null, tags } }),
+  update: (id: string, patch: import("@/types").UpdateChecklistPatch & { title: string; tags: string[] }): Promise<ChecklistItem> =>
+    invoke("update_checklist_item", {
+      args: {
+        id,
+        title: patch.title,
+        due_date: patch.dueDate === undefined ? null : patch.dueDate,
+        due_has_time: patch.dueHasTime ?? false,
+        tags: patch.tags,
+        category: patch.category ?? null,
+        priority: patch.priority && patch.priority !== "none" ? patch.priority : null,
+      },
+    }),
 
   complete: (id: string): Promise<ChecklistItem> =>
     invoke("complete_checklist_item", { id }),
@@ -143,10 +227,23 @@ export const checklistService = {
     to: number | null,
     sort: ChecklistSortMode,
     tags: string[] = [],
+    categories: string[] = [],
   ): Promise<ChecklistItem[]> =>
-    invoke("list_checklist_history", { args: { from, to, sort, tags } }),
+    invoke("list_checklist_history", { args: { from, to, sort, tags, categories } }),
 
   listTags: (): Promise<Tag[]> => invoke("list_checklist_tags"),
+
+  listCategories: (): Promise<import("@/types").ChecklistCategory[]> =>
+    invoke("list_checklist_categories"),
+
+  createCategory: (name: string, tone?: string): Promise<import("@/types").ChecklistCategory> =>
+    invoke("create_checklist_category", { args: { name, tone: tone ?? null } }),
+
+  updateCategory: (id: string, name: string, tone: string): Promise<import("@/types").ChecklistCategory> =>
+    invoke("update_checklist_category", { args: { id, name, tone } }),
+
+  deleteCategory: (id: string): Promise<void> =>
+    invoke("delete_checklist_category", { id }),
 
   linkSession: (itemId: string, sessionId: string): Promise<void> =>
     invoke("link_checklist_session", { itemId, sessionId }),
@@ -173,10 +270,73 @@ export const monitorService = {
     invoke("get_idle_time"),
 };
 
+export const habitService = {
+  list: (includeInactive = false): Promise<import("@/types").Habit[]> =>
+    invoke("list_habits", { includeInactive }),
+  getDetail: (id: string): Promise<import("@/types").HabitDetail> =>
+    invoke("get_habit_detail", { id }),
+  create: (input: import("@/types").HabitInput): Promise<import("@/types").Habit> =>
+    invoke("create_habit", { input }),
+  update: (id: string, input: import("@/types").HabitInput): Promise<import("@/types").Habit> =>
+    invoke("update_habit", { id, input }),
+  delete: (id: string): Promise<void> => invoke("delete_habit", { id }),
+  setActive: (id: string, active: boolean): Promise<import("@/types").Habit> =>
+    invoke("set_habit_active", { id, active }),
+  reorder: (orderedIds: string[]): Promise<void> =>
+    invoke("reorder_habits", { orderedIds }),
+  log: (habitId: string, input: import("@/types").HabitLogInput): Promise<import("@/types").HabitLog> =>
+    invoke("log_habit", { habitId, input }),
+  updateLog: (
+    logId: string,
+    input: import("@/types").HabitLogInput,
+  ): Promise<import("@/types").HabitLog> => invoke("update_habit_log", { logId, input }),
+  deleteLog: (logId: string): Promise<void> => invoke("delete_habit_log", { logId }),
+  listLogs: (habitId: string, fromMs: number, toMs: number): Promise<import("@/types").HabitLog[]> =>
+    invoke("list_habit_logs", { habitId, fromMs, toMs }),
+  getToday: (): Promise<import("@/types").HabitTodaySummary> => invoke("get_habits_today"),
+  daySeries: (
+    habitId: string | null,
+    fromMs: number,
+    toMs: number,
+  ): Promise<import("@/types").HabitDayPoint[]> =>
+    invoke("get_habit_day_series", { habitId, fromMs, toMs }),
+  reports: (fromMs: number, toMs: number): Promise<import("@/types").HabitReports> =>
+    invoke("get_habit_reports", { fromMs, toMs }),
+  export: (habitId?: string | null): Promise<import("@/types").HabitExport> =>
+    invoke("export_habits", { habitId: habitId ?? null }),
+  openQuickLog: (habitId: string, eventId?: string | null): Promise<void> =>
+    invoke("open_quick_log", { habitId, eventId: eventId ?? null }),
+  takeQuickLogRequest: (): Promise<import("@/types").QuickLogOpenPayload | null> =>
+    invoke("take_quick_log_request"),
+};
+
 // Tray commands (spec: tray-status)
 export const trayService = {
   setLabels: (labels: TrayLabels): Promise<void> =>
     invoke("set_tray_labels", { labels }),
+};
+
+export const pomodoroService = {
+  getState: (): Promise<import("@/types").PomodoroState> => invoke("get_pomodoro_state"),
+  start: (args: {
+    label?: string | null;
+    checklist_item_id?: string | null;
+  }): Promise<import("@/types").PomodoroState> => invoke("start_pomodoro", { args }),
+  pause: (): Promise<import("@/types").PomodoroState> => invoke("pause_pomodoro"),
+  resume: (): Promise<import("@/types").PomodoroState> => invoke("resume_pomodoro"),
+  skipPhase: (): Promise<import("@/types").PomodoroState> => invoke("skip_pomodoro_phase"),
+  startNext: (): Promise<import("@/types").PomodoroState> =>
+    invoke("start_next_pomodoro_phase"),
+  stop: (): Promise<import("@/types").PomodoroState> => invoke("stop_pomodoro"),
+  listRuns: (from: number, to: number): Promise<import("@/types").PomodoroRun[]> =>
+    invoke("list_pomodoro_runs", { from, to }),
+  listPhases: (from: number, to: number): Promise<import("@/types").PomodoroPhaseListItem[]> =>
+    invoke("list_pomodoro_phases", { from, to }),
+  stats: (from: number, to: number): Promise<import("@/types").PomodoroStats> =>
+    invoke("get_pomodoro_stats", { from, to }),
+  deleteRun: (runId: string): Promise<void> => invoke("delete_pomodoro_run", { runId }),
+  export: (from: number, to: number): Promise<import("@/types").PomodoroExport> =>
+    invoke("export_pomodoro", { from, to }),
 };
 
 // App mode commands (spec: app-modes)
@@ -203,4 +363,13 @@ export const permissionsService = {
 // Screenshot demo (gated; returns DemoInactive when gate is off)
 export const demoService = {
   isActive: (): Promise<boolean> => invoke("demo_is_active"),
+};
+
+export const calendarService = {
+  getRange: (
+    fromMs: number,
+    toMs: number,
+    kinds?: import("@/types").CalendarKind[],
+  ): Promise<import("@/types").CalendarRange> =>
+    invoke("get_calendar_range", { fromMs, toMs, kinds: kinds ?? null }),
 };

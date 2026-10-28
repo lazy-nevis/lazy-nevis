@@ -8,7 +8,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 
 ## [Unreleased]
 
+### Added
+- Pomodoro timer (opt-in): engine with crash recovery, migration `0008`, linked focus sessions via `break_source`, phase alerts through the shared delivery service, `/pomodoro` page, Dashboard widget, Compact strip, tray block/tooltip, command palette, Settings tab, history (delete/export CSV/JSON), and reports (Today panel; 7/30/90-day completion rate, average pauses, best hour, per-day chart). OKF: `knowledge/changes/2026-10-26/pomodoro-timer/`.
+- Habit tracking: targets, logging (card/dialog/quick-log), reminders with skip-when-met, contribution skyline, reports/export, and quick-log window. OKF: `knowledge/changes/2026-10-26/habit-tracking/`.
+- Calendar (phase B): read-only month/week/day views, day panel, kind filters, `CalendarSettings`, `get_calendar_range` aggregation (sessions, checklist, reminders; habit/pomodoro extension points), History `?session=` deep link, and “new reminder on this day”. OKF: `knowledge/changes/2026-10-26/calendar-and-reminders/`.
+- Reminders and shared scheduler (phase A): local reminders with recurrence, snooze, activity log, Rust-driven delivery (notification/fullscreen/sound), overlay queue, Settings delivery defaults, and `general.week_start`. OKF: `knowledge/changes/2026-10-26/calendar-and-reminders/`.
+- Checklist organization: sub-items (depth 1), categories with tones, priorities, natural-language due dates (pt-BR/en-US), grouping by category/date/priority, live time refresh, and category management in Settings. OKF: `knowledge/changes/2026-10-26/checklist-organization/`.
+
+### Changed
+- App visual identity (Quiet Workspace): neutral zinc tokens, 248px/60px grouped sidebar, content header with breadcrumb and command palette (`⌘K` / `Mod+K`), shared UI primitives, and restyled shell surfaces. OKF: `knowledge/changes/2026-10-26/app-visual-identity/`.
+- Documentation is OKF-only under `knowledge/`: capability contracts in `knowledge/product/capabilities/`, change bundles in `knowledge/changes/`. OpenSpec (`openspec/`, `@fission-ai/openspec`, `spec:validate`) and `.configdocs/` were removed after migration. See `knowledge/changes/2026-10-26/openspec-to-okf-migration/` and `knowledge/changes/2026-10-26/agents-knowledge-bootstrap/`.
+
 ### Fixed
+- Backend freezes from re-entrant `Database` mutex locks (habit create/update/log, reminder create/update, habit heatmap) and db→scheduler lock-order inversions (`mark_dirty` under the DB guard). New always-on rule: `knowledge/rules/rust-locking.md`. OKF: `knowledge/changes/2026-10-26/habit-tracking/`, `knowledge/changes/2026-10-26/calendar-and-reminders/`.
+- Pomodoro "today" goal counted from UTC midnight instead of local midnight; stats always reported 0 breaks/interruptions; run deletion was not atomic. Inline Pomodoro/scheduler SQL moved to `db/queries.rs`. OKF: `knowledge/changes/2026-10-26/pomodoro-timer/`.
 - CI Rust quality and dependency audit: pin Rust toolchain to 1.97.1, install PipeWire/GBM/EGL/Wayland/Clang Linux build deps required by `xcap`, run `cargo-audit`/`cargo-deny` via prebuilt binaries (drop Node-20 `rustsec/audit-check`), bump `xcap`/`plist` for current crates, and document temporary RustSec ignores for transitive `quick-xml` build/toast parsers awaiting upstream.
 
 ---

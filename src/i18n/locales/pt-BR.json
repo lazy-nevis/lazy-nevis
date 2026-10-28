@@ -26,7 +26,12 @@
     "history": "Histórico",
     "settings": "Configurações",
     "about": "Sobre",
-    "checklist": "Checklist"
+    "checklist": "Checklist",
+    "reminders": "Lembretes",
+    "calendar": "Calendário",
+    "habits": "Hábitos",
+    "pomodoro": "Pomodoro",
+    "sessions": "Sessões"
   },
   "dashboard": {
     "session": {
@@ -149,7 +154,8 @@
       "shortcuts": "Atalhos",
       "data": "Dados",
       "permissions": "Permissões",
-      "checklist": "Checklist"
+      "checklist": "Checklist",
+      "pomodoro": "Pomodoro"
     },
     "section_desc": {
       "general": "Idioma, tema e parâmetros de monitoramento de janelas.",
@@ -287,7 +293,9 @@
     },
     "checklist": {
       "grace_period": "Tempo para desfazer",
-      "grace_period_hint": "Por quanto tempo um item concluído continua visível com opção de desfazer antes de ir para o histórico."
+      "grace_period_hint": "Por quanto tempo um item concluído continua visível com opção de desfazer antes de ir para o histórico.",
+      "date_recognition": "Reconhecimento de datas",
+      "date_recognition_hint": "Destaca datas digitadas nos títulos (ex.: amanhã, 03/11)."
     }
   },
   "permissions": {
@@ -331,7 +339,12 @@
     "fullscreen_dismiss": "Entendido, vou me focar agora!",
     "break_notification_title": "LazyNevis — Hora de fazer uma pausa!",
     "break_notification_body": "Você está focado há {{time}}. Faça uma pausa rápida.",
-    "break_app": "Hora da pausa!"
+    "break_app": "Hora da pausa!",
+    "overlay_kind_reminder": "Lembrete",
+    "overlay_kind_habit": "Hábito",
+    "overlay_kind_pomodoro": "Pomodoro",
+    "overlay_log": "Registrar agora",
+    "overlay_escape_hint": "Pressione Esc para dispensar"
   },
   "app": {
     "recovery_notification_title": "LazyNevis — Sessão recuperada",
@@ -342,6 +355,42 @@
     "close_keep": "Manter sessão ativa",
     "close_confirm": "Encerrar sessão e fechar",
     "close_note": "Sessão encerrada ao fechar a janela do aplicativo"
+  },
+  "shell": {
+    "group_plan": "Planejar",
+    "group_track": "Acompanhar",
+    "brand_no_session": "Nenhuma sessão ativa",
+    "brand_focusing": "Focando · {{time}}",
+    "brand_paused": "Pausado · {{time}}",
+    "breadcrumb": "Navegação",
+    "collapse_sidebar": "Recolher barra lateral",
+    "expand_sidebar": "Expandir barra lateral"
+  },
+  "command_palette": {
+    "title": "Paleta de comandos",
+    "open": "Abrir paleta de comandos",
+    "search_placeholder": "Buscar…",
+    "empty": "Nenhum comando encontrado",
+    "group_navigation": "Navegação",
+    "group_actions": "Ações",
+    "group_checklist": "Checklist",
+    "group_habits": "Hábitos",
+    "group_pomodoro": "Pomodoro",
+    "log_habit": "Anotar hábito: {{name}}",
+    "pomodoro_open": "Abrir Pomodoro",
+    "pomodoro_start": "Iniciar Pomodoro",
+    "pomodoro_pause": "Pausar Pomodoro",
+    "pomodoro_resume": "Retomar Pomodoro",
+    "pomodoro_skip": "Pular fase do Pomodoro",
+    "pomodoro_stop": "Parar Pomodoro",
+    "pomodoro_start_next": "Iniciar próxima fase do Pomodoro",
+    "start_session": "Iniciar sessão",
+    "pause_resume_session": "Pausar ou retomar sessão",
+    "stop_session": "Encerrar sessão",
+    "toggle_theme": "Alternar tema"
+  },
+  "ui": {
+    "segment_label": "Seção"
   },
   "about": {
     "title": "Sobre o LazyNevis",
@@ -364,6 +413,96 @@
     "up_to_date": "Você está usando a versão mais recente.",
     "update_failed": "Não foi possível verificar atualizações. Confira sua conexão e tente novamente.",
     "open_release": "Abrir página da versão"
+  },
+  "calendar": {
+    "title": "Calendário",
+    "description": "Veja o que você fez e o que está planejado em foco, checklist, hábitos e lembretes.",
+    "loading": "Carregando calendário…",
+    "today": "Hoje",
+    "prev": "Anterior",
+    "next": "Próximo",
+    "view_label": "Visualização do calendário",
+    "week_of": "Semana de {{date}}",
+    "close_panel": "Fechar painel do dia",
+    "day_empty": "Nada neste dia para os tipos selecionados.",
+    "session_unnamed": "Sessão sem nome",
+    "completed": "Concluído",
+    "due": "Vence",
+    "overdue": "Atrasado",
+    "late": "Atrasado",
+    "late_suffix": " (atrasado)",
+    "session_row": "{{start}} – {{end}} · {{duration}} · {{focus}} foco",
+    "habit_day_entry": "{{name}} · {{status}}",
+    "habit_log_entry": "{{name}} · {{time}}",
+    "checklist_completed_entry": "{{title}} · {{status}}{{late}}",
+    "checklist_due_entry": "{{title}} · {{status}}",
+    "reminder_entry": "{{title}} · {{time}} · {{status}}{{late}}",
+    "new_reminder_on_day": "Novo lembrete neste dia",
+    "habit_ring": "{{met}}/{{due}} hábitos",
+    "all_day": "Dia inteiro",
+    "pomodoro_block": "Pomodoro",
+    "pomodoro_run": "Pomodoro · {{status}}",
+    "views": {
+      "month": "Mês",
+      "week": "Semana",
+      "day": "Dia"
+    },
+    "weekdays": {
+      "short": {
+        "0": "Dom",
+        "1": "Seg",
+        "2": "Ter",
+        "3": "Qua",
+        "4": "Qui",
+        "5": "Sex",
+        "6": "Sáb"
+      }
+    },
+    "sections": {
+      "sessions": "Sessões",
+      "pomodoro": "Pomodoro",
+      "habits": "Hábitos",
+      "checklist": "Checklist",
+      "reminders": "Lembretes"
+    },
+    "kinds": {
+      "filter_label": "Filtrar tipos de entrada",
+      "session": "Sessões",
+      "pomodoro_run": "Pomodoro",
+      "checklist_completed": "Checklist feito",
+      "checklist_due": "Checklist a vencer",
+      "habit_log": "Registros de hábito",
+      "habit_day": "Hábitos",
+      "reminder_occurrence": "Lembretes"
+    },
+    "habit_status": {
+      "met": "Cumprido",
+      "partial": "Parcial",
+      "missed": "Perdido",
+      "pending": "Pendente"
+    },
+    "reminder_status": {
+      "planned": "Planejado",
+      "delivered": "Entregue",
+      "done": "Feito",
+      "snoozed": "Adiado",
+      "dismissed": "Dispensado",
+      "missed": "Perdido",
+      "not_delivered": "Não entregue"
+    },
+    "pomodoro_entry": "{{start}}–{{end}} · {{cycles}} ciclos de foco · {{focus}} de foco · {{status}}",
+    "pomodoro_status": {
+      "active": "Em andamento",
+      "completed": "Concluído",
+      "cancelled": "Interrompido"
+    },
+    "new_reminder": "Novo lembrete",
+    "search_placeholder": "Buscar eventos…",
+    "search_clear": "Limpar busca",
+    "filter_button": "Filtros",
+    "filter_show_all": "Mostrar todos os tipos",
+    "day_count_one": "{{count}} item",
+    "day_count_other": "{{count}} itens"
   },
   "notifications": {
     "unnamed_session": "Sessão sem nome",
@@ -408,7 +547,175 @@
     "linked_prompt_title": "Concluir o item vinculado?",
     "linked_prompt_body": "Esta sessão foi iniciada a partir de “{{title}}”. Marcar como concluído também?",
     "linked_prompt_complete": "Concluir item",
-    "linked_prompt_keep": "Manter aberto"
+    "linked_prompt_keep": "Manter aberto",
+    "add_sub_item": "Adicionar subitem",
+    "reject_date": "Ignorar data reconhecida",
+    "empty_title_hint": "Inclua um título após remover datas e tags.",
+    "group_by": "Agrupar por",
+    "group_dimension": {
+      "category": "Categoria",
+      "date": "Data",
+      "priority": "Prioridade"
+    },
+    "groups": {
+      "no_category": "Sem categoria",
+      "category": "{{name}}",
+      "no_date": "Sem data",
+      "overdue": "Atrasado",
+      "today": "Hoje",
+      "tomorrow": "Amanhã",
+      "due_on": "Até {{date}}"
+    },
+    "priority": {
+      "label": "Prioridade",
+      "none": "Sem prioridade",
+      "low": "Baixa",
+      "medium": "Média",
+      "high": "Alta",
+      "urgent": "Urgente"
+    },
+    "category": {
+      "label": "Categoria",
+      "none": "Sem categoria",
+      "manage_title": "Categorias",
+      "new_placeholder": "Nome da nova categoria",
+      "add": "Adicionar categoria",
+      "delete_confirm": "Excluir a categoria “{{name}}”? Os itens ficarão sem categoria."
+    },
+    "delete_confirm_subitems": "“{{title}}” e {{count}} subitens serão removidos.",
+    "subitem_progress": "{{done}}/{{total}}",
+    "subitem_prefix": "Pai ›",
+    "history_categories": "Categorias:"
+  },
+  "reminders": {
+    "title": "Lembretes",
+    "subtitle": "Avisos agendados com notificação, som ou tela cheia.",
+    "add": "Novo lembrete",
+    "filter_all": "Todos",
+    "filter_active": "Ativos",
+    "filter_paused": "Pausados",
+    "filter_finished": "Concluídos",
+    "list": {
+      "empty": "Nenhum lembrete corresponde a este filtro.",
+      "no_next": "Sem próxima ocorrência",
+      "next_soon": "Em menos de um minuto",
+      "next_in_minutes": "Em {{count}} min",
+      "active": "Ativo",
+      "paused": "Pausado"
+    },
+    "editor": {
+      "title_new": "Novo lembrete",
+      "title_edit": "Editar lembrete",
+      "title_label": "Título",
+      "body_label": "Descrição (Markdown)",
+      "preview": "Prévia",
+      "tone": "Tom",
+      "schedules": "Agendas",
+      "add_schedule": "Adicionar agenda",
+      "delivery": "Entrega",
+      "inherit": "Usar canais padrão",
+      "custom": "Canais personalizados",
+      "save": "Salvar",
+      "cancel": "Cancelar",
+      "delete": "Excluir lembrete",
+      "delete_confirm": "Excluir este lembrete e a atividade?",
+      "next_preview": "Próximas 5 ocorrências",
+      "write": "Escrever",
+      "format": {
+        "bold": "Negrito (⌘B)",
+        "italic": "Itálico (⌘I)",
+        "bullet": "Lista com marcadores",
+        "numbered": "Lista numerada"
+      }
+    },
+    "activity": {
+      "title": "Atividade recente",
+      "empty": "Nenhum evento ainda.",
+      "done": "Feito",
+      "snooze": "Adiar"
+    },
+    "overlay": {
+      "late": "Atrasado",
+      "done": "Feito",
+      "dismiss": "Dispensar",
+      "snooze": "Adiar",
+      "snooze_5": "5 minutos",
+      "snooze_10": "10 minutos",
+      "snooze_30": "30 minutos",
+      "snooze_60": "1 hora"
+    }
+  },
+  "schedule": {
+    "kinds": {
+      "once": "Uma vez",
+      "daily": "Diário",
+      "interval": "Intervalo",
+      "monthly": "Mensal"
+    },
+    "weekdays": {
+      "every_day": "Todos os dias",
+      "short": {
+        "0": "Dom",
+        "1": "Seg",
+        "2": "Ter",
+        "3": "Qua",
+        "4": "Qui",
+        "5": "Sex",
+        "6": "Sáb"
+      }
+    },
+    "summary": {
+      "unset": "não definido",
+      "once": "Uma vez em {{at}}",
+      "daily": "Diário às {{times}} · {{days}}",
+      "interval": "A cada {{minutes}} min, {{start}}–{{end}} · {{days}}",
+      "monthly": "Mensal no dia {{days}} às {{times}}"
+    },
+    "fields": {
+      "at": "Data e hora",
+      "times": "Horários",
+      "weekdays": "Dias da semana",
+      "every_minutes": "A cada (minutos)",
+      "window_start": "Início da janela",
+      "window_end": "Fim da janela",
+      "month_days": "Dias do mês",
+      "starts_on": "Começa em",
+      "ends_on": "Termina em",
+      "no_start": "Começa agora",
+      "no_end": "Sem data final"
+    },
+    "actions": {
+      "remove": "Remover agendamento",
+      "remove_time": "Remover horário",
+      "add_time": "Adicionar horário"
+    }
+  },
+  "delivery": {
+    "tab_title": "Entrega de lembretes, hábitos e Pomodoro",
+    "tab_description": "Como lembretes, hábitos e Pomodoro chegam até você: canais e sons por tipo.",
+    "week_start": "Semana começa em",
+    "week_start_sunday": "Domingo",
+    "week_start_monday": "Segunda-feira",
+    "types": {
+      "reminder": "Lembretes",
+      "habit": "Hábitos",
+      "pomodoro": "Pomodoro"
+    },
+    "channels": {
+      "notification": "Notificação",
+      "fullscreen": "Tela cheia",
+      "sound": "Som"
+    },
+    "sound": "Som",
+    "test": "Testar entrega",
+    "inherit_default": "Usar padrão",
+    "override": {
+      "title": "Entrega",
+      "default": "Padrão",
+      "custom": "Personalizada",
+      "default_hint": "Usa os canais definidos em Configurações → Alertas.",
+      "custom_hint": "Somente este item usa estes canais."
+    }
   },
   "tray": {
     "show": "Abrir o LazyNevis",
@@ -420,11 +727,254 @@
     "state_paused": "Pausado",
     "open_quick_panel": "Painel rápido"
   },
+  "habits": {
+    "title": "Hábitos",
+    "subtitle": "Crie rotinas com registro rápido e lembretes leves.",
+    "new_habit": "Novo hábito",
+    "views": {
+      "today": "Hoje",
+      "all": "Todos",
+      "reports": "Relatórios"
+    },
+    "today_summary": "{{met}} de {{total}} hábitos cumpridos hoje",
+    "period_daily": "Hoje",
+    "period_weekly": "Esta semana",
+    "period_monthly": "Este mês",
+    "log": "Registrar",
+    "card_progress": "Progresso",
+    "skyline_overview": "Visão geral da atividade",
+    "empty_logs": "Nenhum registro para este hábito ainda.",
+    "quick_log_hint": "Janela de registro rápido — salve para fechar.",
+    "reports_title": "Conclusão por hábito",
+    "reports_empty": "Sem dados de relatório neste intervalo.",
+    "mark_done": "Marcar feito",
+    "logged_toast": "Registrado",
+    "streak_days": "{{count}} dias",
+    "inactive_badge": "Inativo",
+    "menu_edit": "Editar",
+    "menu_deactivate": "Desativar",
+    "menu_activate": "Ativar",
+    "menu_history": "Histórico",
+    "menu_log_with_note": "Registrar com nota",
+    "delete_confirm": "Excluir este hábito e todos os registros? Não pode ser desfeito.",
+    "editor_title_create": "Novo hábito",
+    "editor_title_edit": "Editar hábito",
+    "field_name": "Nome",
+    "field_description": "Descrição",
+    "field_period": "Período",
+    "field_tone": "Tom",
+    "field_icon": "Ícone",
+    "field_skip_when_met": "Pular lembretes quando a meta estiver cumprida",
+    "targets_title": "Metas",
+    "add_target": "Adicionar meta",
+    "target_metric": "Métrica",
+    "target_unit": "Unidade",
+    "target_value": "Objetivo",
+    "reminders_title": "Lembretes",
+    "delivery_title": "Entrega",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "validation_targets": "Adicione entre 1 e 5 metas.",
+    "targets_change_note": "Alterar metas recalcula o progresso; registros antigos permanecem no histórico.",
+    "log_title": "Registrar hábito",
+    "log_note": "Nota",
+    "log_when": "Quando",
+    "quick_add": "Atalhos",
+    "stepper_decrease": "Diminuir {{metric}}",
+    "stepper_increase": "Aumentar {{metric}}",
+    "stepper_edit": "{{value}} {{unit}} — toque para digitar um valor",
+    "stepper_input": "Valor de {{metric}}",
+    "preset_hours": "+{{count}} h",
+    "log_more_options": "Mais opções",
+    "done_today": "Feito hoje",
+    "done_week": "Feito nesta semana",
+    "done_month": "Feito neste mês",
+    "log_error_toast": "Não foi possível salvar o registro",
+    "stopwatch_start": "Iniciar",
+    "stopwatch_pause": "Pausar",
+    "stopwatch_reset": "Zerar",
+    "detail_stats_streak": "Sequência atual",
+    "detail_stats_best": "Melhor sequência",
+    "detail_stats_rate_7": "Conclusão (7 períodos)",
+    "detail_stats_rate_30": "Conclusão (30 períodos)",
+    "detail_stats_rate_90": "Conclusão (90 períodos)",
+    "detail_history": "Histórico por período",
+    "detail_logs": "Registros",
+    "export_csv": "Exportar CSV",
+    "export_json": "Exportar JSON",
+    "reports_range_7": "Últimos 7 dias",
+    "reports_range_30": "Últimos 30 dias",
+    "reports_range_90": "Últimos 90 dias",
+    "reports_range_year": "Este ano",
+    "reports_best": "Melhor hábito",
+    "reports_worst": "Precisa de atenção",
+    "skyline_2d": "2D",
+    "skyline_3d": "3D",
+    "skyline_less": "Menos",
+    "skyline_more": "Mais",
+    "skyline_tooltip": "{{value}} {{unit}} em {{date}}",
+    "skyline_no_data": "Sem atividade ainda",
+    "skyline_chart_view_aria": "Visualização do gráfico de contribuição",
+    "skyline_hint_heatmap": "Passe o mouse em um dia. Use as setas para navegar.",
+    "skyline_hint_orbit": "Arraste para orbitar. Duplo clique para resetar.",
+    "skyline_stat_year": "Total no ano",
+    "skyline_stat_busiest": "Dia mais ativo",
+    "skyline_stat_longest": "Maior sequência",
+    "skyline_stat_current": "Sequência atual",
+    "skyline_day": "dia",
+    "skyline_days": "dias",
+    "skyline_level_no": "Sem {{unit}}",
+    "skyline_level_light": "Leve",
+    "skyline_level_moderate": "Moderado",
+    "skyline_level_heavy": "Intenso",
+    "skyline_level_heaviest": "Máximo",
+    "skyline_highlight_level": "Destacar {{level}}",
+    "skyline_aria_chart": "{{total}} {{unit}} entre {{range}} em vista {{mode}}",
+    "skyline_title": "{{total}} {{unit}} no último ano",
+    "day_popover_title": "Registros em {{date}}",
+    "day_popover_empty": "Nenhum registro neste dia.",
+    "log_delete": "Excluir",
+    "log_edit_title": "Editar registro",
+    "log_delete_confirm_title": "Excluir registro?",
+    "log_delete_confirm_body": "Este registro será removido permanentemente.",
+    "reorder_up": "Mover para cima",
+    "reorder_down": "Mover para baixo",
+    "quick_log_pick": "Escolha um hábito para registrar",
+    "empty_today": "Nenhum hábito ativo. Crie um para começar.",
+    "empty_all": "Nenhum hábito ainda.",
+    "metrics": {
+      "check": "Confirmação",
+      "count": "Contagem",
+      "volume": "Volume",
+      "mass": "Massa",
+      "distance": "Distância",
+      "duration": "Duração"
+    },
+    "units": {
+      "time": "vez",
+      "times": "vezes",
+      "ml": "ml",
+      "l": "L",
+      "g": "g",
+      "kg": "kg",
+      "m": "m",
+      "km": "km",
+      "min": "min",
+      "h": "h"
+    },
+    "targets_help": "Uma meta define o que conta como concluído no período. Adicione até 5 (ex.: 2 L de água e 8 copos).",
+    "target_metric_help": "O que você mede: check simples, contagem, volume, massa, distância ou duração.",
+    "target_unit_help": "Rótulo exibido ao lado do valor, ex.: copos, km, min.",
+    "target_value_help": "Quantidade a atingir em cada período.",
+    "target_check_hint": "Concluído ao marcar uma vez por período.",
+    "remove_target": "Remover meta",
+    "add_schedule": "Adicionar lembrete",
+    "icons": {
+      "droplet": "Água",
+      "dumbbell": "Treino",
+      "book": "Leitura",
+      "footprints": "Caminhada",
+      "bed": "Sono",
+      "apple": "Alimentação",
+      "brain": "Mente",
+      "pill": "Medicação",
+      "heart": "Saúde",
+      "timer": "Timer",
+      "pencil": "Escrita",
+      "music": "Música",
+      "sun": "Manhã",
+      "leaf": "Natureza",
+      "bike": "Ciclismo",
+      "target": "Meta",
+      "coffee": "Pausa",
+      "smile": "Humor"
+    }
+  },
   "tray_panel": {
     "focus": "Foco",
     "distracted": "Distração",
     "idle": "Ocioso",
     "session_name_placeholder": "Nome da sessão (opcional)"
+  },
+  "pomodoro": {
+    "page": {
+      "title": "Pomodoro",
+      "description": "Ciclos estruturados de foco e pausa.",
+      "disabled": "Ative o Pomodoro nas Configurações para usar esta página."
+    },
+    "phase": {
+      "idle": "Pronto",
+      "focus": "Foco",
+      "short_break": "Pausa curta",
+      "long_break": "Pausa longa"
+    },
+    "controls": {
+      "start": "Iniciar",
+      "pause": "Pausar",
+      "resume": "Retomar",
+      "skip": "Pular",
+      "stop": "Parar",
+      "start_next": "Iniciar próxima"
+    },
+    "today_progress": "{{done}} / {{goal}} fases de foco hoje",
+    "start_dialog": {
+      "title": "Iniciar Pomodoro",
+      "label_placeholder": "Etiqueta (opcional)"
+    },
+    "widget": {
+      "title": "Pomodoro"
+    },
+    "tray": {
+      "title": "Pomodoro"
+    },
+    "stats": {
+      "today_title": "Hoje",
+      "report_title": "Relatório",
+      "focus_phases": "Fases de foco",
+      "focus_minutes": "Minutos de foco",
+      "breaks": "Intervalos feitos",
+      "interruptions": "Interrupções",
+      "interruptions_hint": "{{pauses}} pausas · {{skips}} pulos · {{cancels}} cancelamentos",
+      "range_label": "Período do relatório",
+      "range_7": "7 dias",
+      "range_30": "30 dias",
+      "range_90": "90 dias",
+      "completion_rate": "Taxa de conclusão",
+      "completion_hint": "{{completed}} de {{started}} fases de foco",
+      "avg_pauses": "Média de pausas por foco",
+      "best_hour": "Melhor horário",
+      "no_data": "Sem dados ainda",
+      "chart_title": "Foco por dia",
+      "metric_label": "Métrica do gráfico",
+      "bar_title": "{{date}}: {{phases}} fases de foco · {{minutes}} min"
+    },
+    "history": {
+      "title": "Execuções recentes",
+      "empty": "Nenhuma execução ainda.",
+      "unlabeled": "Execução sem título",
+      "delete": "Excluir",
+      "export_csv": "Exportar CSV",
+      "export_json": "Exportar JSON",
+      "delete_confirm_title": "Excluir esta execução?",
+      "delete_confirm_body": "Isso remove a execução e suas fases do histórico. Não pode ser desfeito.",
+      "delete_confirm": "Excluir",
+      "delete_cancel": "Cancelar"
+    },
+    "settings": {
+      "title": "Pomodoro",
+      "description": "Durações dos ciclos e vínculo com sessão.",
+      "enabled": "Ativar Pomodoro",
+      "focus_minutes": "Foco (minutos)",
+      "short_break_minutes": "Pausa curta (minutos)",
+      "long_break_minutes": "Pausa longa (minutos)",
+      "daily_goal": "Meta diária de foco",
+      "link_focus_session": "Vincular sessão de foco"
+    },
+    "overlay": {
+      "start_next": "Iniciar próxima",
+      "skip": "Pular",
+      "dismiss": "Dispensar"
+    }
   },
   "app_modes": {
     "compact_title": "LazyNevis",
@@ -434,5 +984,81 @@
     "unpin": "Desafixar",
     "view_reports": "Ver relatórios",
     "view_previous_activities": "Ver atividades anteriores"
+  },
+  "overview": {
+    "title": "Visão geral",
+    "description": "Seu dia em sessões, Pomodoro, checklist, lembretes e hábitos.",
+    "hero": {
+      "sessions_title": "Sessões de foco",
+      "sessions_desc": "Acompanhe foco, distrações e checkpoints.",
+      "sessions_start": "Iniciar sessão",
+      "sessions_open": "Abrir sessão",
+      "idle": "Parado",
+      "pomodoro_title": "Pomodoro",
+      "pomodoro_desc": "Blocos de foco cronometrados com pausas.",
+      "pomodoro_today": "{{done}} de {{goal}} hoje",
+      "pomodoro_start": "Iniciar Pomodoro",
+      "pomodoro_open": "Abrir timer",
+      "checklist_title": "Checklist",
+      "checklist_desc": "Suas tarefas abertas e prazos.",
+      "checklist_open_one": "{{count}} item aberto",
+      "checklist_open_other": "{{count}} itens abertos",
+      "checklist_open_cta": "Abrir checklist"
+    },
+    "stats": {
+      "sessions_today": "Sessões hoje",
+      "sessions_week_one": "{{count}} nos últimos 7 dias",
+      "sessions_week_other": "{{count}} nos últimos 7 dias",
+      "focus_today": "Foco hoje",
+      "session_active": "Sessão em andamento",
+      "session_none": "Nenhuma sessão ativa",
+      "checklist_today": "Para hoje",
+      "reminders_today": "Lembretes hoje",
+      "upcoming_one": "{{count}} próximo",
+      "upcoming_other": "{{count}} próximos",
+      "habits_met": "Hábitos cumpridos",
+      "pomodoros": "Pomodoros"
+    },
+    "habits": {
+      "title": "Hábitos de hoje",
+      "see_all_one": "Ver todos ({{count}})",
+      "see_all_other": "Ver outros hábitos ({{count}})",
+      "streak_one": "{{count}} dia seguido",
+      "streak_other": "{{count}} dias seguidos"
+    },
+    "calendar": {
+      "open": "Calendário"
+    },
+    "checklist": {
+      "title": "Para hoje",
+      "open": "Checklist",
+      "empty": "Nada para hoje."
+    },
+    "reminders": {
+      "title": "Lembretes",
+      "open": "Lembretes",
+      "empty": "Nenhum lembrete agendado.",
+      "upcoming": "Próximos"
+    },
+    "layout": {
+      "reset": "Restaurar layout",
+      "resize": "Alterar tamanho do widget",
+      "drag": "Arraste para reordenar"
+    }
+  },
+  "pickers": {
+    "prev_month": "Mês anterior",
+    "next_month": "Próximo mês",
+    "hour": "Hora",
+    "minute": "Min",
+    "clear": "Limpar",
+    "pick_date": "Escolha uma data",
+    "pick_time": "Escolha um horário",
+    "pick_datetime": "Escolha data e hora",
+    "today": "Hoje"
+  },
+  "runtime": {
+    "browser_title": "Abra o LazyNevis no app desktop",
+    "browser_body": "Esta página é o servidor de desenvolvimento da janela do LazyNevis. Ela precisa do runtime do Tauri e não funciona em uma aba comum do navegador."
   }
 }

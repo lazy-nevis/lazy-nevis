@@ -6,7 +6,7 @@ alwaysApply: true
 
 # LazyNevis
 
-Read `AGENTS.md` and `RTK.md` before non-trivial edits, plus relevant `openspec/specs/*/spec.md`. Use `openspec/README.md` for behavior/schema/security/cross-module changes, `DESIGN.md` for visual work, and `docs/architecture/release.md` for release work.
+Read `AGENTS.md` and every `knowledge/rules/*.md` (except the rules README) before non-trivial edits. Use `RTK.md` for implementation context and `knowledge/product/capabilities/` for capability behavior. Feature/fix work opens an OKF bundle under `knowledge/changes/` first; update capability docs when contracts change. Use `DESIGN.md` for visual work and `docs/architecture/release.md` for release work.
 
 ## Stack
 - Tauri v2 desktop app.
@@ -26,7 +26,7 @@ Read `AGENTS.md` and `RTK.md` before non-trivial edits, plus relevant `openspec/
 - Keep alert checks in the 1-second ticker in `src-tauri/src/monitor.rs`.
 - Keep `rodio::OutputStream` inside the audio background thread.
 - Keep LazyNevis in `ALWAYS_IGNORED`.
-- Update specs and tests for behavior changes. Keep all adapters named in `AGENTS.md` aligned.
+- Update capability docs and tests for behavior changes. Keep all adapters named in `AGENTS.md` aligned. Prefer `knowledge/rules/` over IDE-only always-on rules.
 
 ## Validate
 ```bash

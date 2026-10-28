@@ -50,6 +50,9 @@ export function useSettings() {
 
   const saveSettings = useCallback(
     async (updated: AppSettings, options?: { silent?: boolean }) => {
+      // Never persist before the real settings arrive: `updated` would be built from
+      // the store defaults and overwrite the user's saved configuration.
+      if (!useSettingsStore.getState().loaded) return;
       setSettings(updated);
       const languageChanged = i18n.language !== updated.general.language;
       await i18n.changeLanguage(updated.general.language);

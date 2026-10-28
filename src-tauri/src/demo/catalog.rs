@@ -451,15 +451,21 @@ pub fn apply_mode(app: &AppHandle, state: &AppState, mode: &str) -> Result<()> {
     app_mode::apply_mode(app, state, parsed, true)
 }
 
+/// Logical window size for screenshots; the capture keeps the display's
+/// backing scale, so Retina output is twice this in pixels. Full Mode is 16:9
+/// so shots drop straight into a 1080p video frame.
+const SHOT_FULL_SIZE: (f64, f64) = (1920.0, 1080.0);
+const SHOT_COMPACT_SIZE: (f64, f64) = (400.0, 900.0);
+
 fn apply_shot_frame(app: &AppHandle, mode: &str) -> Result<()> {
     use tauri::{LogicalSize, Size};
     let Some(main) = app.get_webview_window("main") else {
         return Ok(());
     };
     let (width, height) = if mode == "compact" {
-        (380.0, 860.0)
+        (SHOT_COMPACT_SIZE.0, SHOT_COMPACT_SIZE.1)
     } else {
-        (1100.0, 820.0)
+        (SHOT_FULL_SIZE.0, SHOT_FULL_SIZE.1)
     };
     main.set_size(Size::Logical(LogicalSize::new(width, height)))
         .map_err(|error| AppError::Internal(error.to_string()))?;
@@ -630,6 +636,7 @@ fn show_overlay_pose(app: &AppHandle, state: &AppState) -> Result<()> {
         .map(|settings| settings.general.time_format.clone())
         .unwrap_or_else(|_| "24h".into());
     let payload = OverlayAlertPayload {
+        kind: "distraction".into(),
         session_id: "demo-overlay".into(),
         app_name: "Safari".into(),
         window_title: Some("Example — Safari".into()),
@@ -641,6 +648,7 @@ fn show_overlay_pose(app: &AppHandle, state: &AppState) -> Result<()> {
         is_test: true,
         language,
         time_format,
+        reminder: None,
     };
     monitor::show_overlay_payload_for_screenshots(app, payload)
 }

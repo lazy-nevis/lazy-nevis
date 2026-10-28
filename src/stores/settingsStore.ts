@@ -10,6 +10,10 @@ const DEFAULT_SETTINGS: AppSettings = {
     start_minimized: false,
     launch_at_login: false,
     time_format: "24h",
+    week_start: 1,
+  },
+  ui: {
+    sidebar_collapsed: false,
   },
   focus_rules: {
     mode: "blocklist",
@@ -25,6 +29,14 @@ const DEFAULT_SETTINGS: AppSettings = {
     fullscreen_threshold_ms: 60_000,
     cooldown_ms: 10_000,
     session_feedback_notifications: true,
+  },
+  delivery: {
+    reminders: { notification: true, fullscreen: false, sound: true },
+    habits: { notification: true, fullscreen: false, sound: false },
+    pomodoro: { notification: true, fullscreen: false, sound: true },
+    reminder_sound: "builtin:alert1.wav",
+    habit_sound: "builtin:alert1.wav",
+    pomodoro_sound: "builtin:alert1.wav",
   },
   audio: {
     notification_sound: "builtin:alert1.wav",
@@ -45,9 +57,35 @@ const DEFAULT_SETTINGS: AppSettings = {
     open_home: "CmdOrCtrl+Alt+Shift+O",
     add_checkpoint: "CmdOrCtrl+Alt+Shift+C",
   },
+  pomodoro: {
+    enabled: false,
+    focus_ms: 25 * 60_000,
+    short_break_ms: 5 * 60_000,
+    long_break_ms: 15 * 60_000,
+    long_break_every: 4,
+    auto_start_breaks: true,
+    auto_start_focus: false,
+    link_focus_session: true,
+    stop_session_with_run: true,
+    daily_goal: 8,
+  },
   checklist: {
     grace_period_ms: 10_000,
     history_sort: "created",
+    group_by: [],
+    date_recognition: true,
+  },
+  calendar: {
+    visible_kinds: [
+      "session",
+      "pomodoro_run",
+      "checklist_completed",
+      "checklist_due",
+      "habit_log",
+      "habit_day",
+      "reminder_occurrence",
+    ],
+    default_view: "month",
   },
   app_mode: {
     mode: "full",

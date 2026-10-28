@@ -1,5 +1,5 @@
 use lazy_nevis_lib::db::Database;
-use lazy_nevis_lib::models::{EventType, SessionRuntimeSnapshot};
+use lazy_nevis_lib::models::{BreakSource, EventType, SessionRuntimeSnapshot};
 use lazy_nevis_lib::services::SessionLogger;
 use lazy_nevis_lib::state::SessionData;
 use std::sync::{Arc, Mutex};
@@ -39,6 +39,8 @@ fn session_lifecycle_persists_recovers_and_deletes_cleanly() {
             is_distracted: false,
             is_idle: false,
             on_break: false,
+            break_started_at_ms: None,
+            break_source: BreakSource::Manual,
             distracted_since_ms: None,
             last_alert_ms: None,
             continuous_focus_start_ms: Some(1_000),
@@ -55,7 +57,7 @@ fn session_lifecycle_persists_recovers_and_deletes_cleanly() {
     assert_eq!(recovered.focus_ms, 5_000);
     assert_eq!(logger.get_checkpoints(&session.id).unwrap().len(), 1);
 
-    recovered.start_break(7_000).unwrap();
+    recovered.start_break(7_000, BreakSource::Manual).unwrap();
     assert!(recovered.on_break);
     recovered.end_break(8_000).unwrap();
     assert!(!recovered.on_break);

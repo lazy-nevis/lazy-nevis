@@ -6,6 +6,7 @@
 //! broadcast planned for the app-modes change.
 
 use crate::error::{AppError, Result};
+use crate::models::{PhaseKind, PomodoroRunState, PomodoroTraySummary};
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::image::Image;
@@ -163,8 +164,12 @@ fn format_hms(ms: i64) -> String {
 }
 
 /// `"{state} — HH:MM:SS"` while active, plain state label when idle.
-pub fn format_tooltip(labels: &TrayLabels, summary: &SessionSummary) -> String {
-    match summary.state {
+pub fn format_tooltip(
+    labels: &TrayLabels,
+    summary: &SessionSummary,
+    pomodoro: Option<&PomodoroTraySummary>,
+) -> String {
+    let base = match summary.state {
         TraySessionState::Idle => labels.state_idle.clone(),
         TraySessionState::Running => format!(
             "{} \u{2014} {}",
@@ -176,7 +181,18 @@ pub fn format_tooltip(labels: &TrayLabels, summary: &SessionSummary) -> String {
             labels.state_paused,
             format_hms(summary.elapsed_ms)
         ),
+    };
+    if let Some(p) = pomodoro {
+        let phase = match p.phase_kind {
+            PhaseKind::Focus => "Focus",
+            PhaseKind::ShortBreak => "Break",
+            PhaseKind::LongBreak => "Break",
+        };
+        if p.state == PomodoroRunState::Running || p.state == PomodoroRunState::Paused {
+            return format!("{} · {} {}", base, phase, format_hms(p.remaining_ms));
+        }
     }
+    base
 }
 
 /// Shared between `setup_tray` and label refreshes so both build the same menu.
@@ -215,6 +231,7 @@ pub fn build_tray_menu<R: Runtime, M: Manager<R>>(
 #[derive(Debug)]
 struct Inner {
     session: SessionSummary,
+    pomodoro: Option<PomodoroTraySummary>,
     labels: TrayLabels,
     applied_icon: Option<TraySessionState>,
     applied_tooltip: Option<String>,
@@ -236,6 +253,7 @@ impl Default for AppStatusManager {
         Self {
             inner: Mutex::new(Inner {
                 session: SessionSummary::idle(),
+                pomodoro: None,
                 labels: TrayLabels::default(),
                 // The idle icon is set by TrayIconBuilder at startup.
                 applied_icon: Some(TraySessionState::Idle),
@@ -357,7 +375,7 @@ impl AppStatusManager {
                 return;
             };
             inner.labels = labels.clone();
-            let tooltip = format_tooltip(&inner.labels, &inner.session);
+            let tooltip = format_tooltip(&inner.labels, &inner.session, inner.pomodoro.as_ref());
             inner.applied_tooltip = Some(tooltip.clone());
             tooltip
         };
@@ -377,7 +395,7 @@ impl AppStatusManager {
             } else {
                 None
             };
-            let tooltip = format_tooltip(&inner.labels, &summary);
+            let tooltip = format_tooltip(&inner.labels, &summary, inner.pomodoro.as_ref());
             let tooltip = if inner.applied_tooltip.as_deref() != Some(tooltip.as_str()) {
                 inner.applied_tooltip = Some(tooltip.clone());
                 Some(tooltip)
@@ -394,6 +412,25 @@ impl AppStatusManager {
         // windows stay consistent without per-second spam (ticks cover elapsed).
         if icon.is_some() {
             self.broadcast(app);
+        }
+    }
+
+    pub fn update_pomodoro(&self, app: &AppHandle, summary: Option<PomodoroTraySummary>) {
+        let tooltip = {
+            let Ok(mut inner) = self.inner.lock() else {
+                return;
+            };
+            inner.pomodoro = summary;
+            let tooltip = format_tooltip(&inner.labels, &inner.session, inner.pomodoro.as_ref());
+            if inner.applied_tooltip.as_deref() != Some(tooltip.as_str()) {
+                inner.applied_tooltip = Some(tooltip.clone());
+                Some(tooltip)
+            } else {
+                None
+            }
+        };
+        if let Some(tooltip) = tooltip {
+            apply_to_tray(app, None, Some(tooltip), None);
         }
     }
 }
@@ -451,7 +488,8 @@ mod tests {
                 &SessionSummary {
                     state: TraySessionState::Running,
                     elapsed_ms: 83_000
-                }
+                },
+                None,
             ),
             "Focando \u{2014} 00:01:23"
         );
@@ -461,11 +499,15 @@ mod tests {
                 &SessionSummary {
                     state: TraySessionState::Paused,
                     elapsed_ms: 3_661_000
-                }
+                },
+                None,
             ),
             "Pausado \u{2014} 01:01:01"
         );
-        assert_eq!(format_tooltip(&labels, &SessionSummary::idle()), "Ocioso");
+        assert_eq!(
+            format_tooltip(&labels, &SessionSummary::idle(), None),
+            "Ocioso"
+        );
     }
 
     // Spec scenario: tray-status/icon-follows-lifecycle

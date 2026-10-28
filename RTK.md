@@ -1,31 +1,26 @@
 # RTK - LazyNevis Runtime Technical Knowledge
 
-Last verified: 2026-06-19.
+Last verified: 2026-10-26.
 
 LazyNevis is a lightweight open-source desktop focus tool for people who want nudges, not blockers. It runs as a Tauri v2 desktop app with a React/TypeScript frontend and a Rust backend that monitors the active window, classifies focus/distraction, stores local history in SQLite, and emits alerts.
 
 ## Verification Snapshot
 
-Commands run successfully on 2026-06-19:
+Commands run successfully on 2026-10-26 (`bun run quality` exit 0):
 
 ```bash
-/Users/lucas/.bun/bin/bun run test
-/Users/lucas/.bun/bin/bun run build
-cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
-cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
-cargo test --manifest-path src-tauri/Cargo.toml
-/Users/lucas/.bun/bin/bun run tauri build
+/Users/lucas/.bun/bin/bun run quality   # repository checks + test + build + cargo fmt/clippy/test
+/Users/lucas/.bun/bin/bun run check:i18n
+/Users/lucas/.bun/bin/bun run check:hardcoded
+/Users/lucas/.bun/bin/bun run check:agents
 ```
 
 Results:
-- Frontend tests: 11 files, 57 tests passed.
-- Frontend build: `tsc && vite build` passed.
-- Rust tests: 45 unit tests, 3 release-contract tests, and 1 session-lifecycle integration test passed.
-- Rust build/check/test passed without the previously reported unused-item warnings.
-- Bun dependency audit passed with no high-severity advisory after pinning the compatible `undici` fix.
-- `bun` and `node` were not on PATH in this shell; `/Users/lucas/.bun/bin/bun` worked.
-- Production macOS app and DMG bundle passed with the autostart plugin included.
-- i18n parity check: `en-US` and `pt-BR` both have 270 keys, with no missing keys or hardcoded-string baseline entries.
+- Frontend tests: 46 files, 205 tests passed; `tsc && vite build` passed.
+- Rust: `cargo fmt --check`, `clippy --all-targets --all-features -D warnings` clean; 127 unit tests, 3 release-contract tests, 1 session-lifecycle integration test passed.
+- i18n parity: 755 keys in both locales; hardcoded-string baseline 0 findings.
+- Run cargo by full path (`~/.cargo/bin/cargo`) when a shell wrapper hides output; a "hanging" test run usually means a re-entrant mutex (see `knowledge/rules/rust-locking.md`).
+- Not verified in this snapshot: `bun run tauri build` and interactive `tauri dev` smoke test of the 2026-10-26 features.
 
 ## Current Feature Surface
 
@@ -45,6 +40,12 @@ Implemented:
 - About performs an explicit, bounded update check against official GitHub release metadata and never downloads an update.
 - Permission checks for notifications/accessibility with a startup permissions modal.
 - English (US) and Portuguese (BR) locales.
+- Visual identity "Quiet Workspace" (2026-10-26): grouped 248/60 px sidebar (`UiSettings.sidebar_collapsed`), content header with breadcrumb, command palette (`Mod+K`, `src/components/command/`), shared primitives in `src/components/ui/`.
+- Checklist organization: sub-items (depth 1), categories with tones, priorities, natural-language due dates (pt-BR/en-US, `naturalDate.ts`), grouping by category/date/priority (`checklistGrouping.ts`), live refresh. Migration `0005`.
+- Reminders + shared scheduler: recurring schedules, snooze, activity log, delivery via notification / fullscreen overlay queue / sound, Settings "Notifications & reminders". Migration `0006`.
+- Calendar: month/week/day views over `get_calendar_range` (≤ 62 days) aggregating sessions, checklist completed/due, reminder occurrences, habit logs/days, pomodoro runs.
+- Habit tracking: daily/weekly/monthly targets, logs (card, dialog, quick-log window `quicklog`), reminders with skip-when-met, contribution skyline heatmap, reports/export, activate/deactivate. Migration `0007`.
+- Pomodoro (opt-in): Rust engine with recovery, linked sessions (`session_runtime.break_source`), phase alerts, page/widget/compact strip/tray block/palette, history + export, reports (local-day today panel, 7/30/90-day stats). Migration `0008`.
 
 Release gates outside this checkout:
 - Clean-machine acceptance remains required for each exact macOS, Windows, Debian/Ubuntu, and RPM-family artifact.
@@ -85,7 +86,8 @@ src/
     features/              Domain UI: alerts, permissions, session timeline/modal
     charts/                Pure SVG charts
     layout/                Sidebar and toast container
-  pages/                   Dashboard, History, Settings, About, Overlay
+  pages/                   Dashboard, Checklist, History, Settings, About, Overlay, QuickLog, TrayPopover, SecondaryShell
+                           (Calendar, Reminders, Habits, HabitDetail, Pomodoro pages live in components/features/<domain>/)
   hooks/                   useFocusSession, useSettings
   stores/                  sessionStore, settingsStore, uiStore
   services/tauri.ts        All frontend invoke wrappers
@@ -112,6 +114,15 @@ Other important files:
 - `src-tauri/Cargo.toml`: Rust dependencies.
 - `.github/workflows/ci.yml`: frontend tests, Rust tests, multi-platform Tauri build.
 - `.github/workflows/release.yml`: tag-based draft release flow.
+
+## Scheduler (reminders / habits / pomodoro)
+
+- `monitor::start_scheduler_ticker` runs a 1 s Tokio loop from app setup (independent of focus sessions).
+- `services/scheduler.rs` maintains `next_due`, a dirty flag, missed-occurrence policy, and dedupe via `trigger_events` unique index.
+- `services/delivery.rs` resolves channels from `AppSettings.delivery` (+ per-reminder overrides) and delivers notification / fullscreen (`overlay_queue`) / sound (`AudioPlayer` on the audio thread).
+- Frontend reminder UI lives under `src/components/features/reminders/`; delivery defaults under `src/components/features/delivery/`.
+- Lock order is scheduler → db; never call `mark_dirty()` or other scheduler-locking code while holding the DB guard, and never re-lock the DB from inside a held guard (`knowledge/rules/rust-locking.md`).
+- Pomodoro runs its own 1 s ticker (`start_pomodoro_ticker`); engine lock order is `active` → db.
 
 ## Main Runtime Flows
 

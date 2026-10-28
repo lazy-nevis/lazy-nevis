@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "quicklog-capability",
+  "description": "Capabilities for the habit quick-log window",
+  "windows": ["quicklog"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-hide",
+    "core:window:allow-set-title",
+    "core:window:allow-start-dragging"
+  ]
+}

@@ -14,6 +14,7 @@ vi.mock("@tauri-apps/api/event", () => ({
 }));
 
 const activePayload: OverlayAlertPayload = {
+  kind: "distraction",
   session_id: "test-session",
   app_name: "Instagram",
   window_title: null,
@@ -25,6 +26,32 @@ const activePayload: OverlayAlertPayload = {
   is_test: true,
   language: "pt-BR",
   time_format: "24h",
+  reminder: null,
+};
+
+const reminderPayload: OverlayAlertPayload = {
+  kind: "reminder",
+  session_id: "",
+  app_name: "",
+  window_title: null,
+  distracted_ms: 0,
+  session_elapsed_ms: 0,
+  focus_ms: 0,
+  idle_ms: 0,
+  alert_started_at_ms: Date.now(),
+  is_test: false,
+  language: "en-US",
+  time_format: "24h",
+  reminder: {
+    event_id: "event-1",
+    owner_kind: "reminder",
+    owner_id: "rem-1",
+    title: "Drink water",
+    body_md: "Stay hydrated",
+    tone: "sky",
+    late: false,
+    actions: ["done"],
+  },
 };
 
 describe("Overlay", () => {
@@ -55,4 +82,30 @@ describe("Overlay", () => {
 
     await waitFor(() => expect(dismiss).toHaveBeenCalledOnce());
   });
+
+  it("renders calm reminder overlay actions", async () => {
+    vi.spyOn(overlayService, "getActive").mockResolvedValue(reminderPayload);
+    const resolveAction = vi.spyOn(overlayService, "resolveAction").mockResolvedValue();
+
+    render(<Overlay />);
+    expect(await screen.findByText("Drink water")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Done"));
+    await waitFor(() => expect(resolveAction).toHaveBeenCalledWith("event-1", "done", undefined));
+  });
+
+  it("renders habit alerts in the shared frame without session metrics", async () => {
+    vi.spyOn(overlayService, "getActive").mockResolvedValue({
+      ...reminderPayload,
+      kind: "habit",
+      reminder: { ...reminderPayload.reminder!, owner_kind: "habit", title: "Stretch", actions: ["log", "snooze", "dismiss"] },
+    });
+    const resolveAction = vi.spyOn(overlayService, "resolveAction").mockResolvedValue();
+
+    render(<Overlay />);
+    expect(await screen.findByText("Stretch")).toBeInTheDocument();
+    expect(screen.queryByText(/Distracted/i)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("10 minutes"));
+    await waitFor(() => expect(resolveAction).toHaveBeenCalledWith("event-1", "snooze", 10));
+  });
 });
+

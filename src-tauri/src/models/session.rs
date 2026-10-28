@@ -73,6 +73,8 @@ pub struct SessionStats {
     pub checkpoints: Vec<Checkpoint>,
 }
 
+use crate::models::BreakSource;
+
 #[derive(Debug, Clone)]
 pub struct SessionRuntimeSnapshot {
     pub session_id: String,
@@ -84,6 +86,8 @@ pub struct SessionRuntimeSnapshot {
     pub is_distracted: bool,
     pub is_idle: bool,
     pub on_break: bool,
+    pub break_started_at_ms: Option<i64>,
+    pub break_source: BreakSource,
     pub distracted_since_ms: Option<i64>,
     pub last_alert_ms: Option<i64>,
     pub continuous_focus_start_ms: Option<i64>,

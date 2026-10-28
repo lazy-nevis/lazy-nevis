@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   History as HistoryIcon,
   Info,
+  ListChecks,
   Maximize2,
   Monitor,
   Pause,
@@ -17,14 +18,27 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import type { ChecklistItem } from "@/types";
+import { ChecklistGroupedList } from "@/components/features/checklist/ChecklistGroupedList";
 import { ChecklistInput } from "@/components/features/checklist/ChecklistInput";
-import { ChecklistItemRow } from "@/components/features/checklist/ChecklistItemRow";
+import { HabitCompactList } from "@/components/features/habits/HabitCompactList";
+import { PomodoroCompactStrip } from "@/components/features/pomodoro/PomodoroCompactStrip";
 import { useChecklist } from "@/hooks/useChecklist";
+import { usePomodoro } from "@/hooks/usePomodoro";
+import { useSettings } from "@/hooks/useSettings";
 import { appModeService, overlayService, sessionService } from "@/services/tauri";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUiStore } from "@/stores/uiStore";
 import { formatDuration } from "@/utils/formatters";
+import { COMPACT_SEGMENTS, type CompactSegmentId } from "@/config/compactSegments";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/utils/cn";
+
+const compactChromeBtn =
+  "rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+const compactLinkBtn =
+  "mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 /**
  * Compact Mode layout — a narrow vertical column. Rendered inside AppShell, so
@@ -57,26 +71,10 @@ export function CompactShell({
     startFocusFromItem,
   } = useChecklist();
   const [name, setName] = useState("");
+  const [segment, setSegment] = useState<CompactSegmentId>(COMPACT_SEGMENTS[0]?.id ?? "checklist");
   const [deleteTarget, setDeleteTarget] = useState<ChecklistItem | null>(null);
-  const dragId = useRef<string | null>(null);
-
-  // Same live drag preview as the Checklist page (spec: daily-checklist/drag-reorder).
-  const handleDragOver = (overId: string) => {
-    const dragging = dragId.current;
-    if (!dragging || dragging === overId) return;
-    const ids = openView.map((entry) => entry.item.id);
-    const fromIndex = ids.indexOf(dragging);
-    const toIndex = ids.indexOf(overId);
-    if (fromIndex < 0 || toIndex < 0) return;
-    ids.splice(toIndex, 0, ids.splice(fromIndex, 1)[0]);
-    previewReorder(ids);
-  };
-
-  const handleDragEnd = () => {
-    if (!dragId.current) return;
-    dragId.current = null;
-    void commitReorder();
-  };
+  const { settings } = useSettings();
+  usePomodoro();
 
   const startSession = async () => {
     try {
@@ -117,7 +115,7 @@ export function CompactShell({
           (spec: app-modes/compact-top-bar + custom-title-bar). */}
       <header
         data-tauri-drag-region
-        className="relative flex select-none items-center justify-end border-b py-2.5 pr-2"
+        className="relative flex select-none items-center justify-end border-b border-border/60 py-2.5 pr-2"
       >
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <BrandLogo className="h-7" />
@@ -128,10 +126,7 @@ export function CompactShell({
             onClick={() => void appModeService.setPin(!pinned)}
             title={pinned ? t("app_modes.unpin") : t("app_modes.pin")}
             aria-label={pinned ? t("app_modes.unpin") : t("app_modes.pin")}
-            className={cn(
-              "rounded p-1.5 transition-colors hover:bg-accent",
-              pinned ? "text-primary" : "text-muted-foreground",
-            )}
+            className={cn(compactChromeBtn, pinned && "text-brand")}
           >
             {pinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
           </button>
@@ -140,7 +135,7 @@ export function CompactShell({
             onClick={() => void appModeService.openSecondary("about")}
             title={t("nav.about")}
             aria-label={t("nav.about")}
-            className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent"
+            className={compactChromeBtn}
           >
             <Info className="h-4 w-4" />
           </button>
@@ -149,7 +144,7 @@ export function CompactShell({
             onClick={() => void appModeService.openSecondary("settings")}
             title={t("nav.settings")}
             aria-label={t("nav.settings")}
-            className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent"
+            className={compactChromeBtn}
           >
             <SettingsIcon className="h-4 w-4" />
           </button>
@@ -162,7 +157,7 @@ export function CompactShell({
               onClick={() => void appModeService.setMode("full")}
               title={t("app_modes.switch_to_full")}
               aria-label={t("app_modes.switch_to_full")}
-              className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent"
+              className={compactChromeBtn}
             >
               <Maximize2 className="h-4 w-4" />
             </button>
@@ -171,7 +166,7 @@ export function CompactShell({
       </header>
 
       {/* Session block */}
-      <section className="border-b p-3">
+      <section className="border-b border-border/60 p-3">
         {activeSession ? (
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
@@ -182,7 +177,7 @@ export function CompactShell({
                 {formatDuration(liveStats?.total_ms ?? 0)}
               </span>
             </div>
-            <div className="grid grid-cols-3 gap-1 text-center text-[11px] text-muted-foreground">
+            <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted/40 p-2 text-center text-[11px] text-muted-foreground">
               <div>
                 <p className="font-mono tabular-nums text-foreground">
                   {formatDuration(liveStats?.focus_ms ?? 0)}
@@ -232,7 +227,7 @@ export function CompactShell({
               placeholder={t("tray_panel.session_name_placeholder")}
               className="h-8 text-sm"
             />
-            <Button size="sm" className="w-full gap-1.5" onClick={() => void startSession()}>
+            <Button size="sm" variant="brand" className="w-full gap-1.5" onClick={() => void startSession()}>
               <Play className="h-3.5 w-3.5" />
               {t("dashboard.session.start_button")}
             </Button>
@@ -241,14 +236,32 @@ export function CompactShell({
         <button
           type="button"
           onClick={() => void appModeService.openSecondary("history")}
-          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className={compactLinkBtn}
         >
           <HistoryIcon className="h-3.5 w-3.5" />
           {t("app_modes.view_reports")}
         </button>
+        <div className="session-extra mt-2">
+          <PomodoroCompactStrip />
+        </div>
       </section>
 
+      {COMPACT_SEGMENTS.length > 1 && (
+        <div className="border-b px-3 py-2">
+          <SegmentedControl
+            aria-label={t("ui.segment_label")}
+            value={segment}
+            onChange={setSegment}
+            options={COMPACT_SEGMENTS.map((s) => ({
+              value: s.id,
+              label: t(s.labelKey),
+            }))}
+          />
+        </div>
+      )}
+
       {/* Checklist block (full CRUD, compact rows) */}
+      {segment === "checklist" && (
       <section className="flex min-h-0 flex-1 flex-col p-3">
         <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           {t("checklist.open_title")}
@@ -256,49 +269,53 @@ export function CompactShell({
         {/* Scrollbar sits in the section padding; rows keep the block's full width. */}
         <div className="-mr-2 min-h-0 flex-1 space-y-1 overflow-y-auto pr-2 [scrollbar-gutter:stable]">
           {openView.length === 0 && (
-            <p className="py-3 text-center text-xs text-muted-foreground">
-              {t("checklist.empty_open")}
-            </p>
-          )}
-          {openView.map((entry) => (
-            <ChecklistItemRow
-              key={entry.item.id}
-              entry={entry}
-              graceMs={graceMs}
-              compact
-              draggable
-              onToggleComplete={(item) => void completeItem(item.id)}
-              onUndo={(item) => void uncompleteItem(item.id)}
-              onUpdate={(item, patch) => void updateItem(item, patch)}
-              onDelete={setDeleteTarget}
-              // Hidden while a session runs (spec: daily-checklist/start-from-item).
-              onStartFocus={
-                activeSession
-                  ? undefined
-                  : (item) => {
-                      startFocusFromItem(item)
-                        .then(() => addToast(t("dashboard.session.status_focused"), "info"))
-                        .catch(() => addToast(t("common.error"), "error"));
-                    }
-              }
-              onDragStart={(id) => {
-                dragId.current = id;
-              }}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
+            <EmptyState
+              icon={ListChecks}
+              title={t("checklist.empty_open")}
+              className="border-none bg-transparent py-3 shadow-none"
             />
-          ))}
+          )}
+          <ChecklistGroupedList
+            openView={openView}
+            groupBy={settings.checklist.group_by ?? []}
+            graceMs={graceMs}
+            compact
+            categoryFilterIds={[]}
+            createItem={createItem}
+            onToggleComplete={(item) => void completeItem(item.id)}
+            onUndo={(item) => void uncompleteItem(item.id)}
+            onUpdate={(item, patch) => void updateItem(item, patch)}
+            onDelete={setDeleteTarget}
+            onStartFocus={
+              activeSession
+                ? undefined
+                : (item, parent) => {
+                    startFocusFromItem(item, parent?.title)
+                      .then(() => addToast(t("dashboard.session.status_focused"), "info"))
+                      .catch(() => addToast(t("common.error"), "error"));
+                  }
+            }
+            previewReorder={previewReorder}
+            commitReorder={commitReorder}
+          />
           <ChecklistInput onCreate={createItem} />
         </div>
         <button
           type="button"
           onClick={() => void appModeService.openSecondary("checklist-history")}
-          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className={compactLinkBtn}
         >
           <HistoryIcon className="h-3.5 w-3.5" />
           {t("app_modes.view_previous_activities")}
         </button>
       </section>
+      )}
+
+      {segment === "habits" && (
+        <section className="min-h-0 flex-1 overflow-y-auto p-3">
+          <HabitCompactList />
+        </section>
+      )}
 
       {/* Delete confirmation (spec: daily-checklist/confirmed-delete) */}
       <Dialog open={deleteTarget !== null} onClose={() => setDeleteTarget(null)}>

@@ -115,6 +115,30 @@ LazyNevis is for people who want to understand their focus patterns, get a gentl
 - Start and end break controls (break pauses the main session timer)
 - Break history tracked per session
 
+### Checklist
+
+- Sub-items, categories with colors, and priorities
+- Natural-language due dates in English and Portuguese ("call at 3pm tomorrow", "próxima sexta"), highlighted as you type
+- Grouping by category, date (no date → overdue → due by date), or priority
+
+### Reminders and calendar
+
+- Recurring reminders with Markdown descriptions, snooze, and an activity log
+- Delivery per alert type: notification, fullscreen overlay, and/or sound
+- Month, week, and day calendar showing sessions, Pomodoro runs, habits, checklist items, and reminders
+
+### Habits
+
+- Daily, weekly, or monthly targets with reminders that skip when the target is met
+- Quick-log window, contribution heatmap, streaks, reports, and export
+- Edit, pause, or reactivate habits without losing history
+
+### Pomodoro (optional)
+
+- Configurable focus / short break / long break cycles that can drive a focus session
+- Crash-safe recovery, tray and Compact Mode status, phase alerts
+- History with export, plus reports: today's progress, completion rate, pauses, best hour, and focus per day
+
 ### History and export
 
 - Session list with date range filters
@@ -198,6 +222,15 @@ bun run quality
 ```
 
 Production bundles: `bun run tauri build`.
+
+**Demo mode and screenshots:**
+
+```bash
+bun run dev:demo --fresh   # open the dev app with ~4 months of fictional daily use
+bun run screenshots:dev    # capture every screen (light + dark) into docs/screenshots/<platform>/
+```
+
+Demo mode never touches your real profile. See [docs/screenshots](docs/screenshots/README.md) for what gets seeded and captured.
 
 Contributor workflow: [CONTRIBUTING.md](CONTRIBUTING.md) — Architecture: [docs/architecture/overview.md](docs/architecture/overview.md) — Release process: [docs/architecture/release.md](docs/architecture/release.md).
 

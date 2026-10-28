@@ -16,24 +16,17 @@ The "-is" suffix is a cultural reference to Mussum (Os Trapalhões, Brazil). It 
 ### Semantic tokens (CSS variables)
 
 ```css
-/* Light */
---background: 0 0% 100%
---foreground: 224 71.4% 4.1%
---card: 0 0% 100%
---primary: 220.9 39.3% 11%
---secondary: 220 14.3% 95.9%
---muted: 220 14.3% 95.9%
---muted-foreground: 220 8.9% 46.1%
---accent: 220 14.3% 95.9%
---destructive: 0 84.2% 60.2%
---border: 220 13% 91%
-
-/* Dark (automatic via .dark class) */
---background: 224 71.4% 4.1%
---card: 224 71.4% 6%
---primary: 210 20% 98%
-/* etc — see src/index.css */
+/* Quiet Workspace — see src/index.css for full light/dark values */
+--background, --foreground, --card, --popover, --muted, --accent, --border, --input, --ring
+--sidebar, --sidebar-accent, --sidebar-border
+--brand, --brand-foreground
+--success, --warning, --info
+--chart-1 … --chart-5
+--radius: 0.625rem
+--tone-* (named accents via src/utils/tones.ts)
 ```
+
+Tailwind v4 maps these through `@theme inline` (`bg-sidebar`, `bg-brand`, `text-success`, …).
 
 ### Session status colors
 

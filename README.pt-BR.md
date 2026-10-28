@@ -79,6 +79,26 @@ Durante uma sessão, o LazyNevis verifica a janela ativa a cada segundo e a clas
 - Contagem regressiva no Dashboard
 - Histórico de pausas por sessão
 
+### Checklist
+- Subitens, categorias com cores e prioridades
+- Datas em linguagem natural em português e inglês ("próxima sexta", "call at 3pm tomorrow"), destacadas enquanto você digita
+- Agrupamento por categoria, data (sem data → atrasados → conclusão em DD/MM) ou prioridade
+
+### Lembretes e calendário
+- Lembretes recorrentes com descrição em Markdown, soneca e registro de atividade
+- Entrega por tipo de alerta: notificação, overlay em tela cheia e/ou som
+- Calendário mensal, semanal e diário com sessões, Pomodoros, hábitos, itens do checklist e lembretes
+
+### Hábitos
+- Metas diárias, semanais ou mensais, com lembretes que não disparam quando a meta já foi cumprida
+- Janela de registro rápido, mapa de contribuições, sequências, relatórios e exportação
+- Editar, pausar ou reativar hábitos sem perder o histórico
+
+### Pomodoro (opcional)
+- Ciclos configuráveis de foco / pausa curta / pausa longa, que podem conduzir uma sessão de foco
+- Recuperação após falha, status na bandeja e no Modo Compacto, alertas de fase
+- Histórico com exportação e relatórios: progresso de hoje, taxa de conclusão, pausas, melhor horário e foco por dia
+
 ### Histórico e exportação
 - Lista de sessões com filtros por intervalo de datas
 - Detalhe da sessão com timeline visual, gráfico de apps por tempo e gráfico de foco
@@ -148,6 +168,15 @@ bun run quality
 ```
 
 Bundles de produção: `bun run tauri build`.
+
+**Modo demonstração e capturas de tela:**
+
+```bash
+bun run dev:demo --fresh   # abre o app de dev com ~4 meses de uso diário fictício
+bun run screenshots:dev    # captura todas as telas (claro + escuro) em docs/screenshots/<plataforma>/
+```
+
+O modo demonstração nunca usa o seu perfil real. Veja [docs/screenshots](docs/screenshots/README.md) para o que é gerado e capturado.
 
 Fluxo para contribuidores: [CONTRIBUTING.md](CONTRIBUTING.md) — Arquitetura: [docs/architecture/overview.md](docs/architecture/overview.md) — Release: [docs/architecture/release.md](docs/architecture/release.md).
 

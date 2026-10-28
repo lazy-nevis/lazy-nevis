@@ -4,7 +4,7 @@ import { checklistService, sessionService } from "@/services/tauri";
 import { useChecklistStore } from "@/stores/checklistStore";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useSettingsStore } from "@/stores/settingsStore";
-import type { ChecklistItem, Session } from "@/types";
+import type { ChecklistItem, CreateChecklistInput, Session, UpdateChecklistPatch } from "@/types";
 
 /** Exit-animation duration; keep in sync with the row's CSS transition. */
 export const CHECKLIST_LEAVE_MS = 300;
@@ -85,19 +85,21 @@ export function useChecklist() {
   );
 
   const createItem = useCallback(
-    (title: string, tags: string[], dueDate?: number) =>
-      checklistService.create(title, tags, dueDate),
+    (input: CreateChecklistInput) => checklistService.create(input),
     [],
   );
 
   const updateItem = useCallback(
-    (item: ChecklistItem, patch: { title?: string; tags?: string[]; dueDate?: number | null }) =>
-      checklistService.update(
-        item.id,
-        patch.title ?? item.title,
-        patch.tags ?? item.tags.map((tag) => tag.name),
-        patch.dueDate === undefined ? item.due_date : patch.dueDate,
-      ),
+    (item: ChecklistItem, patch: UpdateChecklistPatch) =>
+      checklistService.update(item.id, {
+        title: patch.title ?? item.title,
+        tags: patch.tags ?? item.tags.map((tag) => tag.name),
+        dueDate: patch.dueDate === undefined ? item.due_date : patch.dueDate,
+        dueHasTime: patch.dueHasTime ?? item.due_has_time,
+        category:
+          patch.category === undefined ? (item.category?.name ?? null) : patch.category,
+        priority: patch.priority ?? item.priority,
+      }),
     [],
   );
 
@@ -125,8 +127,9 @@ export function useChecklist() {
 
 
   /** Spec: daily-checklist/start-from-item. */
-  const startFocusFromItem = useCallback(async (item: ChecklistItem): Promise<Session> => {
-    const session = await sessionService.start(item.title);
+  const startFocusFromItem = useCallback(async (item: ChecklistItem, parentTitle?: string): Promise<Session> => {
+    const label = parentTitle ? `${parentTitle} › ${item.title}` : item.title;
+    const session = await sessionService.start(label);
     await checklistService.linkSession(item.id, session.id).catch(() => {});
     useSessionStore.getState().setActiveSession(session);
     useSessionStore.getState().resetCheckpoints();

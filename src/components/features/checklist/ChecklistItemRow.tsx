@@ -1,13 +1,19 @@
 import { useState } from "react";
 import type { DragEvent } from "react";
 import { Calendar, Check, GripVertical, Play, Tag as TagIcon, Trash2, Undo2, X } from "lucide-react";
+import { motion } from "motion/react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { TagChip } from "./TagChip";
-import { parseInlineTags } from "./checklistUtils";
 import type { OpenChecklistEntry } from "@/hooks/useChecklist";
 import type { ChecklistItem } from "@/types";
 import { daysAgo, fromDateInputValue, startOfLocalDay, toDateInputValue } from "@/utils/dates";
+import { useNow } from "@/hooks/useNow";
+import { CategoryChip, CategoryPicker } from "./CategoryPicker";
+import { PriorityFlag, PriorityMenu } from "./PriorityFlag";
+import { toneStyle, type Tone } from "@/utils/tones";
+import { parseEntry } from "./checklistUtils";
+import type { UpdateChecklistPatch } from "@/types";
 import { formatDate } from "@/utils/formatters";
 import { cn } from "@/utils/cn";
 
@@ -19,7 +25,7 @@ export interface ChecklistItemRowProps {
   draggable?: boolean;
   onToggleComplete: (item: ChecklistItem) => void;
   onUndo: (item: ChecklistItem) => void;
-  onUpdate?: (item: ChecklistItem, patch: { title?: string; tags?: string[]; dueDate?: number | null }) => void;
+  onUpdate?: (item: ChecklistItem, patch: UpdateChecklistPatch) => void;
   onDelete?: (item: ChecklistItem) => void;
   onStartFocus?: (item: ChecklistItem) => void;
   onTagClick?: (name: string) => void;
@@ -50,21 +56,27 @@ export function ChecklistItemRow({
   onDragEnd,
 }: ChecklistItemRowProps) {
   const { t, i18n } = useTranslation();
+  const now = useNow();
   const { item, grace } = entry;
+  const isSubItem = item.parent_id !== null;
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(item.title);
   const [editingDue, setEditingDue] = useState(false);
   const [tagsOpen, setTagsOpen] = useState(false);
 
-  const age = daysAgo(item.created_at);
+  const age = daysAgo(item.created_at, now);
   const overdue =
     item.completed_at === null &&
     item.due_date !== null &&
-    item.due_date < startOfLocalDay(Date.now());
+    item.due_date < startOfLocalDay(now);
 
   const commitTitle = () => {
     setEditingTitle(false);
-    const { title, tags } = parseInlineTags(titleDraft);
+    const { title, tags, category, priority, due } = parseEntry(titleDraft, {
+      now,
+      locale: i18n.language,
+      dateRecognition: true,
+    });
     if (!title || (title === item.title && tags.length === 0)) {
       setTitleDraft(item.title);
       return;
@@ -75,7 +87,14 @@ export function ChecklistItemRow({
         merged.push(tag);
       }
     }
-    onUpdate?.(item, { title, tags: merged });
+    onUpdate?.(item, {
+      title,
+      tags: merged,
+      category,
+      priority,
+      dueDate: due?.ms ?? item.due_date,
+      dueHasTime: due?.hasTime ?? item.due_has_time,
+    });
   };
 
   const removeTag = (name: string) => {
@@ -133,8 +152,11 @@ export function ChecklistItemRow({
           />
         )}
 
-        <button
+        <motion.button
           type="button"
+          initial={false}
+          animate={grace ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
           onClick={() => (grace ? onUndo(item) : onToggleComplete(item))}
           aria-label={grace ? t("checklist.undo") : t("checklist.complete")}
           className={cn(
@@ -145,8 +167,16 @@ export function ChecklistItemRow({
           )}
         >
           {grace && <Check className="h-3 w-3" />}
-        </button>
+        </motion.button>
 
+        {compact && item.category && (
+          <span
+            className="tone-dot h-2 w-2 shrink-0 rounded-full"
+            style={toneStyle(item.category.tone as Tone)}
+            title={item.category.name}
+          />
+        )}
+        <PriorityFlag priority={item.priority} />
         <div className="min-w-0 flex-1">
           {editingTitle && onUpdate ? (
             <input
@@ -191,6 +221,23 @@ export function ChecklistItemRow({
             </div>
           )}
 
+          {!compact && !isSubItem && onUpdate && !grace && (
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <CategoryPicker
+                value={item.category}
+                onChange={(name) => onUpdate(item, { category: name })}
+              />
+              <PriorityMenu
+                value={item.priority}
+                onChange={(priority) => onUpdate(item, { priority })}
+              />
+            </div>
+          )}
+          {!compact && !isSubItem && item.category && !onUpdate && (
+            <div className="mt-1">
+              <CategoryChip category={item.category} />
+            </div>
+          )}
           {!compact && (item.tags.length > 0 || item.due_date !== null || age > 0) && (
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               {item.tags.map((tag) => (

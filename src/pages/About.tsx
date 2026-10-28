@@ -4,6 +4,8 @@ import { getVersion } from "@tauri-apps/api/app";
 import { AlertTriangle, CheckCircle2, Download, ExternalLink, Heart } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { SectionCard } from "@/components/ui/section-card";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useUiStore } from "@/stores/uiStore";
@@ -72,65 +74,48 @@ export function About() {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
-      {/* Centered but full-width content: header, side-by-side info cards, and a
-          horizontal action row keep the page short enough to avoid scrolling. */}
-      <div className="mx-auto w-full max-w-3xl px-8 pt-8 pb-8 space-y-6">
+    <PageContainer>
+      <PageHeader title={t("about.title")} description={t("about.description")} />
 
-        {/* Header: logo, tagline, description */}
-        <div className="flex flex-col items-center gap-3 text-center">
-          <img
-            src={logoSrc}
-            alt="LazyNevis"
-            className="h-20 w-auto object-contain"
-            draggable={false}
-          />
-          <p className="text-muted-foreground italic text-sm">
-            {t("common.tagline")}
-          </p>
-          <p className="max-w-2xl text-sm text-muted-foreground leading-relaxed">
-            {t("about.description")}
-          </p>
-        </div>
+      <div className="flex flex-col items-center gap-3 text-center">
+        <img
+          src={logoSrc}
+          alt="LazyNevis"
+          className="h-20 w-auto object-contain"
+          draggable={false}
+        />
+        <p className="text-sm italic text-muted-foreground">{t("common.tagline")}</p>
+      </div>
 
-        {/* Name origin + author, side by side */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-lg border bg-muted/40 p-4 space-y-2">
-            <p className="text-sm font-semibold">{t("about.tagline_title")}</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              {t("about.tagline_body")}
-            </p>
-            <p className="text-xs text-muted-foreground/60 italic">
-              {t("common.tagline_note")}
-            </p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <SectionCard title={t("about.tagline_title")}>
+          <p className="text-xs leading-relaxed text-muted-foreground">{t("about.tagline_body")}</p>
+          <p className="mt-2 text-xs italic text-muted-foreground/70">{t("common.tagline_note")}</p>
+        </SectionCard>
+
+        <SectionCard title={t("about.created_by")}>
+          <p className="text-sm font-semibold">{t("about.author_name")}</p>
+          <div className="mt-2 flex flex-wrap gap-4">
+            <button
+              type="button"
+              onClick={() => openLink("https://github.com/simstm")}
+              className="flex items-center gap-1 text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+            >
+              <ExternalLink className="h-3 w-3" />
+              {t("about.author_github")}
+            </button>
+            <button
+              type="button"
+              onClick={() => openLink("https://sims.dev.br")}
+              className="flex items-center gap-1 text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+            >
+              <ExternalLink className="h-3 w-3" />
+              {t("about.author_site")}
+            </button>
           </div>
-
-          <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-              {t("about.created_by")}
-            </p>
-            <p className="text-sm font-semibold">
-              {t("about.author_name")}
-            </p>
-            <div className="flex gap-4 flex-wrap mt-1">
-              <button
-                onClick={() => openLink("https://github.com/simstm")}
-                className="text-xs text-primary hover:underline flex items-center gap-1"
-              >
-                <ExternalLink className="h-3 w-3" />
-                {t("about.author_github")}
-              </button>
-              <button
-                onClick={() => openLink("https://sims.dev.br")}
-                className="text-xs text-primary hover:underline flex items-center gap-1"
-              >
-                <ExternalLink className="h-3 w-3" />
-                {t("about.author_site")}
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground">{t("about.open_source")}</p>
-          </div>
-        </div>
+          <p className="mt-2 text-xs text-muted-foreground">{t("about.open_source")}</p>
+        </SectionCard>
+      </div>
 
         {/* Actions as a single row */}
         <div className="grid gap-3 sm:grid-cols-3">
@@ -163,7 +148,7 @@ export function About() {
             className={cn(
               "fade-slide-in flex items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm",
               updateResult.kind === "available" && "border-primary/40 bg-primary/10",
-              updateResult.kind === "current" && "border-green-500/40 bg-green-500/10 text-green-600 dark:text-green-400",
+              updateResult.kind === "current" && "border-success/40 bg-success/10 text-success",
               updateResult.kind === "error" && "border-destructive/40 bg-destructive/10 text-destructive",
             )}
           >
@@ -181,7 +166,7 @@ export function About() {
         )}
 
         {/* Footer line */}
-        <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-1 text-xs text-muted-foreground border-t pt-4">
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-border/60 pt-4 text-xs text-muted-foreground">
           <span>{t("about.version")} {version}</span>
           <span>·</span>
           <button
@@ -194,7 +179,6 @@ export function About() {
           <span>{t("about.built_with")}</span>
         </div>
 
-      </div>
-    </div>
+    </PageContainer>
   );
 }
