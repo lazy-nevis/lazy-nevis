@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { motion } from "motion/react";
 import { useTranslation } from "react-i18next";
+import { celebrate } from "@/components/ui/motion";
 import { ChecklistInput } from "./ChecklistInput";
 import { ChecklistItemRow } from "./ChecklistItemRow";
 import type { OpenChecklistEntry } from "@/hooks/useChecklist";
@@ -46,6 +48,7 @@ export function ChecklistGroupedList({
   const { t, i18n } = useTranslation();
   const now = useNow();
   const dragId = useRef<string | null>(null);
+  const rowEls = useRef(new Map<string, HTMLElement>());
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [expandedSubs, setExpandedSubs] = useState<Record<string, boolean>>({});
 
@@ -72,6 +75,22 @@ export function ChecklistGroupedList({
   );
 
   const trees = useMemo(() => buildTree(items), [items]);
+
+  /** Completing the last open item of a category fires a small confetti pop from its row. */
+  const handleToggleComplete = (item: ChecklistItem) => {
+    const categoryId = item.category?.id;
+    if (categoryId && !entryById.get(item.id)?.grace) {
+      const othersOpen = items.some(
+        (other) =>
+          other.id !== item.id &&
+          other.category?.id === categoryId &&
+          other.completed_at === null &&
+          !entryById.get(other.id)?.grace,
+      );
+      if (!othersOpen) celebrate(rowEls.current.get(item.id), "small");
+    }
+    onToggleComplete(item);
+  };
 
   const handleDragOver = (overId: string) => {
     const dragging = dragId.current;
@@ -125,13 +144,22 @@ export function ChecklistGroupedList({
     }).length;
 
     return (
-      <div key={item.id} className="space-y-1">
+      <motion.div
+        key={item.id}
+        layout="position"
+        transition={{ type: "spring", bounce: 0.1, visualDuration: 0.3 }}
+        className="space-y-1"
+        ref={(el: HTMLDivElement | null) => {
+          if (el) rowEls.current.set(item.id, el);
+          else rowEls.current.delete(item.id);
+        }}
+      >
         <ChecklistItemRow
           entry={entry}
           graceMs={graceMs}
           compact={compact}
           draggable
-          onToggleComplete={onToggleComplete}
+          onToggleComplete={handleToggleComplete}
           onUndo={onUndo}
           onUpdate={onUpdate}
           onDelete={onDelete}
@@ -159,7 +187,7 @@ export function ChecklistGroupedList({
             )}
           </>
         )}
-      </div>
+      </motion.div>
     );
   };
 

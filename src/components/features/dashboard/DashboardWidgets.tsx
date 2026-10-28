@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatCard } from "@/components/ui/stat-card";
+import { AnimatedNumber, AnimatedProgress } from "@/components/ui/motion";
 import { formatProgressLine } from "@/components/features/habits/habitFormat";
 import { habitIcon } from "@/components/features/habits/habitIcons";
 import type { DashboardData } from "@/components/features/dashboard/useDashboardData";
@@ -176,36 +177,49 @@ export function StatsWidget({
       <StatCard
         icon={Play}
         label={t("stats.sessions_today")}
-        value={data.sessionsToday.length}
+        value={<AnimatedNumber value={data.sessionsToday.length} />}
         hint={t("stats.sessions_week", { count: data.sessionsWeekCount })}
       />
       <StatCard
         icon={Target}
         label={t("stats.focus_today")}
-        value={formatDurationHuman(data.focusTodayMs, i18n.language)}
+        value={
+          <AnimatedNumber
+            value={data.focusTodayMs}
+            format={(ms) => formatDurationHuman(ms, i18n.language)}
+          />
+        }
         hint={activeSession ? t("stats.session_active") : t("stats.session_none")}
       />
       <StatCard
         icon={ListChecks}
         label={t("stats.checklist_today")}
-        value={checklistToday}
+        value={<AnimatedNumber value={checklistToday} />}
         hint={t("stats.upcoming", { count: checklistUpcoming })}
       />
       <StatCard
         icon={BellRing}
         label={t("stats.reminders_today")}
-        value={data.remindersToday.length}
+        value={<AnimatedNumber value={data.remindersToday.length} />}
         hint={t("stats.upcoming", { count: data.remindersUpcoming.length })}
       />
       <StatCard
         icon={Check}
         label={t("stats.habits_met")}
-        value={`${today?.met_count ?? 0}/${today?.total_active ?? 0}`}
+        value={
+          <>
+            <AnimatedNumber value={today?.met_count ?? 0} />/{today?.total_active ?? 0}
+          </>
+        }
       />
       <StatCard
         icon={Timer}
         label={t("stats.pomodoros")}
-        value={`${data.pomodoro?.today_completed ?? 0}/${data.pomodoro?.daily_goal ?? 0}`}
+        value={
+          <>
+            <AnimatedNumber value={data.pomodoro?.today_completed ?? 0} />/{data.pomodoro?.daily_goal ?? 0}
+          </>
+        }
       />
     </div>
   );
@@ -252,12 +266,12 @@ export function HabitsWidget() {
                 <p className="truncate text-xs text-muted-foreground">
                   {formatProgressLine(progress.per_target)}
                 </p>
-                <div className="h-1.5 overflow-hidden rounded-full bg-muted/80">
-                  <div
-                    className="h-full rounded-full"
-                    style={{ width: `${percent}%`, backgroundColor: toneColor(tone, 0.9) }}
-                  />
-                </div>
+                <AnimatedProgress
+                  value={percent}
+                  color={toneColor(tone, 0.9)}
+                  className="h-1.5"
+                  label={habit.name}
+                />
                 <Button
                   type="button"
                   size="xs"

@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { HashRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { motion } from "motion/react";
 import { isPermissionGranted } from "@tauri-apps/plugin-notification";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -224,7 +225,14 @@ function AppShell() {
                 {t("common.loading")}
               </div>
             }>
-              <Routes>
+              <motion.div
+                key={location.pathname}
+                className="h-full"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+              >
+              <Routes location={location}>
                 <Route path="/"          element={<Dashboard />} />
                 <Route path="/sessions"  element={<Sessions />} />
                 <Route path="/history"   element={<History />} />
@@ -237,6 +245,7 @@ function AppShell() {
                 <Route path="/settings"  element={<SettingsPage />} />
                 <Route path="/about"     element={<About />} />
               </Routes>
+              </motion.div>
             </Suspense>
           </main>
         </div>

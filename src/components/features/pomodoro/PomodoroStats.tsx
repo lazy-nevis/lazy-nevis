@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SectionCard } from "@/components/ui/section-card";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { AnimatedNumber } from "@/components/ui/motion";
 import { StatCard } from "@/components/ui/stat-card";
 import {
   buildDayBars,
@@ -80,13 +81,17 @@ export function PomodoroStats({
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             label={t("focus_phases")}
-            value={`${today?.focus_phases_completed ?? 0} / ${dailyGoal}`}
+            value={
+              <>
+                <AnimatedNumber value={today?.focus_phases_completed ?? 0} /> / {dailyGoal}
+              </>
+            }
           />
           <StatCard
             label={t("focus_minutes")}
-            value={String(Math.round((today?.focus_ms ?? 0) / 60_000))}
+            value={<AnimatedNumber value={Math.round((today?.focus_ms ?? 0) / 60_000)} />}
           />
-          <StatCard label={t("breaks")} value={String(today?.breaks_taken ?? 0)} />
+          <StatCard label={t("breaks")} value={<AnimatedNumber value={today?.breaks_taken ?? 0} />} />
           <StatCard
             label={t("interruptions")}
             value={String(today?.interruptions ?? 0)}

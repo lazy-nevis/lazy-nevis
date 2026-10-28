@@ -22,9 +22,19 @@ export function Stopwatch({
     return () => window.clearInterval(timer);
   }, [running]);
 
+  // Keep the latest callback without making it an effect dependency: an inline callback from the
+  // parent would otherwise re-fire this effect on every render and overwrite what the user typed.
+  const onMinutesChangeRef = useRef(onMinutesChange);
+  onMinutesChangeRef.current = onMinutesChange;
+  const mounted = useRef(false);
+
   useEffect(() => {
-    onMinutesChange(elapsedMs / 60_000);
-  }, [elapsedMs, onMinutesChange]);
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+    onMinutesChangeRef.current(elapsedMs / 60_000);
+  }, [elapsedMs]);
 
   const minutes = (elapsedMs / 60_000).toFixed(1);
 

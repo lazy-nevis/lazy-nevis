@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CycleDots } from "@/components/features/pomodoro/CycleDots";
 import { PomodoroControls } from "@/components/features/pomodoro/PomodoroControls";
@@ -6,6 +6,7 @@ import { PomodoroHistory } from "@/components/features/pomodoro/PomodoroHistory"
 import { PomodoroStartDialog } from "@/components/features/pomodoro/PomodoroStartDialog";
 import { PomodoroStats } from "@/components/features/pomodoro/PomodoroStats";
 import { RingTimer } from "@/components/features/pomodoro/RingTimer";
+import { AnimatedProgress, celebrate } from "@/components/ui/motion";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { SectionCard } from "@/components/ui/section-card";
 import { usePomodoro } from "@/hooks/usePomodoro";
@@ -28,6 +29,18 @@ export function Pomodoro() {
     setState(await fn());
   };
 
+  const todayDone = state?.today_completed ?? 0;
+  const dailyGoal = state?.daily_goal ?? settings.pomodoro.daily_goal;
+  // Fires only on the transition into "goal met", never on mount.
+  const prevDone = useRef<number | null>(null);
+  useEffect(() => {
+    const prev = prevDone.current;
+    prevDone.current = todayDone;
+    if (prev !== null && dailyGoal > 0 && prev < dailyGoal && todayDone >= dailyGoal) {
+      celebrate(null, "large");
+    }
+  }, [todayDone, dailyGoal]);
+
   const phase = state?.phase ?? null;
   const phaseLabel = phase
     ? t(`phase.${phase.kind}`)
@@ -49,12 +62,20 @@ export function Pomodoro() {
             completed={state?.focus_completed_in_set ?? 0}
             total={state?.long_break_every ?? settings.pomodoro.long_break_every}
           />
-          <p className="text-sm text-muted-foreground">
-            {t("today_progress", {
-              done: state?.today_completed ?? 0,
-              goal: state?.daily_goal ?? settings.pomodoro.daily_goal,
-            })}
-          </p>
+          <div className="flex w-full max-w-xs flex-col items-center gap-2">
+            <p className="text-sm text-muted-foreground">
+              {t("today_progress", {
+                done: todayDone,
+                goal: dailyGoal,
+              })}
+            </p>
+            <AnimatedProgress
+              value={dailyGoal > 0 ? (todayDone / dailyGoal) * 100 : 0}
+              className="h-1.5 w-full"
+              barClassName="bg-brand"
+              label={t("today_progress", { done: todayDone, goal: dailyGoal })}
+            />
+          </div>
           <PomodoroControls
             runState={state?.state ?? null}
             hasRun={Boolean(state?.run)}

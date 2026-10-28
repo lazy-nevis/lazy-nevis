@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { DragEvent } from "react";
 import { Calendar, Check, GripVertical, Play, Tag as TagIcon, Trash2, Undo2, X } from "lucide-react";
+import { motion } from "motion/react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { TagChip } from "./TagChip";
@@ -151,8 +152,11 @@ export function ChecklistItemRow({
           />
         )}
 
-        <button
+        <motion.button
           type="button"
+          initial={false}
+          animate={grace ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
           onClick={() => (grace ? onUndo(item) : onToggleComplete(item))}
           aria-label={grace ? t("checklist.undo") : t("checklist.complete")}
           className={cn(
@@ -163,7 +167,7 @@ export function ChecklistItemRow({
           )}
         >
           {grace && <Check className="h-3 w-3" />}
-        </button>
+        </motion.button>
 
         {compact && item.category && (
           <span

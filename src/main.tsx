@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import i18n from "@/i18n";
 import "./index.css";
+import { MotionConfig } from "motion/react";
 import App from "./App";
 
 // The Vite dev server is reachable from a normal browser tab, where every Tauri
@@ -21,5 +22,7 @@ function BrowserNotice() {
 }
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>{inTauri ? <App /> : <BrowserNotice />}</React.StrictMode>,
+  <React.StrictMode>
+    <MotionConfig reducedMotion="user">{inTauri ? <App /> : <BrowserNotice />}</MotionConfig>
+  </React.StrictMode>,
 );

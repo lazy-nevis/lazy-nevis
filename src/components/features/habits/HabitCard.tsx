@@ -1,5 +1,7 @@
+import { useEffect, useRef } from "react";
 import { Check, Flame, MoreVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { AnimatedNumber, AnimatedProgress, PopIn, celebrate } from "@/components/ui/motion";
 import { GlowCard } from "@/components/ui/glow-card";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu } from "@/components/ui/dropdown-menu";
@@ -18,7 +20,7 @@ export function HabitCard({
   onOpenHistory,
 }: {
   card: HabitTodayCard;
-  onLog: () => void;
+  onLog: (anchor: HTMLElement) => void;
   onMarkDone: () => void;
   onEdit: () => void;
   onToggleActive: () => void;
@@ -31,8 +33,28 @@ export function HabitCard({
   const tone = toTone(habit.tone);
   const percent = Math.min(100, Math.round(progress.percent));
   const Icon = habitIcon(habit.icon);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const logButtonRef = useRef<HTMLButtonElement>(null);
+  const previousStatus = useRef(progress.status);
+
+  // Celebrate only on a real not-met -> met transition, never on first mount.
+  useEffect(() => {
+    if (previousStatus.current !== "met" && progress.status === "met") {
+      celebrate(cardRef.current, "small");
+    }
+    previousStatus.current = progress.status;
+  }, [progress.status]);
+
+  const doneLabel =
+    habit.period === "weekly"
+      ? t("done_week")
+      : habit.period === "monthly"
+        ? t("done_month")
+        : t("done_today");
+  const actionClass = "motion-safe:transition-[background-color,transform] active:scale-[0.97]";
 
   return (
+    <div ref={cardRef} className="h-full">
     <GlowCard
       tone={tone}
       className={cn(
@@ -60,7 +82,11 @@ export function HabitCard({
             items={[
               { id: "edit", label: t("menu_edit"), onSelect: onEdit },
               { id: "history", label: t("menu_history"), onSelect: onOpenHistory },
-              { id: "log", label: t("menu_log_with_note"), onSelect: onLog },
+              { id: "log", label: t("menu_log_with_note"), onSelect: () => {
+                  const anchor = logButtonRef.current ?? cardRef.current;
+                  if (anchor) onLog(anchor);
+                },
+              },
               {
                 id: "toggle",
                 label: habit.active ? t("menu_deactivate") : t("menu_activate"),
@@ -76,9 +102,26 @@ export function HabitCard({
             <Flame className="h-3.5 w-3.5 text-warning" aria-hidden />
             {t("streak_days", { count: streak_current })}
           </span>
-          <Button type="button" size="sm" variant="brand" onClick={checkOnly ? onMarkDone : onLog}>
-            {checkOnly ? t("mark_done") : t("log")}
-          </Button>
+          {checkOnly && met ? (
+            <PopIn
+              role="status"
+              className="inline-flex items-center gap-1 rounded-md bg-success/15 px-2.5 py-1 text-xs font-medium text-success"
+            >
+              <Check className="h-3.5 w-3.5" aria-hidden />
+              {doneLabel}
+            </PopIn>
+          ) : (
+            <Button
+              ref={logButtonRef}
+              type="button"
+              size="sm"
+              variant={met ? "outline" : "brand"}
+              className={actionClass}
+              onClick={(event) => (checkOnly ? onMarkDone() : onLog(event.currentTarget))}
+            >
+              {checkOnly ? t("mark_done") : t("log")}
+            </Button>
+          )}
         </div>
       }
     >
@@ -103,19 +146,16 @@ export function HabitCard({
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>{t("card_progress")}</span>
-            <span className="tabular-nums font-medium text-foreground">{percent}%</span>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-muted/80">
-            <div
-              className="h-full rounded-full motion-safe:transition-[width]"
-              style={{
-                width: `${percent}%`,
-                backgroundColor: toneColor(tone, 0.9),
-              }}
+            <AnimatedNumber
+              value={percent}
+              format={(n) => `${Math.round(n)}%`}
+              className="font-medium text-foreground"
             />
           </div>
+          <AnimatedProgress value={percent} color={toneColor(tone, 0.9)} label={t("card_progress")} />
         </div>
       </div>
     </GlowCard>
+    </div>
   );
 }

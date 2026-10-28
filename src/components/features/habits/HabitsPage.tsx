@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { HabitCard } from "@/components/features/habits/HabitCard";
 import { HabitEditorDialog } from "@/components/features/habits/HabitEditorDialog";
-import { HabitLogDialog } from "@/components/features/habits/HabitLogDialog";
+import { HabitLogPopover } from "@/components/features/habits/HabitLogPopover";
 import { HabitAllHabitsList } from "@/components/features/habits/HabitAllHabitsList";
 import { HabitReportsPanel } from "@/components/features/habits/HabitReports";
 import { HabitSkyline } from "@/components/features/habits/HabitSkyline";
@@ -16,7 +17,7 @@ import { useHabits } from "@/hooks/useHabits";
 import { useSettings } from "@/hooks/useSettings";
 import { audioService, habitService } from "@/services/tauri";
 import type { Habit, HabitLogInput, HabitTodayCard } from "@/types";
-import { useEffect } from "react";
+import { celebrate } from "@/components/ui/motion";
 import { useUiStore } from "@/stores/uiStore";
 
 type View = "today" | "all" | "reports";
@@ -29,7 +30,9 @@ export function Habits() {
   const [view, setView] = useState<View>("today");
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Habit | null>(null);
-  const [logCard, setLogCard] = useState<HabitTodayCard | null>(null);
+  const [logTarget, setLogTarget] = useState<{ card: HabitTodayCard; anchor: HTMLElement } | null>(null);
+  const loggedRef = useRef(false);
+  const previousMet = useRef<number | null>(null);
   const [builtinSounds, setBuiltinSounds] = useState<string[]>([]);
   const addToast = useUiStore((s) => s.addToast);
   const weekStart = settings.general.week_start ?? 1;
@@ -52,10 +55,36 @@ export function Habits() {
       .catch(() => setSkyline([]));
   }, [skylineRange.from, skylineRange.to, today]);
 
-  const handleLog = async (habitId: string, input: HabitLogInput) => {
-    await habitService.log(habitId, input);
-    addToast(t("logged_toast"));
-    await refresh();
+  // Big celebration when a log completes the last open habit of the day.
+  useEffect(() => {
+    if (!today) return;
+    const previous = previousMet.current;
+    previousMet.current = today.met_count;
+    if (!loggedRef.current) return;
+    loggedRef.current = false;
+    if (
+      previous != null &&
+      today.total_active > 0 &&
+      previous < today.total_active &&
+      today.met_count >= today.total_active
+    ) {
+      celebrate(null, "large");
+    }
+  }, [today]);
+
+  /** Returns true when the log was saved; failures surface as an error toast. */
+  const handleLog = async (habitId: string, input: HabitLogInput): Promise<boolean> => {
+    try {
+      loggedRef.current = true;
+      await habitService.log(habitId, input);
+      addToast(t("logged_toast"));
+      await refresh();
+      return true;
+    } catch {
+      loggedRef.current = false;
+      addToast(t("log_error_toast"), "error");
+      return false;
+    }
   };
 
   return (
@@ -98,7 +127,11 @@ export function Habits() {
                 <HabitCard
                   key={card.habit.id}
                   card={card}
-                  onLog={() => setLogCard(card)}
+                  onLog={(anchor) =>
+                    setLogTarget((prev) =>
+                      prev?.card.habit.id === card.habit.id ? null : { card, anchor },
+                    )
+                  }
                   onMarkDone={() =>
                     void handleLog(card.habit.id, {
                       values: card.habit.targets
@@ -157,13 +190,21 @@ export function Habits() {
         }}
       />
 
-      <HabitLogDialog
-        open={logCard != null}
-        habit={logCard?.habit ?? null}
-        progress={logCard?.progress.per_target}
-        onClose={() => setLogCard(null)}
-        onSubmit={(input) => handleLog(logCard!.habit.id, input)}
-      />
+      <AnimatePresence>
+        {logTarget && (
+          <HabitLogPopover
+            key={logTarget.card.habit.id}
+            anchor={logTarget.anchor}
+            habit={logTarget.card.habit}
+            progress={logTarget.card.progress.per_target}
+            onClose={() => setLogTarget(null)}
+            onSubmit={async (input) => {
+              const ok = await handleLog(logTarget.card.habit.id, input);
+              if (ok) setLogTarget(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </PageContainer>
   );
 }

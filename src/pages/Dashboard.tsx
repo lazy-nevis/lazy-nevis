@@ -7,7 +7,10 @@ import {
   closestCenter,
   useSensor,
   useSensors,
+  DragOverlay,
   type DragEndEvent,
+  type DragStartEvent,
+  type DropAnimation,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -16,6 +19,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { motion } from "motion/react";
 import { GripVertical, Maximize2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageContainer, PageHeader } from "@/components/ui/page";
@@ -64,9 +68,15 @@ function SortableWidget({
       className={cn(
         "group/widget relative col-span-1 min-w-0",
         SIZE_SPAN_CLASS[size],
-        isDragging && "z-20 opacity-80",
+        isDragging && "z-20",
       )}
     >
+      {isDragging && (
+        <div
+          className="pointer-events-none absolute inset-0 rounded-xl border-2 border-dashed border-border bg-muted/30"
+          aria-hidden
+        />
+      )}
       <div className="absolute -top-2.5 right-2 z-10 flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover/widget:opacity-100">
         <button
           type="button"
@@ -89,14 +99,34 @@ function SortableWidget({
           <GripVertical className="h-3.5 w-3.5" aria-hidden />
         </button>
       </div>
-      {children}
+      <div className={cn("h-full", isDragging && "invisible")}>{children}</div>
     </div>
+  );
+}
+
+const DROP_ANIMATION: DropAnimation = {
+  duration: 250,
+  easing: "cubic-bezier(0.2, 0, 0, 1)",
+};
+
+/** Lifted copy of the dragged tile: bigger, tilted and with a deeper shadow. */
+function LiftedTile({ children }: { children: ReactNode }) {
+  return (
+    <motion.div
+      className={"h-full cursor-grabbing rounded-xl"}
+      initial={{ scale: 1, rotate: 0, boxShadow: "0 1px 2px rgba(0,0,0,0)" }}
+      animate={{ scale: 1.03, rotate: 1, boxShadow: "0 18px 40px -8px rgba(0,0,0,0.35)" }}
+      transition={{ type: "spring", bounce: 0.2, visualDuration: 0.25 }}
+    >
+      {children}
+    </motion.div>
   );
 }
 
 /** Planner overview: hero shortcuts, today's stats, and reorderable widgets. */
 export function Dashboard() {
   const { t } = useTranslation(undefined, { keyPrefix: "overview" });
+  const [activeId, setActiveId] = useState<WidgetId | null>(null);
   const [layout, setLayout] = useState<DashboardLayout>(loadLayout);
   const data = useDashboardData();
   // Mounting the hook keeps the shared open-items store fresh on this screen.
@@ -113,7 +143,10 @@ export function Dashboard() {
     saveLayout(next);
   }, []);
 
+  const onDragStart = (event: DragStartEvent) => setActiveId(event.active.id as WidgetId);
+
   const onDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     commit({
@@ -161,7 +194,11 @@ export function Dashboard() {
             </Button>
           }
         />
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          onDragCancel={() => setActiveId(null)}
+        >
           <SortableContext items={layout.order} strategy={rectSortingStrategy}>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-6">
               {layout.order.map((id) => (
@@ -171,6 +208,9 @@ export function Dashboard() {
               ))}
             </div>
           </SortableContext>
+          <DragOverlay dropAnimation={DROP_ANIMATION}>
+            {activeId ? <LiftedTile>{renderWidget(activeId)}</LiftedTile> : null}
+          </DragOverlay>
         </DndContext>
       </PageContainer>
     </>

@@ -349,18 +349,22 @@ impl HabitService {
     }
 
     pub fn list_logs(&self, habit_id: &str, from_ms: i64, to_ms: i64) -> Result<Vec<HabitLog>> {
-        let db = self.lock_db()?;
-        let mut stmt = db
-            .conn()
-            .prepare(queries::SELECT_LOGS_FOR_HABIT_RANGE)
-            .map_err(AppError::Database)?;
-        let ids = stmt
-            .query_map(params![habit_id, from_ms, to_ms], |row| {
-                row.get::<_, String>(0)
-            })
-            .map_err(AppError::Database)?
-            .collect::<std::result::Result<Vec<_>, _>>()
-            .map_err(AppError::Database)?;
+        // The guard must be gone before get_log locks the database again.
+        let ids = {
+            let db = self.lock_db()?;
+            let mut stmt = db
+                .conn()
+                .prepare(queries::SELECT_LOGS_FOR_HABIT_RANGE)
+                .map_err(AppError::Database)?;
+            let ids = stmt
+                .query_map(params![habit_id, from_ms, to_ms], |row| {
+                    row.get::<_, String>(0)
+                })
+                .map_err(AppError::Database)?
+                .collect::<std::result::Result<Vec<_>, _>>()
+                .map_err(AppError::Database)?;
+            ids
+        };
         ids.into_iter().map(|id| self.get_log(&id)).collect()
     }
 
@@ -1437,5 +1441,8 @@ mod tests {
         let settings = AppSettings::default();
         let today = service.list_today(&settings, now).unwrap();
         assert_eq!(today.met_count, 1);
+        // Regression: list_logs used to hold the database lock while get_log locked it again.
+        let logs = service.list_logs(&habit.id, now - 1, now + 1).unwrap();
+        assert_eq!(logs.len(), 1);
     }
 }
