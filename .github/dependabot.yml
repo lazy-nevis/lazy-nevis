@@ -6,6 +6,10 @@ updates:
     open-pull-requests-limit: 5
     groups:
       frontend-minor-patch: { update-types: [minor, patch] }
+    ignore:
+      # CLI >= 2.12 bundles rpm 0.30, which rejects SemVer pre-release versions (0.10.0-rc.5).
+      # Drop once tauri-apps/tauri#16336 ships.
+      - dependency-name: "@tauri-apps/cli"
   - package-ecosystem: cargo
     directory: /src-tauri
     schedule: { interval: weekly, day: monday, time: "09:30", timezone: America/Sao_Paulo }

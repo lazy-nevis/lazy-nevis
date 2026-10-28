@@ -4,3 +4,5 @@
    `icons/icon.icns` and `icons/icon.png`, keeping their `icons/` destination.
 2. Update the historical comment in `src-tauri/src/services/app_status.rs`.
 3. Validate with the standard suites and the CI Linux/macOS/Windows smoke builds.
+4. Pin `@tauri-apps/cli` to 2.11.2 exactly and add a Dependabot ignore entry with the upstream
+   reference; remove both once tauri-apps/tauri#16336 is released.
