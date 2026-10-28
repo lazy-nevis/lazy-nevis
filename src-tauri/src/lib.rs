@@ -486,6 +486,7 @@ pub fn run() {
             commands::habits::get_habit_reports,
             commands::habits::export_habits,
             commands::habits::open_quick_log,
+            commands::quick_log::take_quick_log_request,
             commands::checklist::create_checklist_item,
             commands::checklist::update_checklist_item,
             commands::checklist::complete_checklist_item,

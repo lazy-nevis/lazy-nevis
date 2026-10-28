@@ -306,6 +306,8 @@ export const habitService = {
     invoke("export_habits", { habitId: habitId ?? null }),
   openQuickLog: (habitId: string, eventId?: string | null): Promise<void> =>
     invoke("open_quick_log", { habitId, eventId: eventId ?? null }),
+  takeQuickLogRequest: (): Promise<import("@/types").QuickLogOpenPayload | null> =>
+    invoke("take_quick_log_request"),
 };
 
 // Tray commands (spec: tray-status)

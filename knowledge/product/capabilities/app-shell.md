@@ -48,6 +48,9 @@ reminders today/upcoming, habits, Pomodoro); a three-habit preview with a link t
 mini month calendar; today's checklist and reminders. Dashboard widgets SHALL be reorderable
 (drag handle or keyboard via @dnd-kit) and resizable (small/medium/large span); the layout
 SHALL persist locally (`lazynevis.dashboard.layout.v1`) and be resettable.
+Dashboard session and Pomodoro widgets SHALL reflect state live, including sessions and runs
+started or stopped from another surface (Pomodoro page, tray quick panel, global shortcut),
+without navigation or reload.
 
 ### Requirement: Browser runtime guard
 
