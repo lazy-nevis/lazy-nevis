@@ -10,5 +10,5 @@ if (!section) throw new Error(`CHANGELOG.md has no section for ${version}.`);
 const prerelease = version.includes("-");
 const warning = prerelease
   ? "This is a release candidate. Native signatures may be absent; read the Gatekeeper/SmartScreen notes before installing."
-  : "Stable artifacts are expected to carry the native signatures documented for their platform.";
+  : "Native signatures may be absent while signing credentials are being established; read the Gatekeeper/SmartScreen notes before installing. Verify downloads with SHA256SUMS.";
 await writeFile(output, `# LazyNevis ${version}\n\n${warning}\n\n${section}\n\n## Verify\n\nEvery asset is covered by SHA256SUMS and GitHub artifact attestations. See docs/release/verification.md.\n`);

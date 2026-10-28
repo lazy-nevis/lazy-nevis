@@ -17,7 +17,7 @@ Windows RCs publish an NSIS installer because MSI/WiX only accepts numeric prere
 
 ## Credentials
 
-Apple certificate/API credentials and Windows managed-signing identity belong only in a protected `release-signing` environment. Prefer OIDC/managed signing. An unavoidable PFX uses separate encrypted certificate/password secrets. Unsigned RCs must say so; installers never weaken Gatekeeper or SmartScreen. See [operator checklist](../release/operator-checklist.md) and [verification](../release/verification.md).
+Apple certificate/API credentials and Windows managed-signing identity belong only in a protected `release-signing` environment. Prefer OIDC/managed signing. An unavoidable PFX uses separate encrypted certificate/password secrets. Unsigned builds (RC or stable) must say so in the release notes; when no signing credentials are configured, the stable signature verification steps warn and skip instead of failing the release; installers never weaken Gatekeeper or SmartScreen. See [operator checklist](../release/operator-checklist.md) and [verification](../release/verification.md).
 
 ## Distribution Gates
 

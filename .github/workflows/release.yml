@@ -132,7 +132,10 @@ jobs:
         shell: bash
       - name: Verify stable macOS signature and notarization
         if: runner.os == 'macOS' && !contains(github.ref_name, '-rc.')
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
         run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then echo '::warning::No Apple certificate configured; publishing an unsigned, un-notarized macOS build.'; exit 0; fi
           app=$(find "src-tauri/target/${{ matrix.target }}/release/bundle/macos" -maxdepth 1 -name '*.app' -type d)
           codesign --verify --deep --strict "$app"
           codesign -dv --verbose=4 "$app" 2>&1 | grep -q '^Authority=Developer ID Application:'
@@ -141,7 +144,11 @@ jobs:
       - name: Verify stable Windows signatures
         if: runner.os == 'Windows' && !contains(github.ref_name, '-rc.')
         shell: pwsh
-        run: Get-ChildItem release-assets | ForEach-Object { if ((Get-AuthenticodeSignature $_).Status -ne 'Valid') { throw "Unsigned stable artifact $($_.Name)" } }
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CERTIFICATE)) { Write-Host '::warning::No Windows certificate configured; publishing unsigned Windows installers.'; exit 0 }
+          Get-ChildItem release-assets | ForEach-Object { if ((Get-AuthenticodeSignature $_).Status -ne 'Valid') { throw "Unsigned stable artifact $($_.Name)" } }
       - name: Verify Linux packages
         if: runner.os == 'Linux'
         run: file release-assets/* && test -x release-assets/*.AppImage
