@@ -78,7 +78,8 @@ export function Habits() {
       loggedRef.current = true;
       await habitService.log(habitId, input);
       addToast(t("logged_toast"));
-      await refresh();
+      // The log is persisted; don't hold the popover open while every habit reloads.
+      void refresh();
       return true;
     } catch {
       loggedRef.current = false;
