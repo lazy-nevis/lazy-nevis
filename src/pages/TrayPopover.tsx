@@ -236,7 +236,7 @@ export function TrayPopover() {
         </div>
         {/* -mr/pr let the scrollbar live in the section padding so rows keep the
             block's full width (aligned with the session button above). */}
-        <div className="-mr-2 min-h-0 flex-1 overflow-y-auto pr-2 [scrollbar-gutter:stable]">
+        <div className="scrollbar-overlay min-h-0 flex-1 overflow-y-auto">
           {openView.length === 0 && (
             <EmptyState
               icon={ListChecks}

@@ -11,7 +11,7 @@ export function PageContainer({
   innerClassName?: string;
 }) {
   return (
-    <div className={cn("h-full overflow-y-auto", className)}>
+    <div className={cn("scrollbar-overlay h-full overflow-y-auto", className)}>
       <div
         className={cn(
           "flex w-full flex-col gap-6 p-6",

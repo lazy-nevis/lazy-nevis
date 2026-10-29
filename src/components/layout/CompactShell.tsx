@@ -271,7 +271,7 @@ export function CompactShell({
           <ChecklistSettingsButton secondary />
         </div>
         {/* Scrollbar sits in the section padding; rows keep the block's full width. */}
-        <div className="-mr-2 min-h-0 flex-1 overflow-y-auto pr-2 [scrollbar-gutter:stable]">
+        <div className="scrollbar-overlay min-h-0 flex-1 overflow-y-auto">
           {openView.length === 0 && (
             <EmptyState
               icon={ListChecks}
@@ -316,7 +316,7 @@ export function CompactShell({
       )}
 
       {segment === "habits" && (
-        <section className="min-h-0 flex-1 overflow-y-auto p-3">
+        <section className="scrollbar-overlay min-h-0 flex-1 overflow-y-auto p-3">
           <HabitCompactList />
         </section>
       )}

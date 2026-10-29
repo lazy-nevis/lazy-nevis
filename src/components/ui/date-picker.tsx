@@ -171,9 +171,9 @@ export function TimeColumns({
     onPick: (item: string) => void,
     ref: React.RefObject<HTMLDivElement | null>,
   ) => (
-    <div className="flex flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <span className="pb-1 text-center text-[11px] font-medium text-muted-foreground">{label}</span>
-      <div ref={ref} className="scrollbar-none relative flex h-[216px] w-14 flex-col gap-0.5 overflow-y-auto">
+      <div ref={ref} className="scrollbar-overlay relative flex min-h-0 w-14 flex-1 flex-col gap-0.5 overflow-y-auto">
         {items.map((item) => (
           <button
             key={item}
@@ -193,7 +193,7 @@ export function TimeColumns({
   );
 
   return (
-    <div className="flex gap-1">
+    <div className="flex min-h-0 flex-1 gap-1">
       {column(t("hour"), HOURS, hour, (h) => onChange(`${h}:${minute}`), hourRef)}
       {column(t("minute"), minutes, minute, (m) => onChange(`${hour}:${m}`), minuteRef)}
     </div>
@@ -273,10 +273,10 @@ export function DateTimePanel({
           </button>
         )}
       </div>
-      <div className="flex gap-3">
+      <div className="flex items-stretch gap-3">
         <CalendarGrid value={date} weekStart={weekStart} onSelect={(picked) => onChange(picked, time)} />
         {withTime && (
-          <div className="space-y-2 border-l border-border pl-3">
+          <div className="relative flex w-[132px] shrink-0 flex-col gap-2 border-l border-border pl-3">
             <input
               type="text"
               inputMode="numeric"
@@ -296,9 +296,14 @@ export function DateTimePanel({
               }}
               className="h-8 w-full rounded-md border border-input bg-transparent px-2 text-center text-sm tabular-nums outline-none focus:border-primary"
             />
-            <TimeColumns value={time} onChange={(next) => onChange(day, next)} minuteStep={activeStep} />
+            {/* Columns take the calendar's height (absolute fill) instead of stretching it. */}
+            <div className="relative min-h-0 flex-1">
+              <div className="absolute inset-0 flex">
+                <TimeColumns value={time} onChange={(next) => onChange(day, next)} minuteStep={activeStep} />
+              </div>
+            </div>
             {minuteStep === undefined && (
-              <div role="group" aria-label={t("minute_step")} className="flex justify-between gap-0.5">
+              <div role="group" aria-label={t("minute_step")} className="grid grid-cols-3 gap-0.5">
                 {MINUTE_STEPS.map((option) => (
                   <button
                     key={option}
@@ -310,7 +315,7 @@ export function DateTimePanel({
                       saveMinuteStep(option);
                     }}
                     className={cn(
-                      "flex-1 rounded px-1 py-0.5 text-[11px] tabular-nums",
+                      "rounded px-1 py-0.5 text-[11px] tabular-nums",
                       option === step ? "bg-accent font-semibold text-foreground" : "text-muted-foreground hover:bg-accent",
                     )}
                   >
