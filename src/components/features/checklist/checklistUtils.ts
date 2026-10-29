@@ -84,7 +84,9 @@ export function parseEntry(raw: string, options: ParseEntryOptions): ParsedEntry
     const dateMatch = parseNaturalDate(text, { now: options.now, locale: options.locale });
     if (dateMatch) {
       due = { ms: dateMatch.dueMs, hasTime: dateMatch.hasTime };
-      highlights.push({ start: dateMatch.start, end: dateMatch.end, kind: "date" });
+      for (const span of dateMatch.spans) {
+        highlights.push({ start: span.start, end: span.end, kind: "date" });
+      }
     }
   }
 

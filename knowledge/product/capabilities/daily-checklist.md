@@ -193,6 +193,15 @@ Category → Date → Priority nesting, live refresh of overdue/today/history fi
 complete/undo on parents, and history category filtering. Compact surfaces SHALL use the same
 syntax and show compact category/priority/due cues; grouping headers MAY be thin labels only.
 
+Rows SHALL render flat (round priority-ringed checkbox, divider, metadata line) with no per-item
+card. Adding and editing SHALL share one entry card: a borderless textarea whose recognized
+date/time text is highlighted, chips for category/date/time/priority/tags, and a "+" menu
+(priority, category, due date, tags) whose pickers are floating popovers that mark the current
+selection. Editing an item opens the same card with a Save action. Natural-language dates SHALL
+accept `DD/MM[/YY|YYYY]`, `YYYY-MM-DD`, `/ - .` separators, optional lead words (`dia`, `até`),
+and times with or without a date (`18:30`, `18h30`, `às 18h`, `6pm`); pt-BR reads day-first,
+bare numbers are never dates, invalid dates are ignored, and past day/month roll to next year.
+
 #### Scenario: Inline everything
 - **GIVEN** pt-BR UI on 2026-10-26
 - **WHEN** the user enters `Enviar proposta @Infleux !alta até 03/11 #vendas` and confirms

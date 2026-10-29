@@ -30,7 +30,7 @@ export function normalizeTime(value: string | null | undefined): string | null {
   return `${pad(h)}:${pad(m)}`;
 }
 
-function CalendarGrid({
+export function CalendarGrid({
   value,
   onSelect,
   weekStart,
@@ -118,7 +118,7 @@ function CalendarGrid({
 const HOURS = Array.from({ length: 24 }, (_, i) => pad(i));
 const MINUTES = Array.from({ length: 12 }, (_, i) => pad(i * 5));
 
-function TimeColumns({ value, onChange }: { value: string | null; onChange: (time: string) => void }) {
+export function TimeColumns({ value, onChange }: { value: string | null; onChange: (time: string) => void }) {
   const { t } = useTranslation(undefined, { keyPrefix: "pickers" });
   const [hour, minute] = (value ?? "09:00").split(":");
   const minutes = MINUTES.includes(minute) ? MINUTES : [...MINUTES, minute].sort();

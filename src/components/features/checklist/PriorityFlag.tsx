@@ -1,39 +1,58 @@
-import { Flag } from "lucide-react";
+import { Check, Flag } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Select } from "@/components/ui/select";
 import type { ChecklistPriority } from "@/types";
 import { cn } from "@/utils/cn";
 
 const TONE_CLASS: Record<ChecklistPriority, string> = {
-  urgent: "tone-text text-[hsl(var(--tone-rose))]",
-  high: "tone-text text-[hsl(var(--tone-orange))]",
-  medium: "tone-text text-[hsl(var(--tone-sky))]",
-  low: "tone-text text-[hsl(var(--tone-slate))]",
-  none: "",
+  urgent: "text-[hsl(var(--tone-rose))]",
+  high: "text-[hsl(var(--tone-orange))]",
+  medium: "text-[hsl(var(--tone-sky))]",
+  low: "text-[hsl(var(--tone-slate))]",
+  none: "text-muted-foreground",
 };
 
-interface PriorityMenuProps {
+/** Ring color for the round checkbox (Todoist-style priority cue). */
+export const PRIORITY_RING_CLASS: Record<ChecklistPriority, string> = {
+  urgent: "border-[hsl(var(--tone-rose))] bg-[hsl(var(--tone-rose)/0.12)]",
+  high: "border-[hsl(var(--tone-orange))] bg-[hsl(var(--tone-orange)/0.12)]",
+  medium: "border-[hsl(var(--tone-sky))] bg-[hsl(var(--tone-sky)/0.12)]",
+  low: "border-[hsl(var(--tone-slate))]",
+  none: "border-muted-foreground/50",
+};
+
+export const PRIORITY_LEVELS: ChecklistPriority[] = ["urgent", "high", "medium", "low", "none"];
+
+interface PriorityOptionListProps {
   value: ChecklistPriority;
   onChange: (value: ChecklistPriority) => void;
-  disabled?: boolean;
 }
 
-const LEVELS: ChecklistPriority[] = ["urgent", "high", "medium", "low", "none"];
-
-export function PriorityMenu({ value, onChange, disabled }: PriorityMenuProps) {
+/** Listbox rendered inside a floating panel; the selected level is highlighted. */
+export function PriorityOptionList({ value, onChange }: PriorityOptionListProps) {
   const { t } = useTranslation();
   return (
-    <Select
-      disabled={disabled}
-      value={value}
-      onChange={(e) => onChange(e.target.value as ChecklistPriority)}
-      className="w-28 [&>button]:h-7 [&>button]:px-2 [&>button]:text-[11px]"
-      aria-label={t("checklist.priority.label")}
-    >
-      {LEVELS.map((level) => (
-        <option key={level} value={level}>{t(`checklist.priority.${level}`)}</option>
-      ))}
-    </Select>
+    <div role="listbox" aria-label={t("checklist.priority.label")} className="space-y-0.5">
+      {PRIORITY_LEVELS.map((level) => {
+        const selected = level === value;
+        return (
+          <button
+            key={level}
+            type="button"
+            role="option"
+            aria-selected={selected}
+            onClick={() => onChange(level)}
+            className={cn(
+              "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent",
+              selected && "bg-accent font-medium",
+            )}
+          >
+            <Flag className={cn("h-4 w-4 shrink-0", TONE_CLASS[level])} aria-hidden />
+            <span className="flex-1">{t(`checklist.priority.${level}`)}</span>
+            {selected && <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden />}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
