@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { DragEvent } from "react";
-import { Calendar, Check, GripVertical, Pencil, Play, Tag as TagIcon, Trash2, Undo2 } from "lucide-react";
+import { Calendar, Check, GripVertical, Pencil, Play, Trash2, Undo2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslation } from "react-i18next";
 import { TagChip } from "./TagChip";
@@ -10,6 +10,7 @@ import { daysAgo, startOfLocalDay } from "@/utils/dates";
 import { useNow } from "@/hooks/useNow";
 import { PRIORITY_RING_CLASS } from "./PriorityFlag";
 import { ChecklistEntryCard, type EntryValues } from "./ChecklistEntryCard";
+import { ChecklistContextMenu } from "./ChecklistContextMenu";
 import { toTone, toneStyle } from "@/utils/tones";
 import { formatDate, formatDateTime } from "@/utils/formatters";
 import { cn } from "@/utils/cn";
@@ -27,7 +28,10 @@ export interface ChecklistItemRowProps {
   onStartFocus?: (item: ChecklistItem) => void;
   onTagClick?: (name: string) => void;
   onDragStart?: (id: string) => void;
-  onDragOver?: (id: string) => void;
+  /** Returns false when the row under the pointer is not a valid drop target. */
+  onDragOver?: (id: string) => boolean | void;
+  /** True while this row is the one being dragged (shown as the drop placeholder). */
+  dragging?: boolean;
   onDragEnd?: () => void;
 }
 
@@ -50,6 +54,7 @@ export function ChecklistItemRow({
   onTagClick,
   onDragStart,
   onDragOver,
+  dragging = false,
   onDragEnd,
 }: ChecklistItemRowProps) {
   const { t, i18n } = useTranslation();
@@ -57,7 +62,7 @@ export function ChecklistItemRow({
   const { item, grace } = entry;
   const isSubItem = item.parent_id !== null;
   const [editing, setEditing] = useState(false);
-  const [tagsOpen, setTagsOpen] = useState(false);
+  const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
 
   const age = daysAgo(item.created_at, now);
   const overdue =
@@ -112,8 +117,8 @@ export function ChecklistItemRow({
       : item.due_has_time
         ? formatDateTime(item.due_date, i18n.language).slice(0, -3)
         : formatDate(item.due_date, i18n.language);
-  const showMeta =
-    !compact && (dueLabel || item.tags.length > 0 || (item.category && !isSubItem) || age > 0);
+  // Category, tags and due date always sit on their own line, in compact mode too.
+  const showMeta = dueLabel || item.tags.length > 0 || (item.category && !isSubItem) || age > 0;
 
   return (
     <div
@@ -127,20 +132,31 @@ export function ChecklistItemRow({
         onDragStart?.(item.id);
       }}
       onDragOver={(e) => {
+        const allowed = onDragOver?.(item.id) !== false;
+        if (!allowed) {
+          if (e.dataTransfer) e.dataTransfer.dropEffect = "none";
+          return;
+        }
         e.preventDefault();
         if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-        onDragOver?.(item.id);
       }}
       onDrop={(e) => {
         e.preventDefault();
         onDragEnd?.();
       }}
       onDragEnd={onDragEnd}
+      onContextMenu={(e) => {
+        if (grace || (!onUpdate && !onDelete)) return;
+        e.preventDefault();
+        setMenuAt({ x: e.clientX, y: e.clientY });
+      }}
       className={cn(
         // Flat Todoist-style row: no card, just a divider (the entry card only appears while editing).
         "group relative overflow-hidden border-b transition-all duration-300",
         compact ? "border-border/40 px-1 py-1.5 hover:bg-accent/50" : "border-border/60 px-1 py-2.5",
         isSubItem && "ml-6",
+        // Drop placeholder: the dragged row shows where it will land.
+        dragging && "rounded-md border-primary/60 bg-primary/10 opacity-70 ring-1 ring-primary/40",
         grace?.leaving && "max-h-0 border-transparent py-0 opacity-0",
         !grace?.leaving && "max-h-[500px] opacity-100",
       )}
@@ -186,26 +202,6 @@ export function ChecklistItemRow({
             {item.title}
           </button>
 
-          {compact && tagsOpen && item.tags.length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-1">
-              {item.tags.map((tag) => (
-                <TagChip key={tag.id} name={tag.name} onClick={onTagClick} />
-              ))}
-            </div>
-          )}
-
-          {compact && dueLabel && (
-            <div
-              className={cn(
-                "mt-0.5 flex items-center gap-1 text-[11px]",
-                overdue ? "text-destructive" : "text-muted-foreground",
-              )}
-            >
-              <Calendar className="h-3 w-3" aria-hidden />
-              {dueLabel}
-            </div>
-          )}
-
           {showMeta && (
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
               {dueLabel && (
@@ -244,25 +240,6 @@ export function ChecklistItemRow({
           </button>
         ) : (
           <div className="flex shrink-0 items-center gap-0.5">
-            {/* Tags disclosure — compact surfaces have no room for inline chips
-                (spec: app-modes/compact-tags-popover). Always visible so the
-                user knows the item is tagged. */}
-            {compact && item.tags.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setTagsOpen((open) => !open)}
-                title={t("checklist.show_tags", { count: item.tags.length })}
-                aria-label={t("checklist.show_tags", { count: item.tags.length })}
-                aria-expanded={tagsOpen}
-                className={cn(
-                  "flex items-center gap-0.5 rounded p-1 text-[11px] transition-colors hover:bg-accent",
-                  tagsOpen ? "text-foreground" : "text-muted-foreground",
-                )}
-              >
-                <TagIcon className="h-3.5 w-3.5" />
-                {item.tags.length}
-              </button>
-            )}
             <div className="flex items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
               {onUpdate && (
                 <button
@@ -301,6 +278,19 @@ export function ChecklistItemRow({
           </div>
         )}
       </div>
+
+      {menuAt && (
+        <ChecklistContextMenu
+          item={item}
+          x={menuAt.x}
+          y={menuAt.y}
+          onClose={() => setMenuAt(null)}
+          onUpdate={onUpdate}
+          onEdit={onUpdate ? startEditing : undefined}
+          onDelete={onDelete}
+          onStartFocus={onStartFocus}
+        />
+      )}
 
       {/* Grace countdown bar (spec: daily-checklist/complete-and-wait) */}
       {grace && (

@@ -17,6 +17,7 @@ import { monitorService, audioService, overlayService, permissionsService, setti
 import { findKnownConflict } from "@/utils/knownShortcutConflicts";
 import { parseAppList } from "@/utils/appLists";
 import { useUiStore } from "@/stores/uiStore";
+import { consumeSettingsTab, SETTINGS_TAB_STORAGE_KEY } from "@/utils/settingsNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -49,9 +50,23 @@ export function Settings() {
   const { t } = useTranslation();
   const { settings, saveSettings, resetSettings } = useSettings();
   const { addToast } = useUiStore();
-  const [activeTab, setActiveTab] = useState<Tab>("general");
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const requested = consumeSettingsTab();
+    return requested && requested in TAB_META ? (requested as Tab) : "general";
+  });
   const [clearConfirm, setClearConfirm] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
+
+  // Another window asked for a tab while this pane was already open.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== SETTINGS_TAB_STORAGE_KEY || !event.newValue) return;
+      const requested = consumeSettingsTab();
+      if (requested && requested in TAB_META) setActiveTab(requested as Tab);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   useEffect(() => {
     let unlisten: (() => void) | null = null;

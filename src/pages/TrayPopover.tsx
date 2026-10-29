@@ -7,7 +7,9 @@ import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PomodoroTrayBlock } from "@/components/features/pomodoro/PomodoroTrayBlock";
+import { ChecklistSettingsButton } from "@/components/features/checklist/ChecklistSettingsButton";
 import { ChecklistGroupedList } from "@/components/features/checklist/ChecklistGroupedList";
 import { usePomodoro } from "@/hooks/usePomodoro";
 import { ChecklistInput } from "@/components/features/checklist/ChecklistInput";
@@ -17,7 +19,7 @@ import { sessionService } from "@/services/tauri";
 import { settingsService } from "@/services/tauri";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useSettingsStore } from "@/stores/settingsStore";
-import type { AppSettings, TickPayload } from "@/types";
+import type { AppSettings, ChecklistItem, TickPayload } from "@/types";
 import { formatDuration } from "@/utils/formatters";
 
 /**
@@ -37,12 +39,14 @@ export function TrayPopover() {
     uncompleteItem,
     createItem,
     updateItem,
+    deleteItem,
     previewReorder,
     commitReorder,
     refresh: refreshChecklist,
   } = useChecklist();
   const checklistSettings = useSettingsStore((s) => s.settings.checklist);
   usePomodoro();
+  const [deleteTarget, setDeleteTarget] = useState<ChecklistItem | null>(null);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -224,12 +228,15 @@ export function TrayPopover() {
 
       {/* Compact checklist (spec: tray-quick-panel/complete-from-the-panel) */}
       <div className="flex min-h-0 flex-1 flex-col p-3">
-        <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          {t("checklist.open_title")}
-        </p>
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            {t("checklist.open_title")}
+          </p>
+          <ChecklistSettingsButton secondary />
+        </div>
         {/* -mr/pr let the scrollbar live in the section padding so rows keep the
             block's full width (aligned with the session button above). */}
-        <div className="-mr-2 min-h-0 flex-1 space-y-1 overflow-y-auto pr-2 [scrollbar-gutter:stable]">
+        <div className="-mr-2 min-h-0 flex-1 overflow-y-auto pr-2 [scrollbar-gutter:stable]">
           {openView.length === 0 && (
             <EmptyState
               icon={ListChecks}
@@ -247,7 +254,7 @@ export function TrayPopover() {
             onToggleComplete={(item) => void completeItem(item.id)}
             onUndo={(item) => void uncompleteItem(item.id)}
             onUpdate={(item, patch) => void updateItem(item, patch)}
-            onDelete={() => {}}
+            onDelete={setDeleteTarget}
             previewReorder={previewReorder}
             commitReorder={commitReorder}
           />
@@ -260,6 +267,29 @@ export function TrayPopover() {
           <BrandLogo className="h-4 opacity-60" />
         </div>
       </div>
+
+      <Dialog open={deleteTarget !== null} onClose={() => setDeleteTarget(null)}>
+        <DialogHeader>
+          <DialogTitle>{t("checklist.delete_confirm_title")}</DialogTitle>
+        </DialogHeader>
+        <p className="px-6 pb-2 text-sm text-muted-foreground">
+          {t("checklist.delete_confirm_body", { title: deleteTarget?.title ?? "" })}
+        </p>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              if (deleteTarget) void deleteItem(deleteTarget.id);
+              setDeleteTarget(null);
+            }}
+          >
+            {t("common.delete")}
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 }

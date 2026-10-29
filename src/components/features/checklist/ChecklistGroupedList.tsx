@@ -7,7 +7,7 @@ import { ChecklistInput } from "./ChecklistInput";
 import { ChecklistItemRow } from "./ChecklistItemRow";
 import type { OpenChecklistEntry } from "@/hooks/useChecklist";
 import type { ChecklistGroupBy, ChecklistItem } from "@/types";
-import { buildTree, groupItems, reorderFlatList, type GroupNode } from "@/utils/checklistGrouping";
+import { buildTree, groupItems, innerGroupKey, reorderFlatList, type GroupNode } from "@/utils/checklistGrouping";
 import { useNow } from "@/hooks/useNow";
 import { formatDate } from "@/utils/formatters";
 import { cn } from "@/utils/cn";
@@ -48,6 +48,7 @@ export function ChecklistGroupedList({
   const { t, i18n } = useTranslation();
   const now = useNow();
   const dragId = useRef<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const rowEls = useRef(new Map<string, HTMLElement>());
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [expandedSubs, setExpandedSubs] = useState<Record<string, boolean>>({});
@@ -92,18 +93,25 @@ export function ChecklistGroupedList({
     onToggleComplete(item);
   };
 
-  const handleDragOver = (overId: string) => {
+  /** Live preview while dragging; false when the row under the pointer is not a valid drop target. */
+  const handleDragOver = (overId: string): boolean => {
     const dragging = dragId.current;
-    if (!dragging || dragging === overId) return;
-    const flatIds = openView.map((entry) => entry.item.id);
+    if (!dragging || dragging === overId) return true;
     const allItems = openView.map((entry) => entry.item);
+    const dragged = allItems.find((item) => item.id === dragging);
+    const over = allItems.find((item) => item.id === overId);
+    if (!dragged || !over) return false;
+    if (innerGroupKey(dragged, groupBy, now) !== innerGroupKey(over, groupBy, now)) return false;
+    const flatIds = allItems.map((item) => item.id);
     const next = reorderFlatList(flatIds, allItems, dragging, overId, groupBy, now);
     if (next) previewReorder(next);
+    return true;
   };
 
   const handleDragEnd = () => {
     if (!dragId.current) return;
     dragId.current = null;
+    setDraggingId(null);
     void commitReorder();
   };
 
@@ -120,7 +128,7 @@ export function ChecklistGroupedList({
         key={node.key}
         onClick={() => setCollapsed((state) => ({ ...state, [node.key]: !collapsedNow }))}
         className={cn(
-          "mb-1 flex w-full items-center gap-2 text-left text-xs font-medium text-muted-foreground",
+          "mb-1 mt-3 flex w-full items-center gap-2 text-left text-xs font-medium text-muted-foreground first:mt-0",
           compact && "text-[10px]",
         )}
       >
@@ -148,7 +156,7 @@ export function ChecklistGroupedList({
         key={item.id}
         layout="position"
         transition={{ type: "spring", bounce: 0.1, visualDuration: 0.3 }}
-        className="space-y-1"
+        className="space-y-0"
         ref={(el: HTMLDivElement | null) => {
           if (el) rowEls.current.set(item.id, el);
           else rowEls.current.delete(item.id);
@@ -165,8 +173,10 @@ export function ChecklistGroupedList({
           onDelete={onDelete}
           onStartFocus={onStartFocus ? () => onStartFocus(item, parent) : undefined}
           onTagClick={onTagClick}
+          dragging={draggingId === item.id}
           onDragStart={(id) => {
             dragId.current = id;
+            setDraggingId(id);
           }}
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
@@ -209,5 +219,5 @@ export function ChecklistGroupedList({
     return output;
   };
 
-  return <div className="space-y-1.5">{walk(groups)}</div>;
+  return <div>{walk(groups)}</div>;
 }

@@ -93,4 +93,17 @@ describe("ChecklistItemRow", () => {
     fireEvent.click(screen.getByText("Task"));
     expect(screen.getByRole("button", { name: "Save" }).textContent).toBe("");
   });
+
+  it("opens quick items on right-click and applies a priority change", async () => {
+    const onUpdate = renderRow(vi.fn(), true);
+    fireEvent.contextMenu(screen.getByTestId("checklist-row-1"));
+    fireEvent.click(await screen.findByRole("menuitem", { name: /Priority/ }));
+    fireEvent.click(await screen.findByRole("option", { name: /High/i }));
+    await waitFor(() => expect(onUpdate).toHaveBeenCalledWith(row, { priority: "high" }));
+  });
+
+  it("always shows the category on its own meta line in compact mode", () => {
+    renderRow(vi.fn(), true);
+    expect(screen.getByText("Work")).toBeInTheDocument();
+  });
 });

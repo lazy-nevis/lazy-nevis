@@ -516,6 +516,7 @@
     "session_stopped_body": "“{{label}}” ended after {{time}}."
   },
   "checklist": {
+    "open_settings": "Checklist settings (categories)",
     "open_title": "Today's checklist",
     "open_count": "{{count}} open",
     "history_title": "Previous activities",
@@ -589,6 +590,8 @@
       "urgent": "Urgent"
     },
     "category": {
+      "create_placeholder": "New category…",
+      "manage": "Edit or delete in Settings",
       "label": "Category",
       "none": "No category",
       "manage_title": "Categories",
@@ -1069,7 +1072,12 @@
     "pick_date": "Pick a date",
     "pick_time": "Pick a time",
     "pick_datetime": "Pick date & time",
-    "today": "Today"
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "now": "Now",
+    "time_input": "Time (HH:MM)",
+    "time_format": "HH:MM",
+    "minute_step": "Minute step"
   },
   "runtime": {
     "browser_title": "Open LazyNevis in the desktop app",

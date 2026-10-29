@@ -9,6 +9,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 ## [Unreleased]
 
 ### Added
+- Checklist quick actions: right-click menu (priority, category, date/time, tags, edit, focus, delete), inline category creation with a shortcut to Settings → Checklist, shared `DateTimePanel` (typed time, minute step) also used by Reminders, live drag-and-drop preview, upward-flipping dropdowns. OKF: `knowledge/changes/2026-10-29/checklist-quick-actions/`.
 - Pomodoro timer (opt-in): engine with crash recovery, migration `0008`, linked focus sessions via `break_source`, phase alerts through the shared delivery service, `/pomodoro` page, Dashboard widget, Compact strip, tray block/tooltip, command palette, Settings tab, history (delete/export CSV/JSON), and reports (Today panel; 7/30/90-day completion rate, average pauses, best hour, per-day chart). OKF: `knowledge/changes/2026-10-26/pomodoro-timer/`.
 - Habit tracking: targets, logging (card/dialog/quick-log), reminders with skip-when-met, contribution skyline, reports/export, and quick-log window. OKF: `knowledge/changes/2026-10-26/habit-tracking/`.
 - Calendar (phase B): read-only month/week/day views, day panel, kind filters, `CalendarSettings`, `get_calendar_range` aggregation (sessions, checklist, reminders; habit/pomodoro extension points), History `?session=` deep link, and “new reminder on this day”. OKF: `knowledge/changes/2026-10-26/calendar-and-reminders/`.
@@ -21,6 +22,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 - Documentation is OKF-only under `knowledge/`: capability contracts in `knowledge/product/capabilities/`, change bundles in `knowledge/changes/`. OpenSpec (`openspec/`, `@fission-ai/openspec`, `spec:validate`) and `.configdocs/` were removed after migration. See `knowledge/changes/2026-10-26/openspec-to-okf-migration/` and `knowledge/changes/2026-10-26/agents-knowledge-bootstrap/`.
 
 ### Fixed
+- Checklist group-by no longer duplicates groups (non-unique React keys); compact/tray rows always show category, tags and due date; tray delete works.
 - Checklist date parsing: `dia DD/MM` no longer leaves `/MM` in the title; added `DD/MM/YYYY`, `YYYY/MM/DD`, `YYYY-MM-DD` (2/4-digit year, `/ - .` separators), times with or without a date (`18:30`, `18h30`, `às 18h`, `6pm`), invalid-date rejection, and year rollover. Category/priority pickers no longer push the layout. OKF: `knowledge/changes/2026-10-29/checklist-todoist-card/`.
 - Backend freezes from re-entrant `Database` mutex locks (habit create/update/log, reminder create/update, habit heatmap) and db→scheduler lock-order inversions (`mark_dirty` under the DB guard). New always-on rule: `knowledge/rules/rust-locking.md`. OKF: `knowledge/changes/2026-10-26/habit-tracking/`, `knowledge/changes/2026-10-26/calendar-and-reminders/`.
 - Pomodoro "today" goal counted from UTC midnight instead of local midnight; stats always reported 0 breaks/interruptions; run deletion was not atomic. Inline Pomodoro/scheduler SQL moved to `db/queries.rs`. OKF: `knowledge/changes/2026-10-26/pomodoro-timer/`.

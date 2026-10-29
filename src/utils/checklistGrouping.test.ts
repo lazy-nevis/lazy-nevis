@@ -66,4 +66,21 @@ describe("reorderFlatList", () => {
     const next = reorderFlatList(flat, [parent, sub, other], "o", "p", [], now);
     expect(next).toEqual(["o", "p", "s"]);
   });
+
+  it("gives every nested group a unique, path-qualified key", () => {
+    const items = [
+      base({ id: "a", priority: "none", category: { id: "c1", name: "A", tone: "sky", sort_order: 1, created_at: 0 } }),
+      base({ id: "b", priority: "none", category: { id: "c2", name: "B", tone: "sky", sort_order: 2, created_at: 0 } }),
+      base({ id: "c", priority: "high", category: { id: "c2", name: "B", tone: "sky", sort_order: 2, created_at: 0 } }),
+    ];
+    const groups = groupItems(items, ["category", "priority"], { now: Date.now() });
+    const keys: string[] = [];
+    const walk = (nodes: typeof groups) =>
+      nodes.forEach((node) => {
+        keys.push(node.key);
+        walk(node.children);
+      });
+    walk(groups);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
 });

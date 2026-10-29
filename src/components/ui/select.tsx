@@ -1,5 +1,7 @@
 import * as React from "react";
 import { Check, ChevronDown } from "lucide-react";
+import { createPortal } from "react-dom";
+import { useAnchoredPosition } from "@/components/ui/popover";
 import { cn } from "@/utils/cn";
 
 interface SelectOption {
@@ -42,6 +44,17 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     const listRef = React.useRef<HTMLUListElement>(null);
     const hiddenSelectRef = React.useRef<HTMLSelectElement>(null);
     const listboxId = React.useId();
+    // Portal + fixed position: the list flips above the trigger near the bottom edge and is never clipped.
+    const position = useAnchoredPosition(
+      open,
+      () => triggerRef.current?.getBoundingClientRect() ?? null,
+      listRef,
+      "start",
+    );
+    const placed = position !== null;
+    React.useEffect(() => {
+      if (open && placed) listRef.current?.focus({ preventScroll: true });
+    }, [open, placed]);
 
     React.useImperativeHandle(ref, () => hiddenSelectRef.current as HTMLSelectElement);
 
@@ -174,16 +187,22 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
         </button>
 
-        {open && (
+        {open &&
+          createPortal(
           <ul
             ref={listRef}
             id={listboxId}
             role="listbox"
             tabIndex={-1}
             onKeyDown={onListKeyDown}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            className="absolute z-50 mt-1 max-h-60 min-w-full overflow-auto rounded-lg border border-border bg-popover p-1 shadow-lg"
+            style={{
+              top: position?.top ?? 0,
+              left: position?.left ?? 0,
+              minWidth: triggerRef.current?.offsetWidth,
+              maxHeight: Math.min(240, position?.maxHeight ?? 240),
+              visibility: position ? "visible" : "hidden",
+            }}
+            className="fixed z-[95] overflow-auto rounded-lg border border-border bg-popover p-1 shadow-lg"
           >
             {options.map((option, index) => {
               const isSelected = option.value === value;
@@ -207,7 +226,8 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                 </li>
               );
             })}
-          </ul>
+          </ul>,
+          document.body,
         )}
       </div>
     );

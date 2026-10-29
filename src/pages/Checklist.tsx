@@ -125,7 +125,7 @@ export function Checklist() {
             commitReorder={commitReorder}
           />
         )}
-        <div className="mt-3 border-t border-border/60 pt-3">
+        <div className="mt-1">
           <ChecklistInput onCreate={createItem} />
         </div>
       </SectionCard>

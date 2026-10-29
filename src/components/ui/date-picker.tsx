@@ -116,12 +116,40 @@ export function CalendarGrid({
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => pad(i));
-const MINUTES = Array.from({ length: 12 }, (_, i) => pad(i * 5));
+export const MINUTE_STEPS = [1, 5, 10, 15, 30] as const;
+export type MinuteStep = (typeof MINUTE_STEPS)[number];
+const MINUTE_STEP_KEY = "lazynevis:minute-step";
 
-export function TimeColumns({ value, onChange }: { value: string | null; onChange: (time: string) => void }) {
+function loadMinuteStep(): MinuteStep {
+  try {
+    const stored = Number(localStorage.getItem(MINUTE_STEP_KEY));
+    return (MINUTE_STEPS as readonly number[]).includes(stored) ? (stored as MinuteStep) : 5;
+  } catch {
+    return 5;
+  }
+}
+
+function saveMinuteStep(step: MinuteStep) {
+  try {
+    localStorage.setItem(MINUTE_STEP_KEY, String(step));
+  } catch {
+    // storage unavailable: the choice just lasts for this panel
+  }
+}
+
+export function TimeColumns({
+  value,
+  onChange,
+  minuteStep = 5,
+}: {
+  value: string | null;
+  onChange: (time: string) => void;
+  minuteStep?: MinuteStep;
+}) {
   const { t } = useTranslation(undefined, { keyPrefix: "pickers" });
   const [hour, minute] = (value ?? "09:00").split(":");
-  const minutes = MINUTES.includes(minute) ? MINUTES : [...MINUTES, minute].sort();
+  const base = Array.from({ length: Math.ceil(60 / minuteStep) }, (_, i) => pad(i * minuteStep));
+  const minutes = base.includes(minute) ? base : [...base, minute].sort();
   const hourRef = useRef<HTMLDivElement>(null);
   const minuteRef = useRef<HTMLDivElement>(null);
 
@@ -134,7 +162,7 @@ export function TimeColumns({ value, onChange }: { value: string | null; onChang
         column.scrollTop = selected.offsetTop - column.clientHeight / 2 + selected.clientHeight / 2;
       }
     }
-  }, []);
+  }, [minuteStep]);
 
   const column = (
     label: string,
@@ -168,6 +196,132 @@ export function TimeColumns({ value, onChange }: { value: string | null; onChang
     <div className="flex gap-1">
       {column(t("hour"), HOURS, hour, (h) => onChange(`${h}:${minute}`), hourRef)}
       {column(t("minute"), minutes, minute, (m) => onChange(`${hour}:${m}`), minuteRef)}
+    </div>
+  );
+}
+
+/**
+ * Shared date (+ optional time) panel: calendar, typed `HH:MM`, scroll columns with a
+ * configurable minute step. Reminders and the checklist both render this.
+ */
+export function DateTimePanel({
+  date,
+  time,
+  onChange,
+  onClear,
+  weekStart = 1,
+  withTime = true,
+  minuteStep,
+}: {
+  date: Date | null;
+  /** `HH:MM`, or null when the value has no time. */
+  time: string | null;
+  onChange: (date: Date, time: string | null) => void;
+  onClear?: () => void;
+  weekStart?: 0 | 1;
+  withTime?: boolean;
+  /** Fixed step; when omitted the user picks one and it is remembered. */
+  minuteStep?: MinuteStep;
+}) {
+  const { t } = useTranslation(undefined, { keyPrefix: "pickers" });
+  const [step, setStep] = useState<MinuteStep>(() => minuteStep ?? loadMinuteStep());
+  const [draft, setDraft] = useState<string | null>(null);
+  const activeStep = minuteStep ?? step;
+  const day = date ?? new Date();
+  const shortcutClass = "rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-accent";
+
+  const commitDraft = () => {
+    if (draft === null) return;
+    const typed = draft.trim();
+    const normalized = normalizeTime(/^\d{1,2}$/.test(typed) ? `${typed}:00` : typed.replace(/[.h]/, ":"));
+    if (normalized) onChange(day, normalized);
+    setDraft(null);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-1.5">
+        <button type="button" className={shortcutClass} onClick={() => onChange(new Date(), time)}>
+          {t("today")}
+        </button>
+        <button
+          type="button"
+          className={shortcutClass}
+          onClick={() => {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            onChange(tomorrow, time);
+          }}
+        >
+          {t("tomorrow")}
+        </button>
+        {withTime && (
+          <button
+            type="button"
+            className={shortcutClass}
+            onClick={() => {
+              const now = new Date();
+              onChange(day, `${pad(now.getHours())}:${pad(now.getMinutes())}`);
+            }}
+          >
+            {t("now")}
+          </button>
+        )}
+        {onClear && (
+          <button type="button" className={cn(shortcutClass, "ml-auto")} onClick={onClear}>
+            {t("clear")}
+          </button>
+        )}
+      </div>
+      <div className="flex gap-3">
+        <CalendarGrid value={date} weekStart={weekStart} onSelect={(picked) => onChange(picked, time)} />
+        {withTime && (
+          <div className="space-y-2 border-l border-border pl-3">
+            <input
+              type="text"
+              inputMode="numeric"
+              aria-label={t("time_input")}
+              placeholder={t("time_format")}
+              value={draft ?? time ?? ""}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={commitDraft}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  commitDraft();
+                } else if (e.key === "Escape" && draft !== null) {
+                  e.stopPropagation();
+                  setDraft(null);
+                }
+              }}
+              className="h-8 w-full rounded-md border border-input bg-transparent px-2 text-center text-sm tabular-nums outline-none focus:border-primary"
+            />
+            <TimeColumns value={time} onChange={(next) => onChange(day, next)} minuteStep={activeStep} />
+            {minuteStep === undefined && (
+              <div role="group" aria-label={t("minute_step")} className="flex justify-between gap-0.5">
+                {MINUTE_STEPS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={option === step}
+                    aria-label={`${option} ${t("minute")}`}
+                    onClick={() => {
+                      setStep(option);
+                      saveMinuteStep(option);
+                    }}
+                    className={cn(
+                      "flex-1 rounded px-1 py-0.5 text-[11px] tabular-nums",
+                      option === step ? "bg-accent font-semibold text-foreground" : "text-muted-foreground hover:bg-accent",
+                    )}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -323,12 +477,12 @@ export function DateTimePicker({
       }
     >
       {() => (
-        <div className="flex gap-3">
-          <CalendarGrid value={date} weekStart={weekStart} onSelect={(picked) => emit(picked, time)} />
-          <div className="border-l border-border pl-3">
-            <TimeColumns value={time} onChange={(nextTime) => emit(date, nextTime)} />
-          </div>
-        </div>
+        <DateTimePanel
+          date={date}
+          time={time}
+          weekStart={weekStart}
+          onChange={(nextDate, nextTime) => emit(nextDate, nextTime ?? time)}
+        />
       )}
     </Popover>
   );

@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { Calendar, ChevronLeft, ChevronRight, Flag, Folder, Tag as TagIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { CalendarGrid } from "@/components/ui/date-picker";
+import { DateTimePanel } from "@/components/ui/date-picker";
 import type { ChecklistCategory, ChecklistPriority } from "@/types";
-import { startOfLocalDay } from "@/utils/dates";
-import { cn } from "@/utils/cn";
 import { CategoryOptionList } from "./CategoryPicker";
 import { PriorityOptionList } from "./PriorityFlag";
 
@@ -27,6 +25,9 @@ interface Props {
   due: EntryDue | null;
   onDue: (due: EntryDue | null) => void;
   onAddTag: (name: string) => void;
+  /** Current tags and a remover; when given, the tags view lists them as removable chips. */
+  tags?: string[];
+  onRemoveTag?: (name: string) => void;
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -52,6 +53,8 @@ export function EntryMenuPanel({
   due,
   onDue,
   onAddTag,
+  tags,
+  onRemoveTag,
 }: Props) {
   const { t } = useTranslation();
   const [view, setView] = useState<EntryMenuView>(initialView);
@@ -151,6 +154,28 @@ export function EntryMenuPanel({
     return (
       <div className="w-52">
         {back}
+        {tags && tags.length > 0 && (
+          <div className="mb-1.5 flex flex-wrap gap-1">
+            {tags.map((name) => (
+              <span
+                key={name}
+                className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px]"
+              >
+                #{name}
+                {onRemoveTag && (
+                  <button
+                    type="button"
+                    aria-label={`${t("common.delete")} #${name}`}
+                    onClick={() => onRemoveTag(name)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
         <input
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
@@ -172,60 +197,31 @@ export function EntryMenuPanel({
 
   // due
   const selected = due ? new Date(due.ms) : null;
-  const pickDay = (day: Date) => {
+  const onPanel = (day: Date, time: string | null) => {
     const base = new Date(day);
-    if (due?.hasTime && selected) base.setHours(selected.getHours(), selected.getMinutes(), 0, 0);
-    onDue({ ms: base.getTime(), hasTime: Boolean(due?.hasTime) });
+    const [hours, minutes] = (time ?? "").split(":").map(Number);
+    const hasTime = time !== null && !Number.isNaN(hours) && !Number.isNaN(minutes);
+    if (hasTime) base.setHours(hours, minutes, 0, 0);
+    else base.setHours(0, 0, 0, 0);
+    onDue({ ms: base.getTime(), hasTime });
   };
-  const setTime = (value: string) => {
-    const [hours, minutes] = value.split(":").map(Number);
-    if (Number.isNaN(hours) || Number.isNaN(minutes)) return;
-    const base = new Date(due ? startOfLocalDay(due.ms) : startOfLocalDay(Date.now()));
-    base.setHours(hours, minutes, 0, 0);
-    onDue({ ms: base.getTime(), hasTime: true });
-  };
-  const shortcut = (offsetDays: number) => {
-    const day = new Date(startOfLocalDay(Date.now()));
-    day.setDate(day.getDate() + offsetDays);
-    pickDay(day);
-  };
-  const chipClass =
-    "rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-accent";
 
   return (
-    <div className="w-[248px] space-y-2">
+    <div className="space-y-2">
       {back}
-      <div className="flex gap-1.5">
-        <button type="button" className={chipClass} onClick={() => shortcut(0)}>
-          {t("pickers.today")}
-        </button>
-        <button type="button" className={chipClass} onClick={() => shortcut(1)}>
-          {t("checklist.groups.tomorrow")}
-        </button>
-      </div>
-      <CalendarGrid value={selected} weekStart={1} onSelect={pickDay} />
-      <div className="flex items-center gap-2 border-t border-border pt-2">
-        <label className="flex flex-1 items-center gap-2 text-xs text-muted-foreground">
-          {t("checklist.entry.time")}
-          <input
-            type="time"
-            value={due?.hasTime ? timeValue(due.ms) : ""}
-            onChange={(e) => setTime(e.target.value)}
-            className="h-7 flex-1 rounded-md border border-input bg-transparent px-2 text-sm text-foreground outline-none focus:border-primary"
-          />
-        </label>
-        <button
-          type="button"
-          disabled={!due}
-          onClick={() => {
-            onDue(null);
-            close();
-          }}
-          className={cn(chipClass, "disabled:opacity-40")}
-        >
-          {t("pickers.clear")}
-        </button>
-      </div>
+      <DateTimePanel
+        date={selected}
+        time={due?.hasTime && selected ? timeValue(due.ms) : null}
+        onChange={onPanel}
+        onClear={
+          due
+            ? () => {
+                onDue(null);
+                close();
+              }
+            : undefined
+        }
+      />
     </div>
   );
 }

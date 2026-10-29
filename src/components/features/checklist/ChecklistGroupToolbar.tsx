@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { ChecklistCategory, ChecklistGroupBy } from "@/types";
+import { ChecklistSettingsButton } from "./ChecklistSettingsButton";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/utils/cn";
 import { toneStyle, type Tone } from "@/utils/tones";
@@ -45,6 +46,7 @@ export function ChecklistGroupToolbar({
             label: t(`checklist.group_dimension.${dim}`),
           }))}
         />
+        <ChecklistSettingsButton className="ml-auto" />
       </div>
       {categories.length > 0 && (
         <div className="flex flex-wrap gap-1.5">

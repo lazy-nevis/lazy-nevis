@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import type { ChecklistItem } from "@/types";
+import { ChecklistSettingsButton } from "@/components/features/checklist/ChecklistSettingsButton";
 import { ChecklistGroupedList } from "@/components/features/checklist/ChecklistGroupedList";
 import { ChecklistInput } from "@/components/features/checklist/ChecklistInput";
 import { HabitCompactList } from "@/components/features/habits/HabitCompactList";
@@ -263,11 +264,14 @@ export function CompactShell({
       {/* Checklist block (full CRUD, compact rows) */}
       {segment === "checklist" && (
       <section className="flex min-h-0 flex-1 flex-col p-3">
-        <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          {t("checklist.open_title")}
-        </p>
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            {t("checklist.open_title")}
+          </p>
+          <ChecklistSettingsButton secondary />
+        </div>
         {/* Scrollbar sits in the section padding; rows keep the block's full width. */}
-        <div className="-mr-2 min-h-0 flex-1 space-y-1 overflow-y-auto pr-2 [scrollbar-gutter:stable]">
+        <div className="-mr-2 min-h-0 flex-1 overflow-y-auto pr-2 [scrollbar-gutter:stable]">
           {openView.length === 0 && (
             <EmptyState
               icon={ListChecks}
