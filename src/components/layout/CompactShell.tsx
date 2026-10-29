@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import {
   History as HistoryIcon,
@@ -271,7 +272,7 @@ export function CompactShell({
           <ChecklistSettingsButton secondary />
         </div>
         {/* Scrollbar sits in the section padding; rows keep the block's full width. */}
-        <div className="scrollbar-overlay min-h-0 flex-1 overflow-y-auto">
+        <ScrollArea className="min-h-0 flex-1">
           {openView.length === 0 && (
             <EmptyState
               icon={ListChecks}
@@ -303,7 +304,7 @@ export function CompactShell({
             commitReorder={commitReorder}
           />
           <ChecklistInput onCreate={createItem} />
-        </div>
+        </ScrollArea>
         <button
           type="button"
           onClick={() => void appModeService.openSecondary("checklist-history")}
@@ -316,9 +317,9 @@ export function CompactShell({
       )}
 
       {segment === "habits" && (
-        <section className="scrollbar-overlay min-h-0 flex-1 overflow-y-auto p-3">
+        <ScrollArea className="min-h-0 flex-1" contentClassName="p-3">
           <HabitCompactList />
-        </section>
+        </ScrollArea>
       )}
 
       {/* Delete confirmation (spec: daily-checklist/confirmed-delete) */}

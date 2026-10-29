@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCallback, useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { ListChecks, Monitor, Pause, Play, Square } from "lucide-react";
@@ -236,7 +237,7 @@ export function TrayPopover() {
         </div>
         {/* -mr/pr let the scrollbar live in the section padding so rows keep the
             block's full width (aligned with the session button above). */}
-        <div className="scrollbar-overlay min-h-0 flex-1 overflow-y-auto">
+        <ScrollArea className="min-h-0 flex-1">
           {openView.length === 0 && (
             <EmptyState
               icon={ListChecks}
@@ -259,7 +260,7 @@ export function TrayPopover() {
             commitReorder={commitReorder}
           />
           <ChecklistInput onCreate={createItem} />
-        </div>
+        </ScrollArea>
 
         {/* Small brand mark so the floating panel is identifiable
             (spec: tray-quick-panel/brand-footer). */}

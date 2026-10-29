@@ -119,39 +119,32 @@
 
 /* Custom scrollbar following the app palette — thin, rounded, visible whenever
    a block overflows so users can tell there is more content. */
-*:not(.scrollbar-overlay) {
+* {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
 }
 
-/* `.scrollbar-overlay` opts out of the custom bar: the native overlay scrollbar takes no
-   layout space and only appears while hovering or scrolling. */
-.scrollbar-overlay {
-  scrollbar-width: auto;
-  scrollbar-color: auto;
-}
-
-*:not(.scrollbar-overlay)::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-*:not(.scrollbar-overlay)::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent;
 }
 
-*:not(.scrollbar-overlay)::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background-color: hsl(var(--muted-foreground) / 0.3);
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 
-*:not(.scrollbar-overlay)::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
   background-color: hsl(var(--muted-foreground) / 0.5);
 }
 
-*:not(.scrollbar-overlay)::-webkit-scrollbar-corner {
+::-webkit-scrollbar-corner {
   background: transparent;
 }
 

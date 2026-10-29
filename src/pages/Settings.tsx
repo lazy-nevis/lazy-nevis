@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -113,7 +114,7 @@ export function Settings() {
       </nav>
 
       {/* Tab content */}
-      <div className="min-h-0 flex-1 overflow-y-auto p-6">
+      <ScrollArea className="min-h-0 flex-1" contentClassName="p-6">
         {activeTab === "general" && (
           <>
             <GeneralTab settings={settings} update={update} t={t} />
@@ -138,7 +139,7 @@ export function Settings() {
         {activeTab === "data" && (
           <DataTab t={t} onClearHistory={() => setClearConfirm(true)} onResetSettings={() => setResetConfirm(true)} />
         )}
-      </div>
+      </ScrollArea>
 
       <Dialog open={clearConfirm} onClose={() => setClearConfirm(false)}>
         <DialogHeader>

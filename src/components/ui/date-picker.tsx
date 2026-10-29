@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock, X } from "lucide-react";
@@ -173,7 +174,7 @@ export function TimeColumns({
   ) => (
     <div className="flex min-h-0 flex-1 flex-col">
       <span className="pb-1 text-center text-[11px] font-medium text-muted-foreground">{label}</span>
-      <div ref={ref} className="scrollbar-overlay relative flex min-h-0 w-14 flex-1 flex-col gap-0.5 overflow-y-auto">
+      <ScrollArea type="scroll" viewportRef={ref} className="min-h-0 w-14 flex-1" viewportClassName="relative" contentClassName="flex flex-col gap-0.5">
         {items.map((item) => (
           <button
             key={item}
@@ -188,7 +189,7 @@ export function TimeColumns({
             {item}
           </button>
         ))}
-      </div>
+      </ScrollArea>
     </div>
   );
 

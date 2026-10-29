@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCommandItems, type CommandItem } from "@/components/command/commandSources";
@@ -116,7 +117,7 @@ export function CommandPalette() {
           placeholder={t("command_palette.search_placeholder")}
           className="w-full border-b border-border bg-transparent px-4 py-3 text-sm outline-none"
         />
-        <div className="max-h-[min(24rem,50vh)] overflow-y-auto p-2">
+        <ScrollArea className="max-h-[min(24rem,50vh)]" contentClassName="p-2">
           {flatFiltered.length === 0 && (
             <p className="px-2 py-6 text-center text-sm text-muted-foreground">
               {t("command_palette.empty")}
@@ -156,7 +157,7 @@ export function CommandPalette() {
               </ul>
             </div>
           ))}
-        </div>
+        </ScrollArea>
       </div>
     </div>
   );
