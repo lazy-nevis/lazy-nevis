@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Reac
 import { cn } from "@/utils/cn";
 
 const MIN_THUMB = 24;
+/** A scroll event within this window after wheel/touch/key/pointer input counts as user scrolling. */
+const INTERACTION_WINDOW_MS = 1000;
 
 /** Mantine-style visibility: `hover` while the pointer is over, `scroll` while scrolling, `always`/`auto` whenever it overflows. */
 export type ScrollAreaType = "auto" | "always" | "hover" | "scroll" | "never";
@@ -45,7 +47,9 @@ export function ScrollArea({
   const innerRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ startY: number; startTop: number } | null>(null);
-  const hideTimer = useRef<number | undefined>(undefined);
+  const hoverTimer = useRef<number | undefined>(undefined);
+  const scrollTimer = useRef<number | undefined>(undefined);
+  const lastInteraction = useRef(0);
   const [thumb, setThumb] = useState<{ top: number; height: number } | null>(null);
   const [scrolling, setScrolling] = useState(false);
   const [hovering, setHovering] = useState(false);
@@ -70,13 +74,9 @@ export function ScrollArea({
     setThumb({ top, height });
   }, []);
 
-  const later = useCallback(
-    (fn: () => void) => {
-      window.clearTimeout(hideTimer.current);
-      hideTimer.current = window.setTimeout(fn, scrollHideDelay);
-    },
-    [scrollHideDelay],
-  );
+  const markInteraction = () => {
+    lastInteraction.current = Date.now();
+  };
 
   useEffect(() => {
     const el = innerRef.current;
@@ -88,9 +88,16 @@ export function ScrollArea({
     if (contentRef.current) observer.observe(contentRef.current);
     return () => {
       observer.disconnect();
-      window.clearTimeout(hideTimer.current);
     };
   }, [measure]);
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(hoverTimer.current);
+      window.clearTimeout(scrollTimer.current);
+    },
+    [],
+  );
 
   const visible =
     thumb !== null &&
@@ -125,20 +132,32 @@ export function ScrollArea({
     <div
       className={cn("relative min-h-0", className)}
       onPointerEnter={() => {
-        window.clearTimeout(hideTimer.current);
+        window.clearTimeout(hoverTimer.current);
         setHovering(true);
       }}
-      onPointerLeave={() => later(() => setHovering(false))}
+      onPointerLeave={() => {
+        window.clearTimeout(hoverTimer.current);
+        hoverTimer.current = window.setTimeout(() => setHovering(false), scrollHideDelay);
+      }}
     >
       <div
         ref={setViewport}
+        data-scroll-viewport=""
+        onWheel={markInteraction}
+        onTouchMove={markInteraction}
+        onKeyDown={markInteraction}
+        onPointerDown={markInteraction}
         onScroll={() => {
           measure();
           onScroll?.();
+          // Programmatic scrolls (e.g. centring the selected time) must not flash the bar.
+          if (Date.now() - lastInteraction.current > INTERACTION_WINDOW_MS && !dragRef.current) return;
           setScrolling(true);
-          later(() => setScrolling(false));
+          window.clearTimeout(scrollTimer.current);
+          scrollTimer.current = window.setTimeout(() => setScrolling(false), scrollHideDelay);
         }}
         style={{
+          scrollbarWidth: "none",
           overscrollBehavior,
           paddingRight: offsetScrollbars && thumb ? scrollbarSize + 4 : undefined,
         }}

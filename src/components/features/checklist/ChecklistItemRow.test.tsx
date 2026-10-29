@@ -97,9 +97,22 @@ describe("ChecklistItemRow", () => {
   it("opens quick items on right-click and applies a priority change", async () => {
     const onUpdate = renderRow(vi.fn(), true);
     fireEvent.contextMenu(screen.getByTestId("checklist-row-1"));
-    fireEvent.click(await screen.findByRole("menuitem", { name: /Priority/ }));
-    fireEvent.click(await screen.findByRole("option", { name: /High/i }));
+    // Real clicks start with a mousedown: it must not count as "outside" and close the portaled menu.
+    const priority = await screen.findByRole("menuitem", { name: /Priority/ });
+    fireEvent.mouseDown(priority);
+    fireEvent.click(priority);
+    const high = await screen.findByRole("option", { name: /High/i });
+    fireEvent.mouseDown(high);
+    fireEvent.click(high);
     await waitFor(() => expect(onUpdate).toHaveBeenCalledWith(row, { priority: "high" }));
+  });
+
+  it("closes the quick menu on a mousedown outside it", async () => {
+    renderRow(vi.fn(), true);
+    fireEvent.contextMenu(screen.getByTestId("checklist-row-1"));
+    await screen.findByRole("menuitem", { name: /Priority/ });
+    fireEvent.mouseDown(document.body);
+    await waitFor(() => expect(screen.queryByRole("menuitem", { name: /Priority/ })).not.toBeInTheDocument());
   });
 
   it("always shows the category on its own meta line in compact mode", () => {

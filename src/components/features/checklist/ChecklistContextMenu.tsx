@@ -22,7 +22,17 @@ interface Props {
 type View = "root" | EntryMenuView;
 
 /** Floating panel at the pointer; remounted per view so it re-measures and re-flips. */
-function Floating({ x, y, children }: { x: number; y: number; children: ReactNode }) {
+function Floating({
+  x,
+  y,
+  children,
+  onMouseDownCapture,
+}: {
+  x: number;
+  y: number;
+  children: ReactNode;
+  onMouseDownCapture: () => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const position = useAnchoredPosition(
     true,
@@ -35,6 +45,8 @@ function Floating({ x, y, children }: { x: number; y: number; children: ReactNod
       ref={ref}
       role="dialog"
       aria-label="menu"
+      data-checklist-context-menu=""
+      onMouseDownCapture={onMouseDownCapture}
       style={{
         top: position?.top ?? 0,
         left: position?.left ?? 0,
@@ -56,20 +68,27 @@ export function ChecklistContextMenu({ item, x, y, onClose, onUpdate, onEdit, on
   const [view, setView] = useState<View>("root");
   const isSub = item.parent_id !== null;
 
+  // The panel (and pickers nested in it) render in portals outside any DOM wrapper, so "inside"
+  // is tracked through React's tree: synthetic events bubble through portals and run before the
+  // bubble-phase document listener below.
+  const pressedInside = useRef(false);
+
   useEffect(() => {
     const onPointer = (event: MouseEvent) => {
-      if ((event.target as Element | null)?.closest("[data-checklist-context-menu]")) return;
-      onClose();
+      const inside =
+        pressedInside.current || Boolean((event.target as Element | null)?.closest("[data-checklist-context-menu]"));
+      pressedInside.current = false;
+      if (!inside) onClose();
     };
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
-    document.addEventListener("mousedown", onPointer, true);
+    document.addEventListener("mousedown", onPointer);
     document.addEventListener("keydown", onKey);
     window.addEventListener("blur", onClose);
     window.addEventListener("resize", onClose);
     return () => {
-      document.removeEventListener("mousedown", onPointer, true);
+      document.removeEventListener("mousedown", onPointer);
       document.removeEventListener("keydown", onKey);
       window.removeEventListener("blur", onClose);
       window.removeEventListener("resize", onClose);
@@ -174,10 +193,8 @@ export function ChecklistContextMenu({ item, x, y, onClose, onUpdate, onEdit, on
   }
 
   return (
-    <div data-checklist-context-menu>
-      <Floating key={view} x={x} y={y}>
-        {body}
-      </Floating>
-    </div>
+    <Floating key={view} x={x} y={y} onMouseDownCapture={() => (pressedInside.current = true)}>
+      {body}
+    </Floating>
   );
 }
