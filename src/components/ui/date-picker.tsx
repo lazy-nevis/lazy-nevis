@@ -313,13 +313,14 @@ export function DateTimePanel({
               className="h-8 w-full rounded-md border border-input bg-transparent px-2 text-center text-sm tabular-nums outline-none focus:border-primary"
             />
             {/* Columns take the calendar's height (absolute fill) instead of stretching it. */}
-            <div className={cn("relative min-h-0 flex-1", stacked && "h-36 flex-none")}>
+            <div className={stacked ? "flex gap-2" : "contents"}>
+            <div className={cn("relative min-h-0 flex-1", stacked && "h-36 flex-none flex-1")}>
               <div className="absolute inset-0 flex">
                 <TimeColumns value={time} onChange={(next) => onChange(day, next)} minuteStep={activeStep} />
               </div>
             </div>
             {minuteStep === undefined && (
-              <div role="group" aria-label={t("minute_step")} className="grid grid-cols-3 gap-0.5">
+              <div role="group" aria-label={t("minute_step")} className={cn(stacked ? "flex w-14 shrink-0 flex-col justify-center gap-0.5" : "grid grid-cols-3 gap-0.5")}>
                 {MINUTE_STEPS.map((option) => (
                   <button
                     key={option}
@@ -340,6 +341,7 @@ export function DateTimePanel({
                 ))}
               </div>
             )}
+            </div>
           </div>
         )}
       </div>
