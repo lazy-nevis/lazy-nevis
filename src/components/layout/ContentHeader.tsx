@@ -42,9 +42,8 @@ export function ContentHeader({
       onDoubleClick={onDoubleClick}
       className={cn(
         "flex h-12 shrink-0 select-none items-center gap-2 border-b border-border bg-background px-3",
-        // Collapsed sidebar is narrower than the macOS traffic lights; keep the
-        // toggle to their right instead of underneath them.
-        IS_MAC && collapsed && "pl-6",
+        // Full-width bar: on macOS it carries the traffic lights (they end ~x=68) and the sidebar starts below it.
+        IS_MAC && "pl-[84px]",
       )}
     >
       <button

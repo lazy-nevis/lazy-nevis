@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCallback, useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { ListChecks, Monitor, Pause, Play, Square } from "lucide-react";
@@ -7,17 +8,21 @@ import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PomodoroTrayBlock } from "@/components/features/pomodoro/PomodoroTrayBlock";
+import { ChecklistSettingsButton } from "@/components/features/checklist/ChecklistSettingsButton";
+import { ChecklistViewMenu } from "@/components/features/checklist/ChecklistViewControls";
 import { ChecklistGroupedList } from "@/components/features/checklist/ChecklistGroupedList";
 import { usePomodoro } from "@/hooks/usePomodoro";
 import { ChecklistInput } from "@/components/features/checklist/ChecklistInput";
 import { useChecklist } from "@/hooks/useChecklist";
+import { useChecklistView } from "@/hooks/useChecklistView";
 import { useThemeSync } from "@/hooks/useThemeSync";
 import { sessionService } from "@/services/tauri";
 import { settingsService } from "@/services/tauri";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useSettingsStore } from "@/stores/settingsStore";
-import type { AppSettings, TickPayload } from "@/types";
+import type { AppSettings, ChecklistItem, TickPayload } from "@/types";
 import { formatDuration } from "@/utils/formatters";
 
 /**
@@ -37,12 +42,14 @@ export function TrayPopover() {
     uncompleteItem,
     createItem,
     updateItem,
+    deleteItem,
     previewReorder,
     commitReorder,
     refresh: refreshChecklist,
   } = useChecklist();
-  const checklistSettings = useSettingsStore((s) => s.settings.checklist);
+  const checklistView = useChecklistView();
   usePomodoro();
+  const [deleteTarget, setDeleteTarget] = useState<ChecklistItem | null>(null);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -224,12 +231,18 @@ export function TrayPopover() {
 
       {/* Compact checklist (spec: tray-quick-panel/complete-from-the-panel) */}
       <div className="flex min-h-0 flex-1 flex-col p-3">
-        <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          {t("checklist.open_title")}
-        </p>
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            {t("checklist.open_title")}
+          </p>
+          <div className="flex items-center gap-0.5">
+            <ChecklistViewMenu view={checklistView} />
+            <ChecklistSettingsButton secondary />
+          </div>
+        </div>
         {/* -mr/pr let the scrollbar live in the section padding so rows keep the
             block's full width (aligned with the session button above). */}
-        <div className="-mr-2 min-h-0 flex-1 space-y-1 overflow-y-auto pr-2 [scrollbar-gutter:stable]">
+        <ScrollArea className="min-h-0 flex-1">
           {openView.length === 0 && (
             <EmptyState
               icon={ListChecks}
@@ -239,20 +252,20 @@ export function TrayPopover() {
           )}
           <ChecklistGroupedList
             openView={openView}
-            groupBy={checklistSettings.group_by ?? []}
+            groupBy={checklistView.groupBy}
             graceMs={graceMs}
             compact
-            categoryFilterIds={[]}
+            categoryFilterIds={checklistView.categoryFilterIds}
             createItem={createItem}
             onToggleComplete={(item) => void completeItem(item.id)}
             onUndo={(item) => void uncompleteItem(item.id)}
             onUpdate={(item, patch) => void updateItem(item, patch)}
-            onDelete={() => {}}
+            onDelete={setDeleteTarget}
             previewReorder={previewReorder}
             commitReorder={commitReorder}
           />
           <ChecklistInput onCreate={createItem} />
-        </div>
+        </ScrollArea>
 
         {/* Small brand mark so the floating panel is identifiable
             (spec: tray-quick-panel/brand-footer). */}
@@ -260,6 +273,29 @@ export function TrayPopover() {
           <BrandLogo className="h-4 opacity-60" />
         </div>
       </div>
+
+      <Dialog open={deleteTarget !== null} onClose={() => setDeleteTarget(null)}>
+        <DialogHeader>
+          <DialogTitle>{t("checklist.delete_confirm_title")}</DialogTitle>
+        </DialogHeader>
+        <p className="px-6 pb-2 text-sm text-muted-foreground">
+          {t("checklist.delete_confirm_body", { title: deleteTarget?.title ?? "" })}
+        </p>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              if (deleteTarget) void deleteItem(deleteTarget.id);
+              setDeleteTarget(null);
+            }}
+          >
+            {t("common.delete")}
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 }

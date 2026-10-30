@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import {
   History as HistoryIcon,
@@ -18,13 +19,15 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import type { ChecklistItem } from "@/types";
+import { ChecklistSettingsButton } from "@/components/features/checklist/ChecklistSettingsButton";
+import { ChecklistViewMenu } from "@/components/features/checklist/ChecklistViewControls";
 import { ChecklistGroupedList } from "@/components/features/checklist/ChecklistGroupedList";
 import { ChecklistInput } from "@/components/features/checklist/ChecklistInput";
 import { HabitCompactList } from "@/components/features/habits/HabitCompactList";
 import { PomodoroCompactStrip } from "@/components/features/pomodoro/PomodoroCompactStrip";
 import { useChecklist } from "@/hooks/useChecklist";
+import { useChecklistView } from "@/hooks/useChecklistView";
 import { usePomodoro } from "@/hooks/usePomodoro";
-import { useSettings } from "@/hooks/useSettings";
 import { appModeService, overlayService, sessionService } from "@/services/tauri";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUiStore } from "@/stores/uiStore";
@@ -73,7 +76,7 @@ export function CompactShell({
   const [name, setName] = useState("");
   const [segment, setSegment] = useState<CompactSegmentId>(COMPACT_SEGMENTS[0]?.id ?? "checklist");
   const [deleteTarget, setDeleteTarget] = useState<ChecklistItem | null>(null);
-  const { settings } = useSettings();
+  const checklistView = useChecklistView();
   usePomodoro();
 
   const startSession = async () => {
@@ -263,11 +266,17 @@ export function CompactShell({
       {/* Checklist block (full CRUD, compact rows) */}
       {segment === "checklist" && (
       <section className="flex min-h-0 flex-1 flex-col p-3">
-        <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          {t("checklist.open_title")}
-        </p>
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            {t("checklist.open_title")}
+          </p>
+          <div className="flex items-center gap-0.5">
+            <ChecklistViewMenu view={checklistView} />
+            <ChecklistSettingsButton secondary />
+          </div>
+        </div>
         {/* Scrollbar sits in the section padding; rows keep the block's full width. */}
-        <div className="-mr-2 min-h-0 flex-1 space-y-1 overflow-y-auto pr-2 [scrollbar-gutter:stable]">
+        <ScrollArea className="min-h-0 flex-1">
           {openView.length === 0 && (
             <EmptyState
               icon={ListChecks}
@@ -277,10 +286,10 @@ export function CompactShell({
           )}
           <ChecklistGroupedList
             openView={openView}
-            groupBy={settings.checklist.group_by ?? []}
+            groupBy={checklistView.groupBy}
             graceMs={graceMs}
             compact
-            categoryFilterIds={[]}
+            categoryFilterIds={checklistView.categoryFilterIds}
             createItem={createItem}
             onToggleComplete={(item) => void completeItem(item.id)}
             onUndo={(item) => void uncompleteItem(item.id)}
@@ -299,7 +308,7 @@ export function CompactShell({
             commitReorder={commitReorder}
           />
           <ChecklistInput onCreate={createItem} />
-        </div>
+        </ScrollArea>
         <button
           type="button"
           onClick={() => void appModeService.openSecondary("checklist-history")}
@@ -312,9 +321,9 @@ export function CompactShell({
       )}
 
       {segment === "habits" && (
-        <section className="min-h-0 flex-1 overflow-y-auto p-3">
+        <ScrollArea className="min-h-0 flex-1" contentClassName="p-3">
           <HabitCompactList />
-        </section>
+        </ScrollArea>
       )}
 
       {/* Delete confirmation (spec: daily-checklist/confirmed-delete) */}

@@ -59,6 +59,7 @@ function nestGroups(
   dimensions: ChecklistGroupBy[],
   depth: number,
   now: number,
+  parentKey = "",
 ): GroupNode[] {
   if (depth >= dimensions.length) {
     return [
@@ -133,10 +134,12 @@ function nestGroups(
       labelKey = `checklist.priority.${key}`;
     }
 
-    const childNodes = nestGroups(groupTrees, dimensions, depth + 1, now);
+    // Path-qualified: "no priority" under two categories must not share a React key or collapse state.
+    const nodeKey = `${parentKey}/${dimension}:${key}`;
+    const childNodes = nestGroups(groupTrees, dimensions, depth + 1, now, nodeKey);
     const items = childNodes.flatMap((node) => node.items);
     return {
-      key: `${dimension}:${key}`,
+      key: nodeKey,
       labelKey,
       labelParams,
       tone,

@@ -1,16 +1,18 @@
 import { useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { motion } from "motion/react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { celebrate } from "@/components/ui/motion";
 import { ChecklistInput } from "./ChecklistInput";
 import { ChecklistItemRow } from "./ChecklistItemRow";
 import type { OpenChecklistEntry } from "@/hooks/useChecklist";
 import type { ChecklistGroupBy, ChecklistItem } from "@/types";
-import { buildTree, groupItems, reorderFlatList, type GroupNode } from "@/utils/checklistGrouping";
+import { buildTree, groupItems, innerGroupKey, reorderFlatList, type GroupNode } from "@/utils/checklistGrouping";
 import { useNow } from "@/hooks/useNow";
 import { formatDate } from "@/utils/formatters";
 import { cn } from "@/utils/cn";
+import { toneStyle, toTone } from "@/utils/tones";
 
 interface Props {
   openView: OpenChecklistEntry[];
@@ -48,6 +50,7 @@ export function ChecklistGroupedList({
   const { t, i18n } = useTranslation();
   const now = useNow();
   const dragId = useRef<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const rowEls = useRef(new Map<string, HTMLElement>());
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [expandedSubs, setExpandedSubs] = useState<Record<string, boolean>>({});
@@ -92,41 +95,58 @@ export function ChecklistGroupedList({
     onToggleComplete(item);
   };
 
-  const handleDragOver = (overId: string) => {
+  /** Live preview while dragging; false when the row under the pointer is not a valid drop target. */
+  const handleDragOver = (overId: string): boolean => {
     const dragging = dragId.current;
-    if (!dragging || dragging === overId) return;
-    const flatIds = openView.map((entry) => entry.item.id);
+    if (!dragging || dragging === overId) return true;
     const allItems = openView.map((entry) => entry.item);
+    const dragged = allItems.find((item) => item.id === dragging);
+    const over = allItems.find((item) => item.id === overId);
+    if (!dragged || !over) return false;
+    if (innerGroupKey(dragged, groupBy, now) !== innerGroupKey(over, groupBy, now)) return false;
+    const flatIds = allItems.map((item) => item.id);
     const next = reorderFlatList(flatIds, allItems, dragging, overId, groupBy, now);
     if (next) previewReorder(next);
+    return true;
   };
 
   const handleDragEnd = () => {
     if (!dragId.current) return;
     dragId.current = null;
+    setDraggingId(null);
     void commitReorder();
   };
 
-  const renderGroupHeader = (node: GroupNode) => {
+  const renderGroupHeader = (node: GroupNode, depth: number) => {
     if (!node.labelKey) return null;
     const collapsedNow = collapsed[node.key];
     let label = t(node.labelKey, node.labelParams ?? {});
     if (node.labelKey === "checklist.groups.due_on" && node.labelParams?.date) {
       label = t(node.labelKey, { date: formatDate(Number(node.labelParams.date), i18n.language) });
     }
+    const Chevron = collapsedNow ? ChevronRight : ChevronDown;
+    const primary = depth === 0;
+    const tone = node.tone ? toTone(node.tone) : null;
     return (
       <button
         type="button"
         key={node.key}
+        aria-expanded={!collapsedNow}
         onClick={() => setCollapsed((state) => ({ ...state, [node.key]: !collapsedNow }))}
+        style={tone ? toneStyle(tone) : undefined}
         className={cn(
-          "mb-1 flex w-full items-center gap-2 text-left text-xs font-medium text-muted-foreground",
-          compact && "text-[10px]",
+          "flex w-full items-center gap-1.5 text-left transition-colors hover:text-foreground first:mt-0",
+          primary
+            ? "mb-1.5 mt-5 border-b-2 pb-1.5 text-sm font-bold text-foreground"
+            : "mb-1 mt-3 border-b pb-1 text-xs font-medium text-muted-foreground",
+          tone ? "tone-border" : primary ? "border-foreground/25" : "border-border/60",
+          compact && (primary ? "mt-3 text-xs" : "mt-2 text-[10px]"),
         )}
       >
-        <span aria-hidden>{collapsedNow ? "▸" : "▾"}</span>
-        {label}
-        <span className="text-muted-foreground/70">({node.items.length})</span>
+        <Chevron className={cn("shrink-0", primary ? (compact ? "h-4 w-4" : "h-5 w-5") : "h-3.5 w-3.5")} aria-hidden />
+        {tone && primary && <span className="tone-dot h-2 w-2 shrink-0 rounded-full" aria-hidden />}
+        <span className="min-w-0 truncate">{label}</span>
+        <span className="font-normal text-muted-foreground/70">({node.items.length})</span>
       </button>
     );
   };
@@ -148,7 +168,7 @@ export function ChecklistGroupedList({
         key={item.id}
         layout="position"
         transition={{ type: "spring", bounce: 0.1, visualDuration: 0.3 }}
-        className="space-y-1"
+        className="space-y-0"
         ref={(el: HTMLDivElement | null) => {
           if (el) rowEls.current.set(item.id, el);
           else rowEls.current.delete(item.id);
@@ -165,8 +185,10 @@ export function ChecklistGroupedList({
           onDelete={onDelete}
           onStartFocus={onStartFocus ? () => onStartFocus(item, parent) : undefined}
           onTagClick={onTagClick}
+          dragging={draggingId === item.id}
           onDragStart={(id) => {
             dragId.current = id;
+            setDraggingId(id);
           }}
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
@@ -191,15 +213,15 @@ export function ChecklistGroupedList({
     );
   };
 
-  const walk = (nodes: GroupNode[]): ReactNode[] => {
+  const walk = (nodes: GroupNode[], depth = 0): ReactNode[] => {
     const output: ReactNode[] = [];
     for (const node of nodes) {
       if (node.labelKey) {
-        output.push(renderGroupHeader(node));
+        output.push(renderGroupHeader(node, depth));
         if (collapsed[node.key]) continue;
       }
       if (node.children.length > 0) {
-        output.push(...walk(node.children));
+        output.push(...walk(node.children, depth + 1));
       } else {
         for (const item of node.items) {
           if (!item.parent_id) output.push(renderItem(item));
@@ -209,5 +231,5 @@ export function ChecklistGroupedList({
     return output;
   };
 
-  return <div className="space-y-1.5">{walk(groups)}</div>;
+  return <div>{walk(groups)}</div>;
 }

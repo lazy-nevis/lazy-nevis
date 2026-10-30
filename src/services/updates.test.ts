@@ -48,7 +48,7 @@ describe("updates", () => {
       .mockRejectedValueOnce(new TypeError("offline"))
       .mockResolvedValueOnce(new Response("[]", {
         status: 200,
-        headers: { "content-length": String(128 * 1024 + 1) },
+        headers: { "content-length": String(1024 * 1024 + 1) },
       }));
     vi.stubGlobal("fetch", fetchMock);
 

@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -627,7 +628,7 @@ function DetailView({
           <CardTitle className="text-sm text-muted-foreground">{t("history.detail.all_events")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-1 max-h-48 overflow-y-auto">
+          <ScrollArea className="max-h-48" contentClassName="space-y-1">
             {events.map((ev) => (
               <div
                 key={ev.id}
@@ -648,7 +649,7 @@ function DetailView({
                 )}
               </div>
             ))}
-          </div>
+          </ScrollArea>
         </CardContent>
       </Card>
     </PageContainer>

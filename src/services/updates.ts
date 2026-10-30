@@ -13,9 +13,10 @@ interface GitHubRelease {
   body?: unknown;
 }
 
-const API_URL = "https://api.github.com/repos/lazy-nevis/lazy-nevis/releases?per_page=10";
+const API_URL = "https://api.github.com/repos/lazy-nevis/lazy-nevis/releases?per_page=5";
 const RELEASE_URL_PREFIX = "https://github.com/lazy-nevis/lazy-nevis/releases/tag/";
-const MAX_RESPONSE_BYTES = 128 * 1024;
+// Release bodies carry the full changelog section + generated notes, so a page of releases is easily >100 KB.
+const MAX_RESPONSE_BYTES = 1024 * 1024;
 const MAX_NOTES_CHARS = 1500;
 const CACHE_MS = 15 * 60 * 1000;
 let cache: { at: number; release: ReleaseInfo | null } | null = null;

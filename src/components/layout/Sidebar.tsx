@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 import { Search } from "lucide-react";
@@ -47,8 +48,6 @@ export function Sidebar() {
         effectiveCollapsed ? "w-[64px]" : "w-[248px]",
       )}
     >
-      {IS_MAC && <div className="h-9 shrink-0" data-tauri-drag-region aria-hidden />}
-
       <div className="flex flex-col gap-3 px-2 pb-3 pt-2">
         <SidebarBrand collapsed={effectiveCollapsed} />
 
@@ -71,10 +70,12 @@ export function Sidebar() {
         </button>
       </div>
 
-      <nav
-        className={cn(
-          "flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden px-2 pb-2",
-          effectiveCollapsed && "scrollbar-none items-center gap-3",
+      <nav className="flex min-h-0 flex-1 flex-col">
+      <ScrollArea
+        className="min-h-0 flex-1"
+        contentClassName={cn(
+          "flex flex-col gap-4 overflow-x-hidden px-2 pb-2",
+          effectiveCollapsed && "items-center gap-3",
         )}
       >
         {NAV_GROUPS.map((group) => (
@@ -129,6 +130,7 @@ export function Sidebar() {
             </ul>
           </div>
         ))}
+      </ScrollArea>
       </nav>
 
       <div className="mt-auto border-t border-sidebar-border px-2 py-2">

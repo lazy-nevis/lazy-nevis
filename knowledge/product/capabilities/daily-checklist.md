@@ -193,6 +193,22 @@ Category → Date → Priority nesting, live refresh of overdue/today/history fi
 complete/undo on parents, and history category filtering. Compact surfaces SHALL use the same
 syntax and show compact category/priority/due cues; grouping headers MAY be thin labels only.
 
+Right-clicking a row SHALL open quick items (edit, priority, category, date/time, add/remove tags,
+start focus, delete) in every mode; the category picker SHALL create categories inline while edit and
+delete stay in Settings → Checklist (a top-of-list button opens it). Group-by SHALL toggle per
+dimension without duplicating groups, drag-and-drop SHALL preview the new order live, floating
+panels SHALL flip upward near the window edge, and compact/tray rows SHALL always show due date,
+category and tags on their own line.
+
+Rows SHALL render flat (round priority-ringed checkbox, divider, metadata line) with no per-item
+card. Adding and editing SHALL share one entry card: a borderless textarea whose recognized
+date/time text is highlighted, chips for category/date/time/priority/tags, and a "+" menu
+(priority, category, due date, tags) whose pickers are floating popovers that mark the current
+selection. Editing an item opens the same card with a Save action. Natural-language dates SHALL
+accept `DD/MM[/YY|YYYY]`, `YYYY-MM-DD`, `/ - .` separators, optional lead words (`dia`, `até`),
+and times with or without a date (`18:30`, `18h30`, `às 18h`, `6pm`); pt-BR reads day-first,
+bare numbers are never dates, invalid dates are ignored, and past day/month roll to next year.
+
 #### Scenario: Inline everything
 - **GIVEN** pt-BR UI on 2026-10-26
 - **WHEN** the user enters `Enviar proposta @Infleux !alta até 03/11 #vendas` and confirms
@@ -203,3 +219,7 @@ syntax and show compact category/priority/due cues; grouping headers MAY be thin
 - **GIVEN** the checklist open with an item due today
 - **WHEN** local midnight passes
 - **THEN** overdue/group labels refresh without remounting the page
+
+## Shared view across modes
+
+`group_by` and `category_filter` are persisted checklist settings used by the main, compact and tray views; changing them in one view applies to all. `category_filter` holds category ids (`__none__` = no category), empty means all, max 200 entries of 1–64 characters. Compact and tray expose them in one view-options popover beside the settings button. The first selected group-by dimension is the outermost group; top-level group headers are bold with a thicker divider, nested ones stay light.

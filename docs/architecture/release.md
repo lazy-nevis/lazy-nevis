@@ -15,6 +15,16 @@ Windows RCs publish an NSIS installer because MSI/WiX only accepts numeric prere
 
 `TAURI_SIGNING_PRIVATE_KEY` signs Tauri updater bundles only. It does not provide Apple Developer ID or Windows Authenticode identity. LazyNevis performs only a manual release-metadata check and opens the official GitHub release page; it does not auto-update, so updater signing is deliberately absent.
 
+## Preparing a release from GitHub Actions
+
+Run **Actions → Prepare Release** (`.github/workflows/release-prepare.yml`) on `main` and choose `bump` (patch/minor/major) and optionally `release_candidate`. `dry_run` only prints the planned version.
+
+- The base is the latest **stable** tag. `patch` on `v1.0.0` targets `1.0.1`, `minor` targets `1.1.0`, `major` targets `2.0.0`.
+- A release candidate uses the same target with `-rc.N`: the first is `1.0.1-rc.1`, then `rc.2`, `rc.3`... (highest existing RC of that target + 1). A later stable release of the same bump lands on `1.0.1`.
+- `scripts/release.mjs` rewrites `package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`, and moves `[Unreleased]` in `CHANGELOG.md` under the new version (RCs keep `[Unreleased]` too). `[Unreleased]` must not be empty.
+- The workflow commits `chore(release): vX.Y.Z`, creates the annotated tag, and pushes both. The tag triggers `release.yml`, which builds and publishes the release with notes taken from the CHANGELOG section.
+- Needs a `RELEASE_TOKEN` secret (PAT or GitHub App token) whose identity may bypass the `main` and `v*` tag rulesets. `GITHUB_TOKEN` cannot push to `main`, cannot create protected tags, and its tag pushes would not trigger `release.yml`.
+
 ## Credentials
 
 Apple certificate/API credentials and Windows managed-signing identity belong only in a protected `release-signing` environment. Prefer OIDC/managed signing. An unavoidable PFX uses separate encrypted certificate/password secrets. Unsigned builds (RC or stable) must say so in the release notes; when no signing credentials are configured, the stable signature verification steps warn and skip instead of failing the release; installers never weaken Gatekeeper or SmartScreen. See [operator checklist](../release/operator-checklist.md) and [verification](../release/verification.md).

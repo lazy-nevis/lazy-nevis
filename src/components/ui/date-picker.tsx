@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock, X } from "lucide-react";
@@ -30,13 +31,15 @@ export function normalizeTime(value: string | null | undefined): string | null {
   return `${pad(h)}:${pad(m)}`;
 }
 
-function CalendarGrid({
+export function CalendarGrid({
   value,
   onSelect,
   weekStart,
+  className,
 }: {
   value: Date | null;
   onSelect: (date: Date) => void;
+  className?: string;
   weekStart: 0 | 1;
 }) {
   const { t, i18n } = useTranslation(undefined, { keyPrefix: "pickers" });
@@ -57,7 +60,7 @@ function CalendarGrid({
   const todayKey = toDateKey(today);
 
   return (
-    <div className="w-[248px]">
+    <div className={className ?? "w-[248px]"}>
       <div className="mb-2 flex items-center justify-between">
         <button
           type="button"
@@ -116,12 +119,43 @@ function CalendarGrid({
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => pad(i));
-const MINUTES = Array.from({ length: 12 }, (_, i) => pad(i * 5));
+export const MINUTE_STEPS = [1, 5, 10, 15, 30] as const;
+export type MinuteStep = (typeof MINUTE_STEPS)[number];
+const MINUTE_STEP_KEY = "lazynevis:minute-step";
 
-function TimeColumns({ value, onChange }: { value: string | null; onChange: (time: string) => void }) {
+function loadMinuteStep(): MinuteStep {
+  try {
+    const stored = Number(localStorage.getItem(MINUTE_STEP_KEY));
+    return (MINUTE_STEPS as readonly number[]).includes(stored) ? (stored as MinuteStep) : 5;
+  } catch {
+    return 5;
+  }
+}
+
+function saveMinuteStep(step: MinuteStep) {
+  try {
+    localStorage.setItem(MINUTE_STEP_KEY, String(step));
+  } catch {
+    // storage unavailable: the choice just lasts for this panel
+  }
+}
+
+export function TimeColumns({
+  value,
+  onChange,
+  minuteStep = 5,
+  fill = false,
+}: {
+  value: string | null;
+  onChange: (time: string) => void;
+  minuteStep?: MinuteStep;
+  /** Columns share the available width instead of a fixed 56px. */
+  fill?: boolean;
+}) {
   const { t } = useTranslation(undefined, { keyPrefix: "pickers" });
   const [hour, minute] = (value ?? "09:00").split(":");
-  const minutes = MINUTES.includes(minute) ? MINUTES : [...MINUTES, minute].sort();
+  const base = Array.from({ length: Math.ceil(60 / minuteStep) }, (_, i) => pad(i * minuteStep));
+  const minutes = base.includes(minute) ? base : [...base, minute].sort();
   const hourRef = useRef<HTMLDivElement>(null);
   const minuteRef = useRef<HTMLDivElement>(null);
 
@@ -134,7 +168,7 @@ function TimeColumns({ value, onChange }: { value: string | null; onChange: (tim
         column.scrollTop = selected.offsetTop - column.clientHeight / 2 + selected.clientHeight / 2;
       }
     }
-  }, []);
+  }, [minuteStep]);
 
   const column = (
     label: string,
@@ -143,9 +177,9 @@ function TimeColumns({ value, onChange }: { value: string | null; onChange: (tim
     onPick: (item: string) => void,
     ref: React.RefObject<HTMLDivElement | null>,
   ) => (
-    <div className="flex flex-col">
+    <div className="flex min-h-0 min-w-0 flex-1 basis-0 flex-col">
       <span className="pb-1 text-center text-[11px] font-medium text-muted-foreground">{label}</span>
-      <div ref={ref} className="scrollbar-none relative flex h-[216px] w-14 flex-col gap-0.5 overflow-y-auto">
+      <ScrollArea type="scroll" viewportRef={ref} className={cn("min-h-0 flex-1", fill ? "w-full" : "w-14")} viewportClassName="relative" contentClassName="flex flex-col gap-0.5">
         {items.map((item) => (
           <button
             key={item}
@@ -160,14 +194,166 @@ function TimeColumns({ value, onChange }: { value: string | null; onChange: (tim
             {item}
           </button>
         ))}
-      </div>
+      </ScrollArea>
     </div>
   );
 
   return (
-    <div className="flex gap-1">
+    <div className={cn("flex min-h-0 flex-1", fill ? "gap-2" : "gap-1")}>
       {column(t("hour"), HOURS, hour, (h) => onChange(`${h}:${minute}`), hourRef)}
       {column(t("minute"), minutes, minute, (m) => onChange(`${hour}:${m}`), minuteRef)}
+    </div>
+  );
+}
+
+/**
+ * Shared date (+ optional time) panel: calendar, typed `HH:MM`, scroll columns with a
+ * configurable minute step. Reminders and the checklist both render this.
+ */
+export function DateTimePanel({
+  date,
+  time,
+  onChange,
+  onClear,
+  weekStart = 1,
+  withTime = true,
+  minuteStep,
+  stacked = false,
+}: {
+  date: Date | null;
+  /** `HH:MM`, or null when the value has no time. */
+  time: string | null;
+  onChange: (date: Date, time: string | null) => void;
+  onClear?: () => void;
+  weekStart?: 0 | 1;
+  withTime?: boolean;
+  /** Fixed step; when omitted the user picks one and it is remembered. */
+  minuteStep?: MinuteStep;
+  /** Narrow windows: calendar on top, time below, instead of side by side. */
+  stacked?: boolean;
+}) {
+  const { t } = useTranslation(undefined, { keyPrefix: "pickers" });
+  const [step, setStep] = useState<MinuteStep>(() => minuteStep ?? loadMinuteStep());
+  const [draft, setDraft] = useState<string | null>(null);
+  const activeStep = minuteStep ?? step;
+  const day = date ?? new Date();
+  const shortcutClass = "rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-accent";
+
+  const commitDraft = () => {
+    if (draft === null) return;
+    const typed = draft.trim();
+    const normalized = normalizeTime(/^\d{1,2}$/.test(typed) ? `${typed}:00` : typed.replace(/[.h]/, ":"));
+    if (normalized) onChange(day, normalized);
+    setDraft(null);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-1.5">
+        <button type="button" className={shortcutClass} onClick={() => onChange(new Date(), time)}>
+          {t("today")}
+        </button>
+        <button
+          type="button"
+          className={shortcutClass}
+          onClick={() => {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            onChange(tomorrow, time);
+          }}
+        >
+          {t("tomorrow")}
+        </button>
+        {withTime && (
+          <button
+            type="button"
+            className={shortcutClass}
+            onClick={() => {
+              const now = new Date();
+              onChange(day, `${pad(now.getHours())}:${pad(now.getMinutes())}`);
+            }}
+          >
+            {t("now")}
+          </button>
+        )}
+        {onClear && (
+          <button type="button" className={cn(shortcutClass, "ml-auto")} onClick={onClear}>
+            {t("clear")}
+          </button>
+        )}
+      </div>
+      <div className={cn("flex items-stretch", stacked ? "flex-col gap-3" : "gap-3")}>
+        <CalendarGrid
+          value={date}
+          weekStart={weekStart}
+          onSelect={(picked) => onChange(picked, time)}
+          className={stacked ? "w-full" : undefined}
+        />
+        {withTime && (
+          <div
+            className={cn(
+              "relative flex shrink-0 flex-col gap-2",
+              stacked ? "w-full border-t border-border pt-3" : "w-[132px] border-l border-border pl-3",
+            )}
+          >
+            <input
+              type="text"
+              inputMode="numeric"
+              aria-label={t("time_input")}
+              placeholder={t("time_format")}
+              value={draft ?? time ?? ""}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={commitDraft}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  commitDraft();
+                } else if (e.key === "Escape" && draft !== null) {
+                  e.stopPropagation();
+                  setDraft(null);
+                }
+              }}
+              className="h-8 w-full rounded-md border border-input bg-transparent px-2 text-center text-sm tabular-nums outline-none focus:border-primary"
+            />
+            {/* Columns take the calendar's height (absolute fill) instead of stretching it. */}
+            <div className={stacked ? "flex gap-2" : "contents"}>
+            <div className={cn("relative min-h-0 min-w-0 flex-[2]", stacked && "h-44 basis-0")}>
+              <div className="absolute inset-0 flex">
+                <TimeColumns value={time} onChange={(next) => onChange(day, next)} minuteStep={activeStep} fill={stacked} />
+              </div>
+            </div>
+            {minuteStep === undefined && (
+              <div role="group" aria-label={t("minute_step")} className={cn(stacked ? "flex h-44 min-w-0 flex-1 basis-0 flex-col" : "grid grid-cols-3 gap-0.5")}>
+                {stacked && (
+                  <span className="pb-1 text-center text-[11px] font-medium text-muted-foreground">{t("minute_step")}</span>
+                )}
+                <div className={cn(stacked ? "flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto" : "contents")}>
+                {MINUTE_STEPS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={option === step}
+                    aria-label={`${option} ${t("minute")}`}
+                    onClick={() => {
+                      setStep(option);
+                      saveMinuteStep(option);
+                    }}
+                    className={cn(
+                      "rounded px-1 py-0.5 text-[11px] tabular-nums",
+                      stacked && "shrink-0 rounded-md py-1.5 text-sm",
+                      option === step ? "bg-accent font-semibold text-foreground" : "text-muted-foreground hover:bg-accent",
+                    )}
+                  >
+                    {option}
+                  </button>
+                ))}
+                </div>
+              </div>
+            )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -323,12 +509,12 @@ export function DateTimePicker({
       }
     >
       {() => (
-        <div className="flex gap-3">
-          <CalendarGrid value={date} weekStart={weekStart} onSelect={(picked) => emit(picked, time)} />
-          <div className="border-l border-border pl-3">
-            <TimeColumns value={time} onChange={(nextTime) => emit(date, nextTime)} />
-          </div>
-        </div>
+        <DateTimePanel
+          date={date}
+          time={time}
+          weekStart={weekStart}
+          onChange={(nextDate, nextTime) => emit(nextDate, nextTime ?? time)}
+        />
       )}
     </Popover>
   );

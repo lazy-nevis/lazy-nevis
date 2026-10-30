@@ -16,13 +16,13 @@ const VIEWPORT_MARGIN = 8;
 type Rect = Pick<DOMRect, "top" | "bottom" | "left" | "right">;
 
 /** Fixed position for a panel anchored to a rect: below when it fits, else above; clamped to the viewport. */
-function useAnchoredPosition(
+export function useAnchoredPosition(
   open: boolean,
   getAnchor: () => Rect | null,
-  panelRef: React.RefObject<HTMLDivElement | null>,
+  panelRef: React.RefObject<HTMLElement | null>,
   align: "start" | "end",
 ) {
-  const [position, setPosition] = useState<{ top: number; left: number; above: boolean } | null>(null);
+  const [position, setPosition] = useState<{ top: number; left: number; above: boolean; maxHeight: number; scale: number } | null>(null);
   const anchorRef = useRef(getAnchor);
   anchorRef.current = getAnchor;
 
@@ -35,17 +35,30 @@ function useAnchoredPosition(
       const anchor = anchorRef.current();
       const panel = panelRef.current;
       if (!anchor || !panel) return;
+      // A panel can never draw outside its native window (tray/compact are small), so one wider than
+      // the window is shrunk (CSS zoom) to fit instead of being clipped.
+      panel.style.zoom = "1";
       // Layout size, not getBoundingClientRect: an entrance scale would shrink the measurement.
-      const width = panel.offsetWidth;
-      const height = panel.offsetHeight;
-      const fitsBelow = anchor.bottom + GAP + height <= window.innerHeight - VIEWPORT_MARGIN;
-      const top = fitsBelow ? anchor.bottom + GAP : Math.max(VIEWPORT_MARGIN, anchor.top - GAP - height);
+      const naturalWidth = panel.offsetWidth;
+      const naturalHeight = panel.scrollHeight + (panel.offsetHeight - panel.clientHeight);
+      const scale = Math.min(1, (window.innerWidth - 2 * VIEWPORT_MARGIN) / naturalWidth);
+      panel.style.zoom = "";
+      const width = naturalWidth * scale;
+      const height = naturalHeight * scale;
+      // Open on the side with more room (preferring below) and cap the height to it, so a tall
+      // panel near an edge scrolls instead of spilling out of the window.
+      const spaceBelow = window.innerHeight - anchor.bottom - GAP - VIEWPORT_MARGIN;
+      const spaceAbove = anchor.top - GAP - VIEWPORT_MARGIN;
+      const above = height > spaceBelow && spaceAbove > spaceBelow;
+      const maxHeight = Math.max(120, above ? spaceAbove : spaceBelow);
+      const shown = Math.min(height, maxHeight);
+      const top = above ? anchor.top - GAP - shown : anchor.bottom + GAP;
       const rawLeft = align === "end" ? anchor.right - width : anchor.left;
       const left = Math.min(
         Math.max(VIEWPORT_MARGIN, rawLeft),
         window.innerWidth - width - VIEWPORT_MARGIN,
       );
-      setPosition({ top, left, above: !fitsBelow });
+      setPosition({ top: Math.max(VIEWPORT_MARGIN, top), left, above, maxHeight, scale });
     };
     place();
     window.addEventListener("resize", place);
@@ -143,10 +156,12 @@ export function Popover({
             style={{
               top: position?.top ?? 0,
               left: position?.left ?? 0,
+              maxHeight: position?.maxHeight,
+              zoom: position && position.scale < 1 ? position.scale : undefined,
               visibility: position ? "visible" : "hidden",
             }}
             className={cn(
-              "fixed z-[90] rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-lg",
+              "fixed z-[90] overflow-y-auto rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-lg",
               className,
             )}
           >
@@ -213,11 +228,13 @@ export function AnchoredPanel({
       style={{
         top: position?.top ?? 0,
         left: position?.left ?? 0,
+        maxHeight: position?.maxHeight,
+        zoom: position && position.scale < 1 ? position.scale : undefined,
         visibility: position ? "visible" : "hidden",
         transformOrigin: position?.above ? "bottom left" : "top left",
       }}
       className={cn(
-        "fixed z-[80] rounded-xl border border-border bg-popover text-popover-foreground shadow-xl",
+        "fixed z-[80] overflow-y-auto rounded-xl border border-border bg-popover text-popover-foreground shadow-xl",
         className,
       )}
     >

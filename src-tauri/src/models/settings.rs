@@ -293,6 +293,9 @@ pub struct ChecklistSettings {
     /// Group-by dimensions for the open list (spec: checklist-organization).
     #[serde(default)]
     pub group_by: Vec<String>,
+    /// Category ids (or "__none__") shown in the open list; empty means all. Shared by every mode.
+    #[serde(default)]
+    pub category_filter: Vec<String>,
     /// Natural-language due date recognition in entry lines.
     #[serde(default = "default_date_recognition")]
     pub date_recognition: bool,
@@ -308,6 +311,7 @@ impl Default for ChecklistSettings {
             grace_period_ms: 10_000,
             history_sort: "created".to_string(),
             group_by: Vec::new(),
+            category_filter: Vec::new(),
             date_recognition: true,
         }
     }
@@ -471,6 +475,15 @@ impl AppSettings {
         ) {
             return Err(invalid("Invalid checklist history sort"));
         }
+        if self.checklist.category_filter.len() > 200
+            || self
+                .checklist
+                .category_filter
+                .iter()
+                .any(|id| id.is_empty() || id.len() > 64)
+        {
+            return Err(invalid("Invalid checklist category_filter"));
+        }
         let allowed_group_by = ["category", "date", "priority"];
         let mut seen_group_by = std::collections::HashSet::new();
         for key in &self.checklist.group_by {
@@ -602,8 +615,22 @@ mod app_settings_tests {
         assert_eq!(settings.checklist.grace_period_ms, 10_000);
         assert_eq!(settings.checklist.history_sort, "created");
         assert!(settings.checklist.group_by.is_empty());
+        assert!(settings.checklist.category_filter.is_empty());
         assert!(settings.checklist.date_recognition);
         settings.validate().unwrap();
+    }
+
+    #[test]
+    fn checklist_category_filter_is_validated() {
+        let mut settings = AppSettings::default();
+        settings.checklist.category_filter = vec!["abc".into(), "__none__".into()];
+        assert!(settings.validate().is_ok());
+        settings.checklist.category_filter = vec![String::new()];
+        assert!(settings.validate().is_err());
+        settings.checklist.category_filter = vec!["x".repeat(65)];
+        assert!(settings.validate().is_err());
+        settings.checklist.category_filter = vec!["a".into(); 201];
+        assert!(settings.validate().is_err());
     }
 
     #[test]

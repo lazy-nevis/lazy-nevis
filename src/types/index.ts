@@ -208,6 +208,8 @@ export interface ChecklistSettings {
   grace_period_ms: number;
   history_sort: ChecklistSortMode;
   group_by: ChecklistGroupBy[];
+  /** Category ids (or `__none__`) shown in the open list; empty = all. */
+  category_filter: string[];
   date_recognition: boolean;
 }
 

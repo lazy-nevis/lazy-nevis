@@ -8,6 +8,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 
 ## [Unreleased]
 
+### Added
+- Prepare Release workflow (`release-prepare.yml`, `scripts/release.mjs`): pick patch/minor/major and optionally a release candidate; it bumps every version file, promotes the CHANGELOG, then commits, tags and pushes so `release.yml` publishes. RCs count up (`rc.1`, `rc.2`...) per target version. Needs a `RELEASE_TOKEN` secret. OKF: `knowledge/changes/2026-10-30/checklist-view-sharing-and-release-workflow/`.
+- Checklist group-by and category filter are shared by the main, compact and tray views (new persisted `checklist.category_filter`); compact and tray get a single view-options button beside the settings button.
+- Checklist quick actions: right-click menu (priority, category, date/time, tags, edit, focus, delete), inline category creation with a shortcut to Settings → Checklist, shared `DateTimePanel` (typed time, minute step) also used by Reminders, live drag-and-drop preview, upward-flipping dropdowns. OKF: `knowledge/changes/2026-10-29/checklist-quick-actions/`.
+
+### Changed
+- Date/time picker opens as a full-window modal (calendar on top, time below, close button top-left) in the narrow tray popover and compact windows, where a floating panel cannot extend past the native window.
+- Checklist group headers are sharper: bold larger text, bigger collapse chevron and a thicker divider (category tone colour); sub-groups keep the light style. The first selected group-by is the outer group.
+- Opening settings or "edit categories" from the checklist lands on the Checklist tab, also when the Settings window is already open.
+- Collapsed sidebar is wider on macOS so its border no longer runs under the traffic lights; the sidebar brand compact button is aligned.
+- Scrollbars: Mantine-style `ScrollArea` (`type` hover/scroll/always/auto/never, `offsetScrollbars`, `overscrollBehavior`, `scrollHideDelay`, `scrollbarSize`) now backs the app's main scroll surfaces (pages, settings, sidebar, compact/tray checklist, command palette, history, calendar time columns). Default is hover with no reserved space; the time columns use scroll-only.
+- Checklist UI is Todoist-style: flat divider rows with a priority-ringed round checkbox; adding and editing share one entry card (borderless textarea, date/time highlight, chips, "+" menu with floating category/priority/due/tag pickers that show the current selection), with a tighter variant in compact mode and the tray popover. OKF: `knowledge/changes/2026-10-29/checklist-todoist-card/`.
+
+### Fixed
+- Check for Updates failed because the GitHub releases response (release bodies) exceeded the 128 KB cap; the cap is now 1 MB and only 5 releases are requested.
+- Overlay `ScrollArea` no longer shows a duplicate ("ghost") native scrollbar: global scrollbar styling moved into `@layer base` and viewports force `scrollbar-width: none`; hover/scroll hide timers are separate and programmatic scrolls (time-column centring) no longer flash the bar. Checklist right-click menu actions now apply instead of closing the menu (outside-click detection follows the React tree through portals).
+- Checklist group-by no longer duplicates groups (non-unique React keys); compact/tray rows always show category, tags and due date; tray delete works.
+- Checklist date parsing: `dia DD/MM` no longer leaves `/MM` in the title; added `DD/MM/YYYY`, `YYYY/MM/DD`, `YYYY-MM-DD` (2/4-digit year, `/ - .` separators), times with or without a date (`18:30`, `18h30`, `às 18h`, `6pm`), invalid-date rejection, and year rollover. Category/priority pickers no longer push the layout. OKF: `knowledge/changes/2026-10-29/checklist-todoist-card/`.
+
 ---
 
 ## [1.0.0] - 2026-10-28

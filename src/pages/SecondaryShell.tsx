@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
@@ -42,7 +43,7 @@ function ChecklistHistoryPane() {
   };
 
   return (
-    <div className="h-full overflow-y-auto p-6">
+    <ScrollArea className="h-full" contentClassName="p-6">
       <div className="mx-auto max-w-3xl">
         <h1 className="mb-4 text-base font-semibold">{t("checklist.history_title")}</h1>
         <ChecklistHistory
@@ -50,7 +51,7 @@ function ChecklistHistoryPane() {
           onRestore={(id) => void checklistService.uncomplete(id).catch(() => {})}
         />
       </div>
-    </div>
+    </ScrollArea>
   );
 }
 

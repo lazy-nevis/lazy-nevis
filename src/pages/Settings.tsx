@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -17,6 +18,7 @@ import { monitorService, audioService, overlayService, permissionsService, setti
 import { findKnownConflict } from "@/utils/knownShortcutConflicts";
 import { parseAppList } from "@/utils/appLists";
 import { useUiStore } from "@/stores/uiStore";
+import { consumeSettingsTab, SETTINGS_TAB_EVENT, SETTINGS_TAB_STORAGE_KEY } from "@/utils/settingsNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -49,9 +51,39 @@ export function Settings() {
   const { t } = useTranslation();
   const { settings, saveSettings, resetSettings } = useSettings();
   const { addToast } = useUiStore();
-  const [activeTab, setActiveTab] = useState<Tab>("general");
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const requested = consumeSettingsTab();
+    return requested && requested in TAB_META ? (requested as Tab) : "general";
+  });
   const [clearConfirm, setClearConfirm] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
+
+  // Another window asked for a tab while this pane was already open.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== SETTINGS_TAB_STORAGE_KEY || !event.newValue) return;
+      const requested = consumeSettingsTab();
+      if (requested && requested in TAB_META) setActiveTab(requested as Tab);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    let unlisten: (() => void) | null = null;
+    listen<string>(SETTINGS_TAB_EVENT, (ev) => {
+      consumeSettingsTab();
+      if (ev.payload in TAB_META) setActiveTab(ev.payload as Tab);
+    }).then((fn) => {
+      if (cancelled) fn();
+      else unlisten = fn;
+    });
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, []);
 
   useEffect(() => {
     let unlisten: (() => void) | null = null;
@@ -98,7 +130,7 @@ export function Settings() {
       </nav>
 
       {/* Tab content */}
-      <div className="min-h-0 flex-1 overflow-y-auto p-6">
+      <ScrollArea className="min-h-0 flex-1" contentClassName="p-6">
         {activeTab === "general" && (
           <>
             <GeneralTab settings={settings} update={update} t={t} />
@@ -123,7 +155,7 @@ export function Settings() {
         {activeTab === "data" && (
           <DataTab t={t} onClearHistory={() => setClearConfirm(true)} onResetSettings={() => setResetConfirm(true)} />
         )}
-      </div>
+      </ScrollArea>
 
       <Dialog open={clearConfirm} onClose={() => setClearConfirm(false)}>
         <DialogHeader>

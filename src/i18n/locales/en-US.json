@@ -516,9 +516,24 @@
     "session_stopped_body": "“{{label}}” ended after {{time}}."
   },
   "checklist": {
+    "open_settings": "Checklist settings (categories)",
     "open_title": "Today's checklist",
     "open_count": "{{count}} open",
     "history_title": "Previous activities",
+    "entry": {
+      "add": "Add",
+      "save": "Save",
+      "more": "More options",
+      "back": "Back",
+      "due": "Due date",
+      "tags": "Tags",
+      "tag_placeholder": "Type a tag and press Enter",
+      "time": "Time",
+      "edit": "Edit item",
+      "remove_time": "Remove time",
+      "remove_category": "Remove category",
+      "remove_priority": "Remove priority"
+    },
     "add_item": "Add item",
     "add_placeholder": "What needs doing? Use #tags to categorize…",
     "empty_open": "Nothing open. Add your first item below.",
@@ -551,6 +566,8 @@
     "add_sub_item": "Add sub-item",
     "reject_date": "Ignore recognized date",
     "empty_title_hint": "Add a title after removing dates and tags.",
+    "view_options": "Group and filter",
+    "filter_categories": "Show categories",
     "group_by": "Group by",
     "group_dimension": {
       "category": "Category",
@@ -575,6 +592,8 @@
       "urgent": "Urgent"
     },
     "category": {
+      "create_placeholder": "New category…",
+      "manage": "Edit or delete in Settings",
       "label": "Category",
       "none": "No category",
       "manage_title": "Categories",
@@ -1056,7 +1075,12 @@
     "pick_date": "Pick a date",
     "pick_time": "Pick a time",
     "pick_datetime": "Pick date & time",
-    "today": "Today"
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "now": "Now",
+    "time_input": "Time (HH:MM)",
+    "time_format": "HH:MM",
+    "minute_step": "Minute step"
   },
   "runtime": {
     "browser_title": "Open LazyNevis in the desktop app",

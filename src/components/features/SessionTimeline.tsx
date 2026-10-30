@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/utils/cn";
@@ -116,7 +117,7 @@ export function SessionTimeline({ events, checkpoints, sessionStart, sessionEnd,
       </div>
 
       {/* ── Written event list ──────────────────────────────────────── */}
-      <div className="space-y-0.5 max-h-60 overflow-y-auto rounded-md">
+      <ScrollArea className="max-h-60 rounded-md" contentClassName="space-y-0.5">
         {displayEvents.map((ev) => {
           const isTitleChange = ev.event_type === "title_change";
           const tabTitle = isTitleChange && ev.window_title && ev.window_title !== ev.app_name
@@ -189,7 +190,7 @@ export function SessionTimeline({ events, checkpoints, sessionStart, sessionEnd,
         {displayEvents.length === 0 && (
           <p className="text-xs text-muted-foreground py-4 text-center">{t("history.detail.no_events")}</p>
         )}
-      </div>
+      </ScrollArea>
 
       {/* Floating tooltip on bar hover */}
       {hovered && (

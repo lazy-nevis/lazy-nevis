@@ -1,20 +1,18 @@
 import { useState } from "react";
 import type { DragEvent } from "react";
-import { Calendar, Check, GripVertical, Play, Tag as TagIcon, Trash2, Undo2, X } from "lucide-react";
+import { Calendar, Check, GripVertical, Pencil, Play, Trash2, Undo2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslation } from "react-i18next";
-import { Badge } from "@/components/ui/badge";
 import { TagChip } from "./TagChip";
 import type { OpenChecklistEntry } from "@/hooks/useChecklist";
-import type { ChecklistItem } from "@/types";
-import { daysAgo, fromDateInputValue, startOfLocalDay, toDateInputValue } from "@/utils/dates";
+import type { ChecklistItem, UpdateChecklistPatch } from "@/types";
+import { daysAgo, startOfLocalDay } from "@/utils/dates";
 import { useNow } from "@/hooks/useNow";
-import { CategoryChip, CategoryPicker } from "./CategoryPicker";
-import { PriorityFlag, PriorityMenu } from "./PriorityFlag";
-import { toneStyle, type Tone } from "@/utils/tones";
-import { parseEntry } from "./checklistUtils";
-import type { UpdateChecklistPatch } from "@/types";
-import { formatDate } from "@/utils/formatters";
+import { PRIORITY_RING_CLASS } from "./PriorityFlag";
+import { ChecklistEntryCard, type EntryValues } from "./ChecklistEntryCard";
+import { ChecklistContextMenu } from "./ChecklistContextMenu";
+import { toTone, toneStyle } from "@/utils/tones";
+import { formatDate, formatDateTime } from "@/utils/formatters";
 import { cn } from "@/utils/cn";
 
 export interface ChecklistItemRowProps {
@@ -30,7 +28,10 @@ export interface ChecklistItemRowProps {
   onStartFocus?: (item: ChecklistItem) => void;
   onTagClick?: (name: string) => void;
   onDragStart?: (id: string) => void;
-  onDragOver?: (id: string) => void;
+  /** Returns false when the row under the pointer is not a valid drop target. */
+  onDragOver?: (id: string) => boolean | void;
+  /** True while this row is the one being dragged (shown as the drop placeholder). */
+  dragging?: boolean;
   onDragEnd?: () => void;
 }
 
@@ -53,58 +54,71 @@ export function ChecklistItemRow({
   onTagClick,
   onDragStart,
   onDragOver,
+  dragging = false,
   onDragEnd,
 }: ChecklistItemRowProps) {
   const { t, i18n } = useTranslation();
   const now = useNow();
   const { item, grace } = entry;
   const isSubItem = item.parent_id !== null;
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [titleDraft, setTitleDraft] = useState(item.title);
-  const [editingDue, setEditingDue] = useState(false);
-  const [tagsOpen, setTagsOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
 
   const age = daysAgo(item.created_at, now);
   const overdue =
-    item.completed_at === null &&
-    item.due_date !== null &&
-    item.due_date < startOfLocalDay(now);
-
-  const commitTitle = () => {
-    setEditingTitle(false);
-    const { title, tags, category, priority, due } = parseEntry(titleDraft, {
-      now,
-      locale: i18n.language,
-      dateRecognition: true,
-    });
-    if (!title || (title === item.title && tags.length === 0)) {
-      setTitleDraft(item.title);
-      return;
-    }
-    const merged = [...item.tags.map((tag) => tag.name)];
-    for (const tag of tags) {
-      if (!merged.some((existing) => existing.toLowerCase() === tag.toLowerCase())) {
-        merged.push(tag);
-      }
-    }
-    onUpdate?.(item, {
-      title,
-      tags: merged,
-      category,
-      priority,
-      dueDate: due?.ms ?? item.due_date,
-      dueHasTime: due?.hasTime ?? item.due_has_time,
-    });
-  };
-
-  const removeTag = (name: string) => {
-    onUpdate?.(item, {
-      tags: item.tags.map((tag) => tag.name).filter((existing) => existing !== name),
-    });
-  };
+    item.completed_at === null && item.due_date !== null && item.due_date < startOfLocalDay(now);
 
   const graceProgress = grace ? Math.max(0, Math.min(1, grace.remainingMs / graceMs)) : 0;
   const graceSeconds = grace ? Math.max(0, Math.ceil(grace.remainingMs / 1000)) : 0;
+
+  if (editing && onUpdate && !grace) {
+    const initial: EntryValues = {
+      title: item.title,
+      tags: item.tags.map((tag) => tag.name),
+      category: item.category?.name ?? null,
+      priority: item.priority,
+      dueDate: item.due_date,
+      dueHasTime: item.due_has_time,
+    };
+    return (
+      <div
+        className={cn("border-b border-border/40 py-1.5", isSubItem && "ml-6")}
+        data-testid={`checklist-row-${item.id}`}
+      >
+        <ChecklistEntryCard
+          mode="edit"
+          initial={initial}
+          compact={compact}
+          allowCategory={!isSubItem}
+          onCancel={() => setEditing(false)}
+          onSubmit={(values) => {
+            setEditing(false);
+            onUpdate(item, {
+              title: values.title,
+              tags: values.tags,
+              ...(isSubItem ? {} : { category: values.category }),
+              priority: values.priority,
+              dueDate: values.dueDate,
+              dueHasTime: values.dueHasTime,
+            });
+          }}
+        />
+      </div>
+    );
+  }
+
+  const startEditing = () => {
+    if (!grace && onUpdate) setEditing(true);
+  };
+
+  const dueLabel =
+    item.due_date === null
+      ? null
+      : item.due_has_time
+        ? formatDateTime(item.due_date, i18n.language).slice(0, -3)
+        : formatDate(item.due_date, i18n.language);
+  // Category, tags and due date always sit on their own line, in compact mode too.
+  const showMeta = dueLabel || item.tags.length > 0 || (item.category && !isSubItem) || age > 0;
 
   return (
     <div
@@ -118,35 +132,41 @@ export function ChecklistItemRow({
         onDragStart?.(item.id);
       }}
       onDragOver={(e) => {
+        const allowed = onDragOver?.(item.id) !== false;
+        if (!allowed) {
+          if (e.dataTransfer) e.dataTransfer.dropEffect = "none";
+          return;
+        }
         e.preventDefault();
         if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-        onDragOver?.(item.id);
       }}
       onDrop={(e) => {
         e.preventDefault();
         onDragEnd?.();
       }}
       onDragEnd={onDragEnd}
+      onContextMenu={(e) => {
+        if (grace || (!onUpdate && !onDelete)) return;
+        e.preventDefault();
+        setMenuAt({ x: e.clientX, y: e.clientY });
+      }}
       className={cn(
-        "group relative overflow-hidden rounded-md border transition-all duration-300",
-        // Compact surfaces: outline-only card, accent highlight on hover
-        // (DESIGN.md interactive-card pattern) — lets the popover glass show through.
-        // Full (not /50) opacity so the highlight reads clearly over the blurred
-        // glass backdrop instead of blending into it.
-        compact
-          ? "border-border/60 bg-transparent px-2 py-1.5 hover:border-accent-foreground/20 hover:bg-accent"
-          : "bg-card px-3 py-2",
-        overdue && "border-destructive/50",
+        // Flat Todoist-style row: no card, just a divider (the entry card only appears while editing).
+        "group relative overflow-hidden border-b transition-all duration-300",
+        compact ? "border-border/40 px-1 py-1.5 hover:bg-accent/50" : "border-border/60 px-1 py-2.5",
+        isSubItem && "ml-6",
+        // Drop placeholder: the dragged row shows where it will land.
+        dragging && "rounded-md border-primary/60 bg-primary/10 opacity-70 ring-1 ring-primary/40",
         grace?.leaving && "max-h-0 border-transparent py-0 opacity-0",
         !grace?.leaving && "max-h-[500px] opacity-100",
       )}
       data-testid={`checklist-row-${item.id}`}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-start gap-2">
         {draggable && (
           <GripVertical
             className={cn(
-              "shrink-0 cursor-grab text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100",
+              "mt-0.5 shrink-0 cursor-grab text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100",
               compact ? "h-3.5 w-3.5" : "h-4 w-4",
             )}
           />
@@ -160,132 +180,52 @@ export function ChecklistItemRow({
           onClick={() => (grace ? onUndo(item) : onToggleComplete(item))}
           aria-label={grace ? t("checklist.undo") : t("checklist.complete")}
           className={cn(
-            "flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded border transition-colors",
-            grace
-              ? "border-green-500 bg-green-500 text-white"
-              : "border-muted-foreground/40 hover:border-primary",
+            "mt-0.5 flex shrink-0 items-center justify-center rounded-full border-2 transition-colors hover:brightness-110",
+            compact ? "h-4 w-4" : "h-5 w-5",
+            grace ? "border-green-500 bg-green-500 text-white" : PRIORITY_RING_CLASS[item.priority],
           )}
         >
           {grace && <Check className="h-3 w-3" />}
         </motion.button>
 
-        {compact && item.category && (
-          <span
-            className="tone-dot h-2 w-2 shrink-0 rounded-full"
-            style={toneStyle(item.category.tone as Tone)}
-            title={item.category.name}
-          />
-        )}
-        <PriorityFlag priority={item.priority} />
         <div className="min-w-0 flex-1">
-          {editingTitle && onUpdate ? (
-            <input
-              // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
-              value={titleDraft}
-              onChange={(e) => setTitleDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") commitTitle();
-                if (e.key === "Escape") {
-                  setTitleDraft(item.title);
-                  setEditingTitle(false);
-                }
-              }}
-              onBlur={commitTitle}
-              className="w-full bg-transparent text-sm outline-none border-b border-primary/50"
-            />
-          ) : (
-            <button
-              type="button"
-              title={itemTooltip(item)}
-              onClick={() => {
-                if (!grace && onUpdate) {
-                  setTitleDraft(item.title);
-                  setEditingTitle(true);
-                }
-              }}
-              className={cn(
-                "block w-full whitespace-pre-wrap break-words text-left text-sm",
-                grace && "text-muted-foreground line-through",
-              )}
-            >
-              {item.title}
-            </button>
-          )}
+          <button
+            type="button"
+            title={itemTooltip(item)}
+            onClick={startEditing}
+            className={cn(
+              "block w-full whitespace-pre-wrap break-words text-left",
+              compact ? "text-xs leading-5" : "text-sm leading-5",
+              grace && "text-muted-foreground line-through",
+            )}
+          >
+            {item.title}
+          </button>
 
-          {compact && tagsOpen && item.tags.length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-1">
+          {showMeta && (
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+              {dueLabel && (
+                <span className={cn("inline-flex items-center gap-1", overdue && "text-destructive")}>
+                  <Calendar className="h-3 w-3" aria-hidden />
+                  {dueLabel}
+                  {overdue && ` · ${t("checklist.overdue")}`}
+                </span>
+              )}
+              {item.category && !isSubItem && (
+                <span className="inline-flex items-center gap-1">
+                  <span
+                    className="tone-dot h-2 w-2 rounded-full"
+                    style={toneStyle(toTone(item.category.tone))}
+                    aria-hidden
+                  />
+                  {item.category.name}
+                </span>
+              )}
               {item.tags.map((tag) => (
                 <TagChip key={tag.id} name={tag.name} onClick={onTagClick} />
               ))}
+              {age > 0 && <span>{t("checklist.created_days_ago", { count: age })}</span>}
             </div>
-          )}
-
-          {!compact && !isSubItem && onUpdate && !grace && (
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <CategoryPicker
-                value={item.category}
-                onChange={(name) => onUpdate(item, { category: name })}
-              />
-              <PriorityMenu
-                value={item.priority}
-                onChange={(priority) => onUpdate(item, { priority })}
-              />
-            </div>
-          )}
-          {!compact && !isSubItem && item.category && !onUpdate && (
-            <div className="mt-1">
-              <CategoryChip category={item.category} />
-            </div>
-          )}
-          {!compact && (item.tags.length > 0 || item.due_date !== null || age > 0) && (
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              {item.tags.map((tag) => (
-                <span key={tag.id} className="group/tag relative inline-flex">
-                  <TagChip name={tag.name} onClick={onTagClick} />
-                  {onUpdate && !grace && (
-                    <button
-                      type="button"
-                      onClick={() => removeTag(tag.name)}
-                      aria-label={t("checklist.remove_tag", { tag: tag.name })}
-                      className="absolute -right-1.5 -top-1.5 hidden h-3.5 w-3.5 items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground group-hover/tag:flex"
-                    >
-                      <X className="h-2.5 w-2.5" />
-                    </button>
-                  )}
-                </span>
-              ))}
-              {item.due_date !== null && !editingDue && (
-                <Badge
-                  variant={overdue ? "destructive" : "outline"}
-                  className="cursor-pointer gap-1 text-[11px] font-normal"
-                  onClick={() => !grace && onUpdate && setEditingDue(true)}
-                >
-                  <Calendar className="h-3 w-3" />
-                  {formatDate(item.due_date, i18n.language)}
-                  {overdue && ` · ${t("checklist.overdue")}`}
-                </Badge>
-              )}
-              {age > 0 && (
-                <span className="text-[11px] text-muted-foreground">
-                  {t("checklist.created_days_ago", { count: age })}
-                </span>
-              )}
-            </div>
-          )}
-
-          {!compact && editingDue && onUpdate && (
-            <input
-              type="date"
-              // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
-              defaultValue={item.due_date !== null ? toDateInputValue(item.due_date) : ""}
-              onBlur={(e) => {
-                setEditingDue(false);
-                onUpdate(item, { dueDate: fromDateInputValue(e.target.value) });
-              }}
-              className="mt-1 rounded border bg-transparent px-1.5 py-0.5 text-xs"
-            />
           )}
         </div>
 
@@ -300,63 +240,57 @@ export function ChecklistItemRow({
           </button>
         ) : (
           <div className="flex shrink-0 items-center gap-0.5">
-            {/* Tags disclosure — compact surfaces have no room for inline chips
-                (spec: app-modes/compact-tags-popover). Always visible so the
-                user knows the item is tagged. */}
-            {compact && item.tags.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setTagsOpen((open) => !open)}
-                title={t("checklist.show_tags", { count: item.tags.length })}
-                aria-label={t("checklist.show_tags", { count: item.tags.length })}
-                aria-expanded={tagsOpen}
-                className={cn(
-                  "flex items-center gap-0.5 rounded p-1 text-[11px] transition-colors hover:bg-accent",
-                  tagsOpen ? "text-foreground" : "text-muted-foreground",
-                )}
-              >
-                <TagIcon className="h-3.5 w-3.5" />
-                {item.tags.length}
-              </button>
-            )}
-            <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-            {!compact && onUpdate && item.due_date === null && (
-              <button
-                type="button"
-                onClick={() => setEditingDue(true)}
-                title={t("checklist.set_due_date")}
-                aria-label={t("checklist.set_due_date")}
-                className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                <Calendar className="h-3.5 w-3.5" />
-              </button>
-            )}
-            {onStartFocus && (
-              <button
-                type="button"
-                onClick={() => onStartFocus(item)}
-                title={t("checklist.start_focus")}
-                aria-label={t("checklist.start_focus")}
-                className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-green-600"
-              >
-                <Play className="h-3.5 w-3.5" />
-              </button>
-            )}
-            {onDelete && (
-              <button
-                type="button"
-                onClick={() => onDelete(item)}
-                title={t("common.delete")}
-                aria-label={t("common.delete")}
-                className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-destructive"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            )}
+            <div className="flex items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+              {onUpdate && (
+                <button
+                  type="button"
+                  onClick={startEditing}
+                  title={t("checklist.entry.edit")}
+                  aria-label={t("checklist.entry.edit")}
+                  className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              )}
+              {onStartFocus && (
+                <button
+                  type="button"
+                  onClick={() => onStartFocus(item)}
+                  title={t("checklist.start_focus")}
+                  aria-label={t("checklist.start_focus")}
+                  className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-green-600"
+                >
+                  <Play className="h-3.5 w-3.5" />
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={() => onDelete(item)}
+                  title={t("common.delete")}
+                  aria-label={t("common.delete")}
+                  className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           </div>
         )}
       </div>
+
+      {menuAt && (
+        <ChecklistContextMenu
+          item={item}
+          x={menuAt.x}
+          y={menuAt.y}
+          onClose={() => setMenuAt(null)}
+          onUpdate={onUpdate}
+          onEdit={onUpdate ? startEditing : undefined}
+          onDelete={onDelete}
+          onStartFocus={onStartFocus}
+        />
+      )}
 
       {/* Grace countdown bar (spec: daily-checklist/complete-and-wait) */}
       {grace && (

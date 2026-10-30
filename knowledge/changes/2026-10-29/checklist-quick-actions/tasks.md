@@ -1,0 +1,11 @@
+# Tasks
+- [x] Group key uniqueness + test
+- [x] Divider de-duplication
+- [x] Live drag preview + placeholder
+- [x] Upward-flipping popovers and Select
+- [x] DateTimePanel + tests
+- [x] Context menu + tests
+- [x] Inline category creation + settings shortcut
+- [x] Compact/tray parity (meta line, delete, settings button)
+- [x] bun test/build/quality, cargo test
+- [ ] Manual verification in a dev build (no dev window was available)

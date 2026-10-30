@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ReactNode } from "react";
 import { cn } from "@/utils/cn";
 
@@ -11,7 +12,7 @@ export function PageContainer({
   innerClassName?: string;
 }) {
   return (
-    <div className={cn("h-full overflow-y-auto", className)}>
+    <ScrollArea className={cn("h-full", className)}>
       <div
         className={cn(
           "flex w-full flex-col gap-6 p-6",
@@ -20,7 +21,7 @@ export function PageContainer({
       >
         {children}
       </div>
-    </div>
+    </ScrollArea>
   );
 }
 

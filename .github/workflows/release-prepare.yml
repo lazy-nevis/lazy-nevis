@@ -1,0 +1,88 @@
+name: Prepare Release
+
+# Manual entry point: bumps the version, promotes the CHANGELOG, pushes the commit + tag.
+# The tag push triggers release.yml, which validates, builds and publishes the GitHub Release.
+#
+# Requires a RELEASE_TOKEN secret (PAT or app token with contents:write) belonging to an identity allowed to
+# bypass the main branch ruleset and the v* tag ruleset; GITHUB_TOKEN can neither push to main nor create
+# tags, and tags pushed with it would not trigger release.yml.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Which part of the version to increment
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+      release_candidate:
+        description: Publish a release candidate (X.Y.Z-rc.N) instead of a stable release
+        type: boolean
+        default: false
+      dry_run:
+        description: Only print the planned version; change nothing
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Plan
+        id: plan
+        run: |
+          args=(--bump "${{ inputs.bump }}")
+          if [ "${{ inputs.release_candidate }}" = "true" ]; then args+=(--candidate); fi
+          bun scripts/release.mjs plan "${args[@]}"
+
+      - name: Check release token
+        if: ${{ !inputs.dry_run }}
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_TOKEN" ]; then
+            echo "::error::Secret RELEASE_TOKEN is missing (needed to push to main and create the tag)."
+            exit 1
+          fi
+
+      - name: Bump files and CHANGELOG
+        if: ${{ !inputs.dry_run }}
+        run: |
+          args=(--bump "${{ inputs.bump }}")
+          if [ "${{ inputs.release_candidate }}" = "true" ]; then args+=(--candidate); fi
+          bun scripts/release.mjs prepare "${args[@]}"
+
+      - name: Verify versions are in sync
+        if: ${{ !inputs.dry_run }}
+        run: |
+          bun run check:version
+
+      - name: Commit, tag and push
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock CHANGELOG.md
+          git commit -m "chore(release): ${{ steps.plan.outputs.tag }}"
+          git tag -a "${{ steps.plan.outputs.tag }}" -m "${{ steps.plan.outputs.tag }}"
+          git push origin main "${{ steps.plan.outputs.tag }}"
+
+      - name: Summary
+        run: |
+          echo "### Release ${{ steps.plan.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ inputs.dry_run }}" = "true" ]; then echo "Dry run: nothing was changed." >> "$GITHUB_STEP_SUMMARY"; else echo "Tag pushed; release.yml is building and publishing it." >> "$GITHUB_STEP_SUMMARY"; fi

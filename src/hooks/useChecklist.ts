@@ -111,9 +111,11 @@ export function useChecklist() {
   const previewReorder = useCallback(
     (ids: string[]) => {
       const byId = new Map(useChecklistStore.getState().openItems.map((item) => [item.id, item]));
+      // Rows render sorted by sort_order, so the preview must renumber it or nothing moves until drop.
       const next = ids
         .map((id) => byId.get(id))
-        .filter((item): item is ChecklistItem => Boolean(item));
+        .filter((item): item is ChecklistItem => Boolean(item))
+        .map((item, index) => ({ ...item, sort_order: index + 1 }));
       setOpenItems(next);
     },
     [setOpenItems],
