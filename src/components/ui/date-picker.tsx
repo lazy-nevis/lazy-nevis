@@ -144,10 +144,13 @@ export function TimeColumns({
   value,
   onChange,
   minuteStep = 5,
+  fill = false,
 }: {
   value: string | null;
   onChange: (time: string) => void;
   minuteStep?: MinuteStep;
+  /** Columns share the available width instead of a fixed 56px. */
+  fill?: boolean;
 }) {
   const { t } = useTranslation(undefined, { keyPrefix: "pickers" });
   const [hour, minute] = (value ?? "09:00").split(":");
@@ -176,7 +179,7 @@ export function TimeColumns({
   ) => (
     <div className="flex min-h-0 flex-1 flex-col">
       <span className="pb-1 text-center text-[11px] font-medium text-muted-foreground">{label}</span>
-      <ScrollArea type="scroll" viewportRef={ref} className="min-h-0 w-14 flex-1" viewportClassName="relative" contentClassName="flex flex-col gap-0.5">
+      <ScrollArea type="scroll" viewportRef={ref} className={cn("min-h-0 flex-1", fill ? "w-full" : "w-14")} viewportClassName="relative" contentClassName="flex flex-col gap-0.5">
         {items.map((item) => (
           <button
             key={item}
@@ -314,13 +317,17 @@ export function DateTimePanel({
             />
             {/* Columns take the calendar's height (absolute fill) instead of stretching it. */}
             <div className={stacked ? "flex gap-2" : "contents"}>
-            <div className={cn("relative min-h-0 flex-1", stacked && "h-36 flex-none flex-1")}>
+            <div className={cn("relative min-h-0 flex-[2]", stacked && "h-44 flex-none")}>
               <div className="absolute inset-0 flex">
-                <TimeColumns value={time} onChange={(next) => onChange(day, next)} minuteStep={activeStep} />
+                <TimeColumns value={time} onChange={(next) => onChange(day, next)} minuteStep={activeStep} fill={stacked} />
               </div>
             </div>
             {minuteStep === undefined && (
-              <div role="group" aria-label={t("minute_step")} className={cn(stacked ? "flex w-14 shrink-0 flex-col justify-center gap-0.5" : "grid grid-cols-3 gap-0.5")}>
+              <div role="group" aria-label={t("minute_step")} className={cn(stacked ? "flex h-44 flex-1 flex-col" : "grid grid-cols-3 gap-0.5")}>
+                {stacked && (
+                  <span className="pb-1 text-center text-[11px] font-medium text-muted-foreground">{t("minute_step")}</span>
+                )}
+                <div className={cn(stacked ? "flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto" : "contents")}>
                 {MINUTE_STEPS.map((option) => (
                   <button
                     key={option}
@@ -333,12 +340,14 @@ export function DateTimePanel({
                     }}
                     className={cn(
                       "rounded px-1 py-0.5 text-[11px] tabular-nums",
+                      stacked && "shrink-0 rounded-md py-1.5 text-sm",
                       option === step ? "bg-accent font-semibold text-foreground" : "text-muted-foreground hover:bg-accent",
                     )}
                   >
                     {option}
                   </button>
                 ))}
+                </div>
               </div>
             )}
             </div>
