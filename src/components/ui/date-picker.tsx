@@ -177,7 +177,7 @@ export function TimeColumns({
     onPick: (item: string) => void,
     ref: React.RefObject<HTMLDivElement | null>,
   ) => (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 min-w-0 flex-1 basis-0 flex-col">
       <span className="pb-1 text-center text-[11px] font-medium text-muted-foreground">{label}</span>
       <ScrollArea type="scroll" viewportRef={ref} className={cn("min-h-0 flex-1", fill ? "w-full" : "w-14")} viewportClassName="relative" contentClassName="flex flex-col gap-0.5">
         {items.map((item) => (
@@ -199,7 +199,7 @@ export function TimeColumns({
   );
 
   return (
-    <div className="flex min-h-0 flex-1 gap-1">
+    <div className={cn("flex min-h-0 flex-1", fill ? "gap-2" : "gap-1")}>
       {column(t("hour"), HOURS, hour, (h) => onChange(`${h}:${minute}`), hourRef)}
       {column(t("minute"), minutes, minute, (m) => onChange(`${hour}:${m}`), minuteRef)}
     </div>
@@ -317,13 +317,13 @@ export function DateTimePanel({
             />
             {/* Columns take the calendar's height (absolute fill) instead of stretching it. */}
             <div className={stacked ? "flex gap-2" : "contents"}>
-            <div className={cn("relative min-h-0 flex-[2]", stacked && "h-44 flex-none")}>
+            <div className={cn("relative min-h-0 min-w-0 flex-[2]", stacked && "h-44 basis-0")}>
               <div className="absolute inset-0 flex">
                 <TimeColumns value={time} onChange={(next) => onChange(day, next)} minuteStep={activeStep} fill={stacked} />
               </div>
             </div>
             {minuteStep === undefined && (
-              <div role="group" aria-label={t("minute_step")} className={cn(stacked ? "flex h-44 flex-1 flex-col" : "grid grid-cols-3 gap-0.5")}>
+              <div role="group" aria-label={t("minute_step")} className={cn(stacked ? "flex h-44 min-w-0 flex-1 basis-0 flex-col" : "grid grid-cols-3 gap-0.5")}>
                 {stacked && (
                   <span className="pb-1 text-center text-[11px] font-medium text-muted-foreground">{t("minute_step")}</span>
                 )}
