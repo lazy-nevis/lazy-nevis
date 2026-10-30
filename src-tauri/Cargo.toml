@@ -1,6 +1,6 @@
 [package]
 name = "lazy-nevis"
-version = "1.0.0"
+version = "1.0.1"
 description = "LazyNevis — for lazy people who don't give upis."
 authors = ["Lucas Sims"]
 license = "MIT"

@@ -2,7 +2,7 @@
   "name": "lazy-nevis",
   "description": "LazyNevis — for lazy people who don't give upis. A lightweight, open-source focus tool for your desktop.",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "license": "MIT",
   "author": {

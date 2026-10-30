@@ -8,6 +8,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 
 ## [Unreleased]
 
+---
+
+## [1.0.1] - 2026-10-30
+
 ### Added
 - Prepare Release workflow (`release-prepare.yml`, `scripts/release.mjs`): pick patch/minor/major and optionally a release candidate; it bumps every version file, promotes the CHANGELOG, then commits, tags and pushes so `release.yml` publishes. RCs count up (`rc.1`, `rc.2`...) per target version. Needs a `RELEASE_TOKEN` secret. OKF: `knowledge/changes/2026-10-30/checklist-view-sharing-and-release-workflow/`.
 - Checklist group-by and category filter are shared by the main, compact and tray views (new persisted `checklist.category_filter`); compact and tray get a single view-options button beside the settings button.
@@ -26,8 +30,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 - Overlay `ScrollArea` no longer shows a duplicate ("ghost") native scrollbar: global scrollbar styling moved into `@layer base` and viewports force `scrollbar-width: none`; hover/scroll hide timers are separate and programmatic scrolls (time-column centring) no longer flash the bar. Checklist right-click menu actions now apply instead of closing the menu (outside-click detection follows the React tree through portals).
 - Checklist group-by no longer duplicates groups (non-unique React keys); compact/tray rows always show category, tags and due date; tray delete works.
 - Checklist date parsing: `dia DD/MM` no longer leaves `/MM` in the title; added `DD/MM/YYYY`, `YYYY/MM/DD`, `YYYY-MM-DD` (2/4-digit year, `/ - .` separators), times with or without a date (`18:30`, `18h30`, `às 18h`, `6pm`), invalid-date rejection, and year rollover. Category/priority pickers no longer push the layout. OKF: `knowledge/changes/2026-10-29/checklist-todoist-card/`.
-
----
 
 ## [1.0.0] - 2026-10-28
 
@@ -166,7 +168,8 @@ First stable release. Highlights: planner suite (reminders, habits, Pomodoro, ca
 - 27 TypeScript tests (stores, hooks, formatters)
 - GitHub Actions CI matrix: Ubuntu, macOS, Windows
 
-[Unreleased]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.10.0-rc.5...HEAD
+[Unreleased]: https://github.com/lazy-nevis/lazy-nevis/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/lazy-nevis/lazy-nevis/compare/v1.0.0...v1.0.1
 [0.10.0-rc.5]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.10.0-rc.4...v0.10.0-rc.5
 [0.10.0-rc.4]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.10.0-rc.3...v0.10.0-rc.4
 [0.10.0-rc.3]: https://github.com/lazy-nevis/lazy-nevis/compare/v0.1.0-rc.2...v0.10.0-rc.3
