@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Calendar, ChevronLeft, ChevronRight, Flag, Folder, Tag as TagIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { Calendar, ChevronLeft, X, ChevronRight, Flag, Folder, Tag as TagIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { DateTimePanel } from "@/components/ui/date-picker";
 import type { ChecklistCategory, ChecklistPriority } from "@/types";
@@ -28,6 +29,19 @@ interface Props {
   /** Current tags and a remover; when given, the tags view lists them as removable chips. */
   tags?: string[];
   onRemoveTag?: (name: string) => void;
+}
+
+/** Windows narrower than the side-by-side date/time panel (tray popover, compact): it opens full-window instead. */
+const NARROW_WINDOW_PX = 440;
+
+function useNarrowWindow(): boolean {
+  const [narrow, setNarrow] = useState(() => window.innerWidth < NARROW_WINDOW_PX);
+  useEffect(() => {
+    const onResize = () => setNarrow(window.innerWidth < NARROW_WINDOW_PX);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  return narrow;
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -60,6 +74,7 @@ export function EntryMenuPanel({
   const [view, setView] = useState<EntryMenuView>(initialView);
   const [tagDraft, setTagDraft] = useState("");
   const fromMenu = initialView === "menu";
+  const narrow = useNarrowWindow();
 
   const back = fromMenu && view !== "menu" && (
     <button
@@ -206,22 +221,52 @@ export function EntryMenuPanel({
     onDue({ ms: base.getTime(), hasTime });
   };
 
+  const panel = (
+    <DateTimePanel
+      stacked={narrow}
+      date={selected}
+      time={due?.hasTime && selected ? timeValue(due.ms) : null}
+      onChange={onPanel}
+      onClear={
+        due
+          ? () => {
+              onDue(null);
+              close();
+            }
+          : undefined
+      }
+    />
+  );
+
+  if (narrow) {
+    // A native window can't be drawn past, so the picker takes the whole window like a modal.
+    return createPortal(
+      <div
+        role="dialog"
+        aria-label={t("checklist.entry.due")}
+        // The parent popover closes on outside mousedown at document level; keep this one inside.
+        onMouseDown={(e) => e.nativeEvent.stopImmediatePropagation()}
+        className="fixed inset-0 z-[100] overflow-y-auto bg-popover p-3 text-popover-foreground"
+      >
+        <button
+          type="button"
+          onClick={close}
+          aria-label={t("common.close")}
+          title={t("common.close")}
+          className="mb-2 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        {panel}
+      </div>,
+      document.body,
+    );
+  }
+
   return (
     <div className="space-y-2">
       {back}
-      <DateTimePanel
-        date={selected}
-        time={due?.hasTime && selected ? timeValue(due.ms) : null}
-        onChange={onPanel}
-        onClear={
-          due
-            ? () => {
-                onDue(null);
-                close();
-              }
-            : undefined
-        }
-      />
+      {panel}
     </div>
   );
 }

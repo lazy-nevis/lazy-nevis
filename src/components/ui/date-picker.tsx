@@ -35,9 +35,11 @@ export function CalendarGrid({
   value,
   onSelect,
   weekStart,
+  className,
 }: {
   value: Date | null;
   onSelect: (date: Date) => void;
+  className?: string;
   weekStart: 0 | 1;
 }) {
   const { t, i18n } = useTranslation(undefined, { keyPrefix: "pickers" });
@@ -58,7 +60,7 @@ export function CalendarGrid({
   const todayKey = toDateKey(today);
 
   return (
-    <div className="w-[248px]">
+    <div className={className ?? "w-[248px]"}>
       <div className="mb-2 flex items-center justify-between">
         <button
           type="button"
@@ -213,6 +215,7 @@ export function DateTimePanel({
   weekStart = 1,
   withTime = true,
   minuteStep,
+  stacked = false,
 }: {
   date: Date | null;
   /** `HH:MM`, or null when the value has no time. */
@@ -223,6 +226,8 @@ export function DateTimePanel({
   withTime?: boolean;
   /** Fixed step; when omitted the user picks one and it is remembered. */
   minuteStep?: MinuteStep;
+  /** Narrow windows: calendar on top, time below, instead of side by side. */
+  stacked?: boolean;
 }) {
   const { t } = useTranslation(undefined, { keyPrefix: "pickers" });
   const [step, setStep] = useState<MinuteStep>(() => minuteStep ?? loadMinuteStep());
@@ -274,10 +279,20 @@ export function DateTimePanel({
           </button>
         )}
       </div>
-      <div className="flex items-stretch gap-3">
-        <CalendarGrid value={date} weekStart={weekStart} onSelect={(picked) => onChange(picked, time)} />
+      <div className={cn("flex items-stretch", stacked ? "flex-col gap-3" : "gap-3")}>
+        <CalendarGrid
+          value={date}
+          weekStart={weekStart}
+          onSelect={(picked) => onChange(picked, time)}
+          className={stacked ? "w-full" : undefined}
+        />
         {withTime && (
-          <div className="relative flex w-[132px] shrink-0 flex-col gap-2 border-l border-border pl-3">
+          <div
+            className={cn(
+              "relative flex shrink-0 flex-col gap-2",
+              stacked ? "w-full border-t border-border pt-3" : "w-[132px] border-l border-border pl-3",
+            )}
+          >
             <input
               type="text"
               inputMode="numeric"
@@ -298,7 +313,7 @@ export function DateTimePanel({
               className="h-8 w-full rounded-md border border-input bg-transparent px-2 text-center text-sm tabular-nums outline-none focus:border-primary"
             />
             {/* Columns take the calendar's height (absolute fill) instead of stretching it. */}
-            <div className="relative min-h-0 flex-1">
+            <div className={cn("relative min-h-0 flex-1", stacked && "h-36 flex-none")}>
               <div className="absolute inset-0 flex">
                 <TimeColumns value={time} onChange={(next) => onChange(day, next)} minuteStep={activeStep} />
               </div>

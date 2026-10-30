@@ -14,6 +14,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) — versions fo
 - Checklist quick actions: right-click menu (priority, category, date/time, tags, edit, focus, delete), inline category creation with a shortcut to Settings → Checklist, shared `DateTimePanel` (typed time, minute step) also used by Reminders, live drag-and-drop preview, upward-flipping dropdowns. OKF: `knowledge/changes/2026-10-29/checklist-quick-actions/`.
 
 ### Changed
+- Date/time picker opens as a full-window modal (calendar on top, time below, close button top-left) in the narrow tray popover and compact windows, where a floating panel cannot extend past the native window.
 - Checklist group headers are sharper: bold larger text, bigger collapse chevron and a thicker divider (category tone colour); sub-groups keep the light style. The first selected group-by is the outer group.
 - Opening settings or "edit categories" from the checklist lands on the Checklist tab, also when the Settings window is already open.
 - Collapsed sidebar is wider on macOS so its border no longer runs under the traffic lights; the sidebar brand compact button is aligned.
