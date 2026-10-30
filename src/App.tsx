@@ -210,15 +210,15 @@ function AppShell() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
+      <ContentHeader
+        screenTitle={screenTitle}
+        collapsed={effectiveCollapsed}
+        onToggleCollapse={toggleCollapsed}
+        onOpenPalette={() => setCommandPaletteOpen(true)}
+      />
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <Sidebar />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <ContentHeader
-            screenTitle={screenTitle}
-            collapsed={effectiveCollapsed}
-            onToggleCollapse={toggleCollapsed}
-            onOpenPalette={() => setCommandPaletteOpen(true)}
-          />
           <main className="min-h-0 flex-1 overflow-hidden bg-background">
             <Suspense fallback={
               <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
