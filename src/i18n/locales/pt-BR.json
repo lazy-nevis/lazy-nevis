@@ -744,7 +744,8 @@
     "state_idle": "Ocioso",
     "state_running": "Focando",
     "state_paused": "Pausado",
-    "open_quick_panel": "Painel rápido"
+    "open_quick_panel": "Painel rápido",
+    "update_available": "Nova versão {{version}} disponível"
   },
   "habits": {
     "title": "Hábitos",
@@ -1084,5 +1085,15 @@
   "runtime": {
     "browser_title": "Abra o LazyNevis no app desktop",
     "browser_body": "Esta página é o servidor de desenvolvimento da janela do LazyNevis. Ela precisa do runtime do Tauri e não funciona em uma aba comum do navegador."
+  },
+  "update": {
+    "alert_title": "A versão {{version}} está disponível",
+    "alert_body": "Uma versão mais nova do LazyNevis está pronta para baixar.",
+    "view_details": "Ver detalhes",
+    "dismiss": "Dispensar",
+    "card_title": "Atualização disponível",
+    "card_version": "Versão {{version}}",
+    "notes_title": "Notas da versão",
+    "badge": "Atualização disponível"
   }
 }

@@ -44,6 +44,7 @@ import {
 } from "@/components/features/dashboard/dashboardLayout";
 import { useChecklistBuckets, useDashboardData } from "@/components/features/dashboard/useDashboardData";
 import { useChecklist } from "@/hooks/useChecklist";
+import { UpdateAlert } from "@/components/features/updates/UpdateAlert";
 import { cn } from "@/utils/cn";
 
 function SortableWidget({
@@ -184,6 +185,7 @@ export function Dashboard() {
   return (
     <>
       <PageContainer>
+        <UpdateAlert />
         <PageHeader
           title={t("title")}
           description={t("description")}

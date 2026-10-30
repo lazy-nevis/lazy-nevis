@@ -19,7 +19,7 @@ The "-is" suffix is a cultural reference to Mussum (Os Trapalhões, Brazil). It 
 /* Quiet Workspace — see src/index.css for full light/dark values */
 --background, --foreground, --card, --popover, --muted, --accent, --border, --input, --ring
 --sidebar, --sidebar-accent, --sidebar-border
---brand, --brand-foreground
+--brand, --brand-foreground, --notice, --notice-foreground (orange update notice: tray dot, dashboard alert, About badge)
 --success, --warning, --info
 --chart-1 … --chart-5
 --radius: 0.625rem

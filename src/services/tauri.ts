@@ -314,6 +314,9 @@ export const habitService = {
 export const trayService = {
   setLabels: (labels: TrayLabels): Promise<void> =>
     invoke("set_tray_labels", { labels }),
+  /** Orange dot + menu entry for a pending release; `null` clears it. */
+  setUpdateNotice: (version: string | null): Promise<void> =>
+    invoke("set_update_notice", { version }),
 };
 
 export const pomodoroService = {

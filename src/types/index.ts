@@ -547,6 +547,7 @@ export interface TrayLabels {
   state_running: string;
   state_paused: string;
   open_quick_panel: string;
+  update_available: string;
 }
 
 export type PomodoroPhaseKind = "focus" | "short_break" | "long_break";

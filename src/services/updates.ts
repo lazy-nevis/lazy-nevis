@@ -1,6 +1,8 @@
 export interface ReleaseInfo {
   version: string;
   url: string;
+  /** Release notes (GitHub body), truncated; omitted when the release has none. */
+  notes?: string;
 }
 
 interface GitHubRelease {
@@ -8,12 +10,14 @@ interface GitHubRelease {
   html_url?: unknown;
   draft?: unknown;
   prerelease?: unknown;
+  body?: unknown;
 }
 
 const API_URL = "https://api.github.com/repos/lazy-nevis/lazy-nevis/releases?per_page=5";
 const RELEASE_URL_PREFIX = "https://github.com/lazy-nevis/lazy-nevis/releases/tag/";
 // Release bodies carry the full changelog section + generated notes, so a page of releases is easily >100 KB.
 const MAX_RESPONSE_BYTES = 1024 * 1024;
+const MAX_NOTES_CHARS = 1500;
 const CACHE_MS = 15 * 60 * 1000;
 let cache: { at: number; release: ReleaseInfo | null } | null = null;
 
@@ -84,7 +88,9 @@ export async function checkForUpdate(currentVersion: string): Promise<ReleaseInf
           || !isOfficialReleaseUrl(release.html_url)
         ) return [];
         const version = release.tag_name.replace(/^v/, "");
-        return parseVersion(version) ? [{ version, url: release.html_url }] : [];
+        if (!parseVersion(version)) return [];
+        const notes = typeof release.body === "string" ? release.body.trim().slice(0, MAX_NOTES_CHARS) : "";
+        return [{ version, url: release.html_url, ...(notes ? { notes } : {}) }];
       })
       .sort((a, b) => compareVersions(b.version, a.version));
     const release = candidates[0] && compareVersions(candidates[0].version, currentVersion) > 0

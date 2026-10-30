@@ -91,6 +91,8 @@ pub struct TrayLabels {
     pub state_paused: String,
     /// Linux fallback menu entry (appindicator delivers no icon clicks).
     pub open_quick_panel: String,
+    /// Menu entry shown while a newer release is pending; `{version}` is replaced.
+    pub update_available: String,
 }
 
 impl Default for TrayLabels {
@@ -104,6 +106,7 @@ impl Default for TrayLabels {
             state_running: "Focusing".to_string(),
             state_paused: "Paused".to_string(),
             open_quick_panel: "Quick Panel".to_string(),
+            update_available: "New version {version} available".to_string(),
         }
     }
 }
@@ -145,11 +148,41 @@ fn next_fullscreen_transition(
 /// app's default (non-template-shaped) icon, which renders as a plain filled
 /// square once `icon_as_template` forces template compositing on it. This bit
 /// LazyNevis in production; `include_bytes!` sidesteps the whole class of bug.
-pub fn icon_bytes(state: TraySessionState) -> &'static [u8] {
-    match state {
-        TraySessionState::Idle => include_bytes!("../../icons/tray/idle_monochrome.png"),
-        TraySessionState::Running => include_bytes!("../../icons/tray/running_monochrome.png"),
-        TraySessionState::Paused => include_bytes!("../../icons/tray/paused_monochrome.png"),
+///
+/// `update` selects the orange-dot variants (spec: tray-status/update-indicator).
+/// They are non-template: macOS template icons are tinted by the OS and cannot
+/// carry colour, so these use a mid-gray glyph that reads on light and dark bars.
+pub fn icon_bytes(state: TraySessionState, update: bool) -> &'static [u8] {
+    match (state, update) {
+        (TraySessionState::Idle, false) => include_bytes!("../../icons/tray/idle_monochrome.png"),
+        (TraySessionState::Running, false) => {
+            include_bytes!("../../icons/tray/running_monochrome.png")
+        }
+        (TraySessionState::Paused, false) => {
+            include_bytes!("../../icons/tray/paused_monochrome.png")
+        }
+        (TraySessionState::Idle, true) => include_bytes!("../../icons/tray/idle_update.png"),
+        (TraySessionState::Running, true) => include_bytes!("../../icons/tray/running_update.png"),
+        (TraySessionState::Paused, true) => include_bytes!("../../icons/tray/paused_update.png"),
+    }
+}
+
+/// Menu label for the pending-update entry.
+pub fn update_menu_label(labels: &TrayLabels, version: &str) -> String {
+    labels.update_available.replace("{version}", version)
+}
+
+/// Accepts plain semver-ish tags only (`0.10.0-rc.5`); the value lands in a menu label.
+pub fn validate_update_version(version: &str) -> Result<()> {
+    let ok = !version.is_empty()
+        && version.len() <= 64
+        && version
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '+'));
+    if ok {
+        Ok(())
+    } else {
+        Err(AppError::InvalidArgument("Invalid update version".into()))
     }
 }
 
@@ -201,6 +234,7 @@ pub fn format_tooltip(
 pub fn build_tray_menu<R: Runtime, M: Manager<R>>(
     manager: &M,
     labels: &TrayLabels,
+    update_version: Option<&str>,
 ) -> tauri::Result<Menu<R>> {
     // Mid-gray glyphs stay legible on both light and dark menu themes.
     let open_icon = Image::from_bytes(include_bytes!("../../icons/tray/menu_open.png")).ok();
@@ -209,6 +243,21 @@ pub fn build_tray_menu<R: Runtime, M: Manager<R>>(
     let show = IconMenuItem::with_id(manager, "show", &labels.show, true, open_icon, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(manager)?;
     let quit = IconMenuItem::with_id(manager, "quit", &labels.quit, true, quit_icon, None::<&str>)?;
+    let update_item = match update_version {
+        Some(version) => Some(IconMenuItem::with_id(
+            manager,
+            "update",
+            update_menu_label(labels, version),
+            true,
+            Image::from_bytes(include_bytes!("../../icons/tray/menu_update.png")).ok(),
+            None::<&str>,
+        )?),
+        None => None,
+    };
+    let mut items: Vec<&dyn tauri::menu::IsMenuItem<R>> = vec![&show];
+    if let Some(item) = &update_item {
+        items.push(item);
+    }
 
     // Linux appindicator delivers no icon click events, so the quick panel needs
     // a menu entry there (spec: tray-quick-panel/linux-fallback).
@@ -222,10 +271,17 @@ pub fn build_tray_menu<R: Runtime, M: Manager<R>>(
             None::<Image>,
             None::<&str>,
         )?;
-        Menu::with_items(manager, &[&show, &quick_panel, &sep, &quit])
+        items.push(&quick_panel);
+        items.push(&sep);
+        items.push(&quit);
+        Menu::with_items(manager, &items)
     }
     #[cfg(not(target_os = "linux"))]
-    Menu::with_items(manager, &[&show, &sep, &quit])
+    {
+        items.push(&sep);
+        items.push(&quit);
+        Menu::with_items(manager, &items)
+    }
 }
 
 #[derive(Debug)]
@@ -233,7 +289,9 @@ struct Inner {
     session: SessionSummary,
     pomodoro: Option<PomodoroTraySummary>,
     labels: TrayLabels,
-    applied_icon: Option<TraySessionState>,
+    applied_icon: Option<(TraySessionState, bool)>,
+    /// Newer release version awaiting the user's attention (spec: tray-status/update-indicator).
+    update_version: Option<String>,
     applied_tooltip: Option<String>,
     mode: AppMode,
     pinned: bool,
@@ -256,7 +314,8 @@ impl Default for AppStatusManager {
                 pomodoro: None,
                 labels: TrayLabels::default(),
                 // The idle icon is set by TrayIconBuilder at startup.
-                applied_icon: Some(TraySessionState::Idle),
+                applied_icon: Some((TraySessionState::Idle, false)),
+                update_version: None,
                 applied_tooltip: None,
                 mode: AppMode::Full,
                 pinned: false,
@@ -379,7 +438,32 @@ impl AppStatusManager {
             inner.applied_tooltip = Some(tooltip.clone());
             tooltip
         };
-        apply_to_tray(app, None, Some(tooltip), Some(labels));
+        let update = self.update_version();
+        apply_to_tray(app, None, Some(tooltip), Some((labels, update)));
+    }
+
+    pub fn update_version(&self) -> Option<String> {
+        self.inner
+            .lock()
+            .ok()
+            .and_then(|inner| inner.update_version.clone())
+    }
+
+    /// Shows or clears the pending-update indicator (icon dot + menu entry).
+    pub fn set_update_version(&self, app: &AppHandle, version: Option<String>) {
+        let (icon, menu) = {
+            let Ok(mut inner) = self.inner.lock() else {
+                return;
+            };
+            if inner.update_version == version {
+                return;
+            }
+            inner.update_version = version.clone();
+            let key = (inner.session.state, version.is_some());
+            inner.applied_icon = Some(key);
+            (key, (inner.labels.clone(), version))
+        };
+        apply_to_tray(app, Some(icon), None, Some(menu));
     }
 
     /// Updates the cached session summary and pushes icon/tooltip changes to the
@@ -389,9 +473,10 @@ impl AppStatusManager {
             let Ok(mut inner) = self.inner.lock() else {
                 return;
             };
-            let icon = if inner.applied_icon != Some(summary.state) {
-                inner.applied_icon = Some(summary.state);
-                Some(summary.state)
+            let key = (summary.state, inner.update_version.is_some());
+            let icon = if inner.applied_icon != Some(key) {
+                inner.applied_icon = Some(key);
+                Some(key)
             } else {
                 None
             };
@@ -439,27 +524,28 @@ impl AppStatusManager {
 /// on macOS).
 fn apply_to_tray(
     app: &AppHandle,
-    icon: Option<TraySessionState>,
+    icon: Option<(TraySessionState, bool)>,
     tooltip: Option<String>,
-    menu_labels: Option<TrayLabels>,
+    menu: Option<(TrayLabels, Option<String>)>,
 ) {
     let app = app.clone();
     let result = app.clone().run_on_main_thread(move || {
         let Some(tray) = app.tray_by_id(TRAY_ID) else {
             return;
         };
-        if let Some(state) = icon {
-            if let Ok(image) = Image::from_bytes(icon_bytes(state)) {
+        if let Some((state, update)) = icon {
+            if let Ok(image) = Image::from_bytes(icon_bytes(state, update)) {
                 let _ = tray.set_icon(Some(image));
-                let _ = tray.set_icon_as_template(true);
+                // Update variants carry colour, so they must not be template-tinted.
+                let _ = tray.set_icon_as_template(!update);
             }
         }
         if let Some(tooltip) = tooltip {
             // No-op on Linux appindicator (spec: tray-status/platform-without-tooltip-support).
             let _ = tray.set_tooltip(Some(&tooltip));
         }
-        if let Some(labels) = menu_labels {
-            if let Ok(menu) = build_tray_menu(&app, &labels) {
+        if let Some((labels, update)) = menu {
+            if let Ok(menu) = build_tray_menu(&app, &labels, update.as_deref()) {
                 let _ = tray.set_menu(Some(menu));
             }
         }
@@ -517,14 +603,47 @@ mod tests {
     // `icon_bytes`'s doc comment).
     #[test]
     fn tray_icon_bytes_decode_and_differ_per_state() {
-        let idle = tauri::image::Image::from_bytes(icon_bytes(TraySessionState::Idle)).unwrap();
+        let idle =
+            tauri::image::Image::from_bytes(icon_bytes(TraySessionState::Idle, false)).unwrap();
         let running =
-            tauri::image::Image::from_bytes(icon_bytes(TraySessionState::Running)).unwrap();
-        let paused = tauri::image::Image::from_bytes(icon_bytes(TraySessionState::Paused)).unwrap();
+            tauri::image::Image::from_bytes(icon_bytes(TraySessionState::Running, false)).unwrap();
+        let paused =
+            tauri::image::Image::from_bytes(icon_bytes(TraySessionState::Paused, false)).unwrap();
 
         assert_ne!(idle.rgba(), running.rgba());
         assert_ne!(running.rgba(), paused.rgba());
         assert_ne!(idle.rgba(), paused.rgba());
+    }
+
+    // Spec scenario: tray-status/update-indicator
+    #[test]
+    fn update_icon_variants_decode_and_differ_from_plain() {
+        for state in [
+            TraySessionState::Idle,
+            TraySessionState::Running,
+            TraySessionState::Paused,
+        ] {
+            let plain = tauri::image::Image::from_bytes(icon_bytes(state, false)).unwrap();
+            let dotted = tauri::image::Image::from_bytes(icon_bytes(state, true)).unwrap();
+            assert_ne!(plain.rgba(), dotted.rgba());
+        }
+    }
+
+    #[test]
+    fn update_menu_label_substitutes_version() {
+        let labels = TrayLabels::default();
+        assert_eq!(
+            update_menu_label(&labels, "0.10.0-rc.5"),
+            "New version 0.10.0-rc.5 available"
+        );
+    }
+
+    #[test]
+    fn update_version_validation_rejects_unsafe_values() {
+        assert!(validate_update_version("0.10.0-rc.5").is_ok());
+        assert!(validate_update_version("").is_err());
+        assert!(validate_update_version("1.0.0\nx").is_err());
+        assert!(validate_update_version(&"1".repeat(65)).is_err());
     }
 
     // Spec scenario: app-modes/fullscreen-follows-full-mode
