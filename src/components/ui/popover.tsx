@@ -22,7 +22,7 @@ export function useAnchoredPosition(
   panelRef: React.RefObject<HTMLElement | null>,
   align: "start" | "end",
 ) {
-  const [position, setPosition] = useState<{ top: number; left: number; above: boolean; maxHeight: number } | null>(null);
+  const [position, setPosition] = useState<{ top: number; left: number; above: boolean; maxHeight: number; scale: number } | null>(null);
   const anchorRef = useRef(getAnchor);
   anchorRef.current = getAnchor;
 
@@ -35,9 +35,16 @@ export function useAnchoredPosition(
       const anchor = anchorRef.current();
       const panel = panelRef.current;
       if (!anchor || !panel) return;
+      // A panel can never draw outside its native window (tray/compact are small), so one wider than
+      // the window is shrunk (CSS zoom) to fit instead of being clipped.
+      panel.style.zoom = "1";
       // Layout size, not getBoundingClientRect: an entrance scale would shrink the measurement.
-      const width = panel.offsetWidth;
-      const height = panel.scrollHeight + (panel.offsetHeight - panel.clientHeight);
+      const naturalWidth = panel.offsetWidth;
+      const naturalHeight = panel.scrollHeight + (panel.offsetHeight - panel.clientHeight);
+      const scale = Math.min(1, (window.innerWidth - 2 * VIEWPORT_MARGIN) / naturalWidth);
+      panel.style.zoom = "";
+      const width = naturalWidth * scale;
+      const height = naturalHeight * scale;
       // Open on the side with more room (preferring below) and cap the height to it, so a tall
       // panel near an edge scrolls instead of spilling out of the window.
       const spaceBelow = window.innerHeight - anchor.bottom - GAP - VIEWPORT_MARGIN;
@@ -51,7 +58,7 @@ export function useAnchoredPosition(
         Math.max(VIEWPORT_MARGIN, rawLeft),
         window.innerWidth - width - VIEWPORT_MARGIN,
       );
-      setPosition({ top: Math.max(VIEWPORT_MARGIN, top), left, above, maxHeight });
+      setPosition({ top: Math.max(VIEWPORT_MARGIN, top), left, above, maxHeight, scale });
     };
     place();
     window.addEventListener("resize", place);
@@ -150,6 +157,7 @@ export function Popover({
               top: position?.top ?? 0,
               left: position?.left ?? 0,
               maxHeight: position?.maxHeight,
+              zoom: position && position.scale < 1 ? position.scale : undefined,
               visibility: position ? "visible" : "hidden",
             }}
             className={cn(
@@ -221,6 +229,7 @@ export function AnchoredPanel({
         top: position?.top ?? 0,
         left: position?.left ?? 0,
         maxHeight: position?.maxHeight,
+        zoom: position && position.scale < 1 ? position.scale : undefined,
         visibility: position ? "visible" : "hidden",
         transformOrigin: position?.above ? "bottom left" : "top left",
       }}

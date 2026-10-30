@@ -51,6 +51,7 @@ function Floating({
         top: position?.top ?? 0,
         left: position?.left ?? 0,
         maxHeight: position?.maxHeight,
+        zoom: position && position.scale < 1 ? position.scale : undefined,
         visibility: position ? "visible" : "hidden",
       }}
       className="fixed z-[95] overflow-y-auto rounded-lg border border-border bg-popover p-1.5 text-popover-foreground shadow-lg"
