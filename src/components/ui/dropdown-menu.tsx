@@ -21,11 +21,13 @@ export function DropdownMenu({
   items,
   align = "start",
   className,
+  triggerClassName,
 }: {
   trigger: ReactNode;
   items: DropdownMenuItem[];
   align?: "start" | "end";
   className?: string;
+  triggerClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -114,7 +116,7 @@ export function DropdownMenu({
         aria-controls={open ? menuId : undefined}
         onClick={() => setOpen((v) => !v)}
         onKeyDown={onTriggerKeyDown}
-        className="inline-flex"
+        className={cn("inline-flex", triggerClassName)}
       >
         {trigger}
       </button>

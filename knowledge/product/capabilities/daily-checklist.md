@@ -219,3 +219,7 @@ bare numbers are never dates, invalid dates are ignored, and past day/month roll
 - **GIVEN** the checklist open with an item due today
 - **WHEN** local midnight passes
 - **THEN** overdue/group labels refresh without remounting the page
+
+## Shared view across modes
+
+`group_by` and `category_filter` are persisted checklist settings used by the main, compact and tray views; changing them in one view applies to all. `category_filter` holds category ids (`__none__` = no category), empty means all, max 200 entries of 1–64 characters. Compact and tray expose them in one view-options popover beside the settings button. The first selected group-by dimension is the outermost group; top-level group headers are bold with a thicker divider, nested ones stay light.

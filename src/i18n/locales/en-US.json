@@ -566,6 +566,8 @@
     "add_sub_item": "Add sub-item",
     "reject_date": "Ignore recognized date",
     "empty_title_hint": "Add a title after removing dates and tags.",
+    "view_options": "Group and filter",
+    "filter_categories": "Show categories",
     "group_by": "Group by",
     "group_dimension": {
       "category": "Category",

@@ -566,6 +566,8 @@
     "add_sub_item": "Adicionar subitem",
     "reject_date": "Ignorar data reconhecida",
     "empty_title_hint": "Inclua um título após remover datas e tags.",
+    "view_options": "Agrupar e filtrar",
+    "filter_categories": "Mostrar categorias",
     "group_by": "Agrupar por",
     "group_dimension": {
       "category": "Categoria",

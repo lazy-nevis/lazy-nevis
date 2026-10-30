@@ -73,6 +73,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     grace_period_ms: 10_000,
     history_sort: "created",
     group_by: [],
+    category_filter: [],
     date_recognition: true,
   },
   calendar: {

@@ -11,10 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PomodoroTrayBlock } from "@/components/features/pomodoro/PomodoroTrayBlock";
 import { ChecklistSettingsButton } from "@/components/features/checklist/ChecklistSettingsButton";
+import { ChecklistViewMenu } from "@/components/features/checklist/ChecklistViewControls";
 import { ChecklistGroupedList } from "@/components/features/checklist/ChecklistGroupedList";
 import { usePomodoro } from "@/hooks/usePomodoro";
 import { ChecklistInput } from "@/components/features/checklist/ChecklistInput";
 import { useChecklist } from "@/hooks/useChecklist";
+import { useChecklistView } from "@/hooks/useChecklistView";
 import { useThemeSync } from "@/hooks/useThemeSync";
 import { sessionService } from "@/services/tauri";
 import { settingsService } from "@/services/tauri";
@@ -45,7 +47,7 @@ export function TrayPopover() {
     commitReorder,
     refresh: refreshChecklist,
   } = useChecklist();
-  const checklistSettings = useSettingsStore((s) => s.settings.checklist);
+  const checklistView = useChecklistView();
   usePomodoro();
   const [deleteTarget, setDeleteTarget] = useState<ChecklistItem | null>(null);
   const [name, setName] = useState("");
@@ -233,7 +235,10 @@ export function TrayPopover() {
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             {t("checklist.open_title")}
           </p>
-          <ChecklistSettingsButton secondary />
+          <div className="flex items-center gap-0.5">
+            <ChecklistViewMenu view={checklistView} />
+            <ChecklistSettingsButton secondary />
+          </div>
         </div>
         {/* -mr/pr let the scrollbar live in the section padding so rows keep the
             block's full width (aligned with the session button above). */}
@@ -247,10 +252,10 @@ export function TrayPopover() {
           )}
           <ChecklistGroupedList
             openView={openView}
-            groupBy={checklistSettings.group_by ?? []}
+            groupBy={checklistView.groupBy}
             graceMs={graceMs}
             compact
-            categoryFilterIds={[]}
+            categoryFilterIds={checklistView.categoryFilterIds}
             createItem={createItem}
             onToggleComplete={(item) => void completeItem(item.id)}
             onUndo={(item) => void uncompleteItem(item.id)}

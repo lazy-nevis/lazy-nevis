@@ -18,7 +18,7 @@ import { monitorService, audioService, overlayService, permissionsService, setti
 import { findKnownConflict } from "@/utils/knownShortcutConflicts";
 import { parseAppList } from "@/utils/appLists";
 import { useUiStore } from "@/stores/uiStore";
-import { consumeSettingsTab, SETTINGS_TAB_STORAGE_KEY } from "@/utils/settingsNav";
+import { consumeSettingsTab, SETTINGS_TAB_EVENT, SETTINGS_TAB_STORAGE_KEY } from "@/utils/settingsNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -67,6 +67,22 @@ export function Settings() {
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    let unlisten: (() => void) | null = null;
+    listen<string>(SETTINGS_TAB_EVENT, (ev) => {
+      consumeSettingsTab();
+      if (ev.payload in TAB_META) setActiveTab(ev.payload as Tab);
+    }).then((fn) => {
+      if (cancelled) fn();
+      else unlisten = fn;
+    });
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
   }, []);
 
   useEffect(() => {

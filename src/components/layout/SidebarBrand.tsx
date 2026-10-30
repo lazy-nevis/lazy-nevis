@@ -84,6 +84,8 @@ export function SidebarBrand({ collapsed }: { collapsed: boolean }) {
     >
       <DropdownMenu
         align="start"
+        className={cn("min-w-0 flex-1", collapsed && "flex-none")}
+        triggerClassName="w-full min-w-0"
         trigger={
           <div
             className={cn(
@@ -113,7 +115,7 @@ export function SidebarBrand({ collapsed }: { collapsed: boolean }) {
           onClick={() => void appModeService.setMode("compact")}
           title={t("app_modes.switch_to_compact")}
           aria-label={t("app_modes.switch_to_compact")}
-          className="shrink-0 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
         >
           <Minimize2 className="h-4 w-4" />
         </button>
@@ -124,7 +126,7 @@ export function SidebarBrand({ collapsed }: { collapsed: boolean }) {
           onClick={() => void appModeService.setMode("compact")}
           title={t("app_modes.switch_to_compact")}
           aria-label={t("app_modes.switch_to_compact")}
-          className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-sidebar-accent"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
         >
           <Minimize2 className="h-4 w-4" />
         </button>

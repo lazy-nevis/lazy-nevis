@@ -44,7 +44,8 @@ export function Sidebar() {
     <aside
       className={cn(
         "flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground motion-safe:transition-[width] motion-reduce:transition-none",
-        effectiveCollapsed ? "w-[64px]" : "w-[248px]",
+        // On macOS the rail must clear the traffic lights (they end ~x=68), or its border runs under the green one.
+        effectiveCollapsed ? (IS_MAC ? "w-[80px]" : "w-[64px]") : "w-[248px]",
       )}
     >
       {IS_MAC && <div className="h-9 shrink-0" data-tauri-drag-region aria-hidden />}

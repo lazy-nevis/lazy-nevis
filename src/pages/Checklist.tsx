@@ -11,12 +11,12 @@ import { ChecklistGroupToolbar } from "@/components/features/checklist/Checklist
 import { ChecklistGroupedList } from "@/components/features/checklist/ChecklistGroupedList";
 import { ChecklistInput } from "@/components/features/checklist/ChecklistInput";
 import { useChecklist } from "@/hooks/useChecklist";
+import { useChecklistView } from "@/hooks/useChecklistView";
 import { useSettings } from "@/hooks/useSettings";
 import { useChecklistStore } from "@/stores/checklistStore";
 import { useSessionStore } from "@/stores/sessionStore";
 import { useUiStore } from "@/stores/uiStore";
-import type { ChecklistCategory, ChecklistGroupBy, ChecklistItem, ChecklistSortMode } from "@/types";
-import { checklistService } from "@/services/tauri";
+import type { ChecklistItem, ChecklistSortMode } from "@/types";
 
 export function Checklist() {
   const { t } = useTranslation();
@@ -37,21 +37,9 @@ export function Checklist() {
   const activeSession = useSessionStore((s) => s.activeSession);
   const setHistoryFilter = useChecklistStore((s) => s.setHistoryFilter);
   const [deleteTarget, setDeleteTarget] = useState<ChecklistItem | null>(null);
-  const [categories, setCategories] = useState<ChecklistCategory[]>([]);
-  const [categoryFilterIds, setCategoryFilterIds] = useState<string[]>([]);
+  const view = useChecklistView();
 
   const openCount = openView.filter((entry) => entry.grace === null).length;
-
-  useEffect(() => {
-    void checklistService.listCategories().then(setCategories).catch(() => {});
-  }, [openView.length]);
-
-  const persistGroupBy = (groupBy: ChecklistGroupBy[]) => {
-    saveSettings(
-      { ...settings, checklist: { ...settings.checklist, group_by: groupBy } },
-      { silent: true },
-    );
-  };
 
   const persistedSort = settings.checklist.history_sort;
   useEffect(() => {
@@ -99,21 +87,15 @@ export function Checklist() {
         title={t("checklist.open_title")}
         actions={<ListChecks className="h-4 w-4 text-muted-foreground" aria-hidden />}
       >
-        <ChecklistGroupToolbar
-          groupBy={settings.checklist.group_by ?? []}
-          onGroupByChange={persistGroupBy}
-          categories={categories}
-          activeCategoryIds={categoryFilterIds}
-          onCategoryFilterChange={setCategoryFilterIds}
-        />
+        <ChecklistGroupToolbar view={view} />
         {openView.length === 0 ? (
           <EmptyState title={t("checklist.empty_open")} className="py-8" />
         ) : (
           <ChecklistGroupedList
             openView={openView}
-            groupBy={settings.checklist.group_by ?? []}
+            groupBy={view.groupBy}
             graceMs={graceMs}
-            categoryFilterIds={categoryFilterIds}
+            categoryFilterIds={view.categoryFilterIds}
             createItem={createItem}
             onToggleComplete={(item) => void completeItem(item.id)}
             onUndo={(item) => void uncompleteItem(item.id)}
