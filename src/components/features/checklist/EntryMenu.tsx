@@ -34,10 +34,12 @@ interface Props {
 /** Windows narrower than the side-by-side date/time panel (tray popover, compact): it opens full-window instead. */
 const NARROW_WINDOW_PX = 440;
 
+const isNarrow = () => NARROW_WINDOW_PX > window.innerWidth;
+
 function useNarrowWindow(): boolean {
-  const [narrow, setNarrow] = useState(() => window.innerWidth < NARROW_WINDOW_PX);
+  const [narrow, setNarrow] = useState(() => isNarrow());
   useEffect(() => {
-    const onResize = () => setNarrow(window.innerWidth < NARROW_WINDOW_PX);
+    const onResize = () => setNarrow(isNarrow());
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
