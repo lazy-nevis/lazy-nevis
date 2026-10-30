@@ -85,3 +85,13 @@ describe("updates", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 });
+
+describe("compareVersions pre-release ordering", () => {
+  it("orders rc numbers numerically and stable above rc", () => {
+    expect(compareVersions("0.10.0-rc.5", "0.10.0-rc.4")).toBeGreaterThan(0);
+    expect(compareVersions("0.10.0-rc.10", "0.10.0-rc.9")).toBeGreaterThan(0);
+    expect(compareVersions("0.10.0", "0.10.0-rc.5")).toBeGreaterThan(0);
+    expect(compareVersions("0.10.0-rc.5", "0.9.9")).toBeGreaterThan(0);
+    expect(compareVersions("v0.10.0-rc.5", "0.10.0-rc.5")).toBe(0);
+  });
+});

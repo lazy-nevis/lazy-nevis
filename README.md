@@ -15,7 +15,7 @@
   <a href="https://deps.rs/repo/github/lazy-nevis/lazy-nevis"><img src="https://deps.rs/repo/github/lazy-nevis/lazy-nevis/status.svg" alt="Dependency Status"></a>
   <a href="https://github.com/lazy-nevis/lazy-nevis/commits/main"><img src="https://img.shields.io/github/last-commit/lazy-nevis/lazy-nevis" alt="Last Commit"></a>
   <a href="https://github.com/lazy-nevis/lazy-nevis/releases/latest"><img src="https://img.shields.io/github/v/release/lazy-nevis/lazy-nevis?label=release&color=brightgreen" alt="Latest Release"></a>
-  <a href="https://github.com/lazy-nevis/lazy-nevis/releases"><img src="https://img.shields.io/github/v/release/lazy-nevis/lazy-nevis?include_prereleases&label=pre-release&color=orange" alt="Latest Pre-release"></a>
+  <a href="https://github.com/lazy-nevis/lazy-nevis/releases"><img src="https://img.shields.io/github/v/release/lazy-nevis/lazy-nevis?label=release&color=orange" alt="Latest Release"></a>
   <a href="https://github.com/lazy-nevis/lazy-nevis/releases"><img src="https://img.shields.io/github/downloads/lazy-nevis/lazy-nevis/total?label=downloads" alt="Total Downloads"></a>
   <a href="https://github.com/lazy-nevis/lazy-nevis/issues"><img src="https://img.shields.io/github/issues/lazy-nevis/lazy-nevis" alt="Open Issues"></a>
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey" alt="Platforms: macOS, Windows, Linux">
@@ -173,7 +173,7 @@ Download only from [GitHub Releases](https://github.com/lazy-nevis/lazy-nevis/re
 | Windows 10+ | x64, ARM64 | NSIS installer | [docs/install/windows.md](docs/install/windows.md) |
 | Linux | x64 | AppImage, DEB, RPM | [docs/install/linux.md](docs/install/linux.md) |
 
-RC builds may be unsigned while signing credentials are being established. See [macOS Gatekeeper](docs/troubleshooting/gatekeeper.md) and [Windows SmartScreen](docs/troubleshooting/smartscreen.md) for the one-time bypass steps, and [docs/release/installation.md](docs/release/installation.md) for checksum verification.
+Builds may be unsigned while signing credentials are being established. See [macOS Gatekeeper](docs/troubleshooting/gatekeeper.md) and [Windows SmartScreen](docs/troubleshooting/smartscreen.md) for the one-time bypass steps, and [docs/release/installation.md](docs/release/installation.md) for checksum verification.
 
 After installing, follow the **[Getting Started guide](docs/getting-started.md)**.
 

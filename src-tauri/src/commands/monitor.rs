@@ -91,6 +91,20 @@ pub async fn set_tray_labels(
     Ok(())
 }
 
+/// Show/clear the pending-update indicator on the tray (spec: tray-status/update-indicator).
+#[tauri::command]
+pub async fn set_update_notice(
+    version: Option<String>,
+    app: AppHandle,
+    state: tauri::State<'_, crate::state::AppState>,
+) -> Result<()> {
+    if let Some(version) = &version {
+        crate::services::app_status::validate_update_version(version)?;
+    }
+    state.app_status.set_update_version(&app, version);
+    Ok(())
+}
+
 // ── Tray quick panel (spec: tray-quick-panel) ────────────────────────────────
 
 pub const TRAY_WINDOW_LABEL: &str = "tray";

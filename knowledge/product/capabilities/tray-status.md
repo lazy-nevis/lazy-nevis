@@ -79,3 +79,17 @@ the quick panel.
 ### Requirement: Pomodoro tooltip suffix
 
 When Pomodoro is enabled and a run is active, the tray tooltip SHALL append a localized phase label and remaining time (for example `· Focus 12:34`). When disabled or idle, no Pomodoro suffix is shown. The tray quick panel MAY show a mini Pomodoro block with pause/resume/skip controls.
+
+### Requirement: Update indicator
+
+While an unseen newer release exists the tray icon SHALL use an orange-dot variant and the menu SHALL include a "New version X available" entry that shows the main window and opens About. The dot variants are non-template (mid-gray glyph) because macOS template icons cannot carry colour; the normal icons remain monochrome templates. Clearing the notice restores the template icon.
+
+#### Scenario: Update pending
+- **GIVEN** the frontend reports an unseen version through `set_update_notice`
+- **WHEN** the tray refreshes
+- **THEN** the orange-dot icon for the current session state and the update menu entry are shown
+
+#### Scenario: Update seen
+- **GIVEN** the frontend clears the notice
+- **WHEN** the tray refreshes
+- **THEN** the monochrome template icon and the two-entry menu return
