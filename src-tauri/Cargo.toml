@@ -35,7 +35,7 @@ rusqlite = { version = "0.40", features = ["bundled"] }
 rodio = { version = "0.22", default-features = false, features = ["playback", "mp3", "wav", "vorbis"] }
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2"
-sysinfo = { version = "0.39", default-features = false, features = ["system"] }
+sysinfo = { version = "0.40", default-features = false, features = ["system"] }
 tauri-plugin-autostart = "2"
 xcap = "0.9"
 
